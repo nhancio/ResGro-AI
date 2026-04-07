@@ -3,9 +3,9 @@
 # ResGro-AI — Run all services
 #
 # Starts three services:
-#   1. Landing site (Vite)   → http://localhost:8888  (folder: resgro-landing/)
-#   2. Self-Serve Analytics  (Streamlit)  → http://localhost:8501  (agents/Resgro-selfserve-app/)
-#   3. Autonomy Agent API    (FastAPI)    → http://localhost:8000  (agents/resgro-browser-automation/)
+#   1. Landing site (Netlify Dev) → http://localhost:8888  (resgro-landing/; proxies Vite + /.netlify/functions)
+#   2. Self-Serve Analytics (Streamlit) → http://localhost:8501  (agents/Resgro-selfserve-app/)
+#   3. Autonomy Agent API (FastAPI) → http://localhost:8000  (agents/resgro-browser-automation/)
 #
 # Usage:
 #   ./run.sh              # Start all services
@@ -35,6 +35,14 @@ warn()  { echo -e "${YELLOW}[ResGro]${NC} $1"; }
 error() { echo -e "${RED}[ResGro]${NC} $1"; }
 header(){ echo -e "\n${CYAN}${BOLD}═══════════════════════════════════════════${NC}"; echo -e "${CYAN}${BOLD}  $1${NC}"; echo -e "${CYAN}${BOLD}═══════════════════════════════════════════${NC}\n"; }
 
+# True if any install artifact is missing (npm or either Python venv).
+needs_install() {
+    [ ! -d "$WEBSITE_DIR/node_modules" ] && return 0
+    [ ! -d "$SELFSERVE_DIR/.venv" ] && return 0
+    [ ! -d "$AUTONOMY_DIR/.venv" ] && return 0
+    return 1
+}
+
 # ── Cleanup on exit ──────────────────────────────────────────────────
 cleanup() {
     log "Shutting down all services..."
@@ -46,7 +54,7 @@ cleanup() {
         done < "$PID_FILE"
         rm -f "$PID_FILE"
     fi
-    # Also kill by port as fallback
+    # Also kill by port as fallback (macOS: lsof)
     lsof -ti:8501 2>/dev/null | xargs kill 2>/dev/null || true
     lsof -ti:8000 2>/dev/null | xargs kill 2>/dev/null || true
     lsof -ti:8888 2>/dev/null | xargs kill 2>/dev/null || true
@@ -112,12 +120,10 @@ start_autonomy() {
     log "Autonomy API started (PID: $pid) → ${BOLD}http://localhost:8000${NC}"
 }
 
-# ── Start Website (Netlify Dev + Functions) ───────────────────────────
+# ── Start landing site (Netlify Dev: Vite + local functions) ─────────
 start_website() {
-    log "Starting landing site (Vite) on port 8888..."
+    log "Starting landing site (Netlify Dev on port 8888 — Vite + /.netlify/functions)..."
     cd "$WEBSITE_DIR"
-    # Use Netlify dev so `/.netlify/functions/*` endpoints exist locally.
-    # `--no-open` prevents opening a browser.
     npm run dev -- --port 8888 --no-open
 }
 
@@ -151,24 +157,15 @@ case "${1:-all}" in
     all)
         header "ResGro-AI — Starting All Services"
 
-        # Create logs directory
         mkdir -p "$ROOT_DIR/logs"
         rm -f "$PID_FILE"
 
-        # Install if node_modules missing
-        if [ ! -d "$WEBSITE_DIR/node_modules" ]; then
+        if needs_install; then
             install_all
         fi
 
-        # Install python venvs if missing
-        if [ ! -d "$SELFSERVE_DIR/.venv" ]; then
-            install_all
-        fi
-
-        # Trap Ctrl+C to cleanup
         trap cleanup EXIT INT TERM
 
-        # Start backend services in background
         start_selfserve
         start_autonomy
 
@@ -184,7 +181,6 @@ case "${1:-all}" in
         echo -e "  ${YELLOW}Press Ctrl+C to stop all services${NC}"
         echo ""
 
-        # Start website in foreground (blocks until Ctrl+C)
         start_website
         ;;
     *)
