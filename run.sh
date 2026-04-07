@@ -3,9 +3,9 @@
 # ResGro-AI — Run all services
 #
 # Starts three services:
-#   1. ResGro Website        (Vite)       → http://localhost:3000
-#   2. Self-Serve Analytics  (Streamlit)  → http://localhost:8501
-#   3. Autonomy Agent API    (FastAPI)    → http://localhost:8000
+#   1. Landing site (Vite)   → http://localhost:8888  (folder: resgro-landing/)
+#   2. Self-Serve Analytics  (Streamlit)  → http://localhost:8501  (agents/Resgro-selfserve-app/)
+#   3. Autonomy Agent API    (FastAPI)    → http://localhost:8000  (agents/resgro-browser-automation/)
 #
 # Usage:
 #   ./run.sh              # Start all services
@@ -18,9 +18,9 @@
 set -e
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
-WEBSITE_DIR="$ROOT_DIR/ResGro"
-SELFSERVE_DIR="$ROOT_DIR/Resgro-selfserve-app/app"
-AUTONOMY_DIR="$ROOT_DIR/resgro-browser-automation"
+WEBSITE_DIR="$ROOT_DIR/resgro-landing"
+SELFSERVE_DIR="$ROOT_DIR/agents/Resgro-selfserve-app/app"
+AUTONOMY_DIR="$ROOT_DIR/agents/resgro-browser-automation"
 PID_FILE="$ROOT_DIR/.resgro-pids"
 
 RED='\033[0;31m'
@@ -49,6 +49,7 @@ cleanup() {
     # Also kill by port as fallback
     lsof -ti:8501 2>/dev/null | xargs kill 2>/dev/null || true
     lsof -ti:8000 2>/dev/null | xargs kill 2>/dev/null || true
+    lsof -ti:8888 2>/dev/null | xargs kill 2>/dev/null || true
     log "All services stopped."
 }
 
@@ -111,11 +112,13 @@ start_autonomy() {
     log "Autonomy API started (PID: $pid) → ${BOLD}http://localhost:8000${NC}"
 }
 
-# ── Start Website (Vite) ─────────────────────────────────────────────
+# ── Start Website (Netlify Dev + Functions) ───────────────────────────
 start_website() {
-    log "Starting ResGro Website (Vite) on port 3000..."
+    log "Starting landing site (Vite) on port 8888..."
     cd "$WEBSITE_DIR"
-    npx vite --port 3000 --host
+    # Use Netlify dev so `/.netlify/functions/*` endpoints exist locally.
+    # `--no-open` prevents opening a browser.
+    npm run dev -- --port 8888 --no-open
 }
 
 # ── Stop all services ────────────────────────────────────────────────
@@ -173,7 +176,7 @@ case "${1:-all}" in
         log "Backend services started. Logs in $ROOT_DIR/logs/"
         echo ""
         echo -e "${BOLD}  Services:${NC}"
-        echo -e "    Website          → ${CYAN}http://localhost:3000${NC}"
+        echo -e "    Website          → ${CYAN}http://localhost:8888${NC}"
         echo -e "    Self-Serve App   → ${CYAN}http://localhost:8501${NC}"
         echo -e "    Autonomy API     → ${CYAN}http://localhost:8000${NC}"
         echo -e "    API Health Check → ${CYAN}http://localhost:8000/health${NC}"
