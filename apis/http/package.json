@@ -1,0 +1,13 @@
+{
+  "name": "resgro-api-http",
+  "private": true,
+  "description": "Express adapter for Netlify-style handlers (Cloud Run / VM)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

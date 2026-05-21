@@ -1,0 +1,2649 @@
+{
+  "operator_id": "chat-upload",
+  "sections": {
+    "financial": {},
+    "sales": {},
+    "product_mix": {},
+    "marketing": {
+      "combined_marketing_spend": 0,
+      "combined_marketing_sales": 0,
+      "combined_marketing_roas": 0.0
+    },
+    "operations": {
+      "total_orders_with_wait_data": 30410,
+      "avg_avoidable_wait_min": 3.38,
+      "avg_delivery_time_min": 20.55,
+      "wait_by_store": [
+        {
+          "Store Name": "McDonald's (11525 - Seville)",
+          "orders": 234,
+          "avg_wait": 4.78,
+          "avg_delivery": 30.22,
+          "p90_wait": 9.5
+        },
+        {
+          "Store Name": "McDonald's (11525 - SEVILLE/SPEEDWAY)",
+          "orders": 590,
+          "avg_wait": 4.75,
+          "avg_delivery": 29.43,
+          "p90_wait": 9.25
+        },
+        {
+          "Store Name": "McDonald's (3314 - Strongsville)",
+          "orders": 931,
+          "avg_wait": 4.43,
+          "avg_delivery": 21.61,
+          "p90_wait": 10.55
+        },
+        {
+          "Store Name": "McDonald's (26316-SIX FLAGS)",
+          "orders": 1392,
+          "avg_wait": 4.13,
+          "avg_delivery": 24.35,
+          "p90_wait": 9.4
+        },
+        {
+          "Store Name": "McDonald's (26316 - Aurora)",
+          "orders": 572,
+          "avg_wait": 4.07,
+          "avg_delivery": 22.4,
+          "p90_wait": 9.47
+        },
+        {
+          "Store Name": "McDonald's (6789-TWINSBURG-AURORA)",
+          "orders": 2764,
+          "avg_wait": 3.9,
+          "avg_delivery": 22.27,
+          "p90_wait": 8.97
+        },
+        {
+          "Store Name": "McDonald's (6789 - Twinsburg)",
+          "orders": 1133,
+          "avg_wait": 3.78,
+          "avg_delivery": 20.85,
+          "p90_wait": 8.32
+        },
+        {
+          "Store Name": "McDonald's (5525-NORTH ROYALTON)",
+          "orders": 1933,
+          "avg_wait": 3.61,
+          "avg_delivery": 19.53,
+          "p90_wait": 7.99
+        },
+        {
+          "Store Name": "McDonald's (28451 - Northfield)",
+          "orders": 596,
+          "avg_wait": 3.59,
+          "avg_delivery": 22.71,
+          "p90_wait": 7.72
+        },
+        {
+          "Store Name": "McDonald's (5525 - North Royalton)",
+          "orders": 792,
+          "avg_wait": 3.58,
+          "avg_delivery": 19.06,
+          "p90_wait": 7.92
+        },
+        {
+          "Store Name": "McDonald's (10859 - Brunswick 303)",
+          "orders": 816,
+          "avg_wait": 3.47,
+          "avg_delivery": 18.9,
+          "p90_wait": 7.22
+        },
+        {
+          "Store Name": "McDonald's (10859-BRUNSWICK-CENTER)",
+          "orders": 1809,
+          "avg_wait": 3.27,
+          "avg_delivery": 19.3,
+          "p90_wait": 7.08
+        },
+        {
+          "Store Name": "McDonald's (28451-NORTHFIELD RELO)",
+          "orders": 1549,
+          "avg_wait": 3.25,
+          "avg_delivery": 22.66,
+          "p90_wait": 7.17
+        },
+        {
+          "Store Name": "McDonald's (31289 - MEDINA III)",
+          "orders": 2771,
+          "avg_wait": 3.23,
+          "avg_delivery": 19.65,
+          "p90_wait": 7.37
+        },
+        {
+          "Store Name": "McDonald's (25335 - Brunswick 42)",
+          "orders": 1169,
+          "avg_wait": 3.12,
+          "avg_delivery": 18.39,
+          "p90_wait": 7.53
+        },
+        {
+          "Store Name": "McDonald's (3314-STRONGSVL-PEARL)",
+          "orders": 2234,
+          "avg_wait": 3.09,
+          "avg_delivery": 20.52,
+          "p90_wait": 7.12
+        },
+        {
+          "Store Name": "McDonald's (31289 - Montville)",
+          "orders": 1044,
+          "avg_wait": 3.0,
+          "avg_delivery": 18.34,
+          "p90_wait": 6.96
+        },
+        {
+          "Store Name": "McDonald's (25335-BRUNSWICK RELO)",
+          "orders": 2969,
+          "avg_wait": 2.99,
+          "avg_delivery": 19.17,
+          "p90_wait": 6.67
+        },
+        {
+          "Store Name": "McDonald's (36762-STRONGSVILLE - PEARL AND WHITNEY)",
+          "orders": 951,
+          "avg_wait": 2.94,
+          "avg_delivery": 20.48,
+          "p90_wait": 6.93
+        },
+        {
+          "Store Name": "McDonald's (12034-MEDINA-N COURT)",
+          "orders": 2684,
+          "avg_wait": 2.8,
+          "avg_delivery": 19.31,
+          "p90_wait": 6.06
+        },
+        {
+          "Store Name": "McDonald's (12034 - Medina)",
+          "orders": 1089,
+          "avg_wait": 2.74,
+          "avg_delivery": 18.4,
+          "p90_wait": 6.13
+        },
+        {
+          "Store Name": "McDonald's (36762 - Whitney)",
+          "orders": 388,
+          "avg_wait": 2.71,
+          "avg_delivery": 19.28,
+          "p90_wait": 6.55
+        }
+      ],
+      "wait_distribution": {
+        "0-2min": 13775,
+        "2-5min": 9911,
+        "5-10min": 5244,
+        "10-15min": 1155,
+        "15-20min": 227,
+        "20+min": 98
+      },
+      "total_cancellations": 534,
+      "cancellation_reasons": {
+        "Customer Cancellations": 396,
+        "Avoidable Store Operations": 105,
+        "Other": 33
+      },
+      "cancellations_paid": 95,
+      "cancellations_unpaid": 439,
+      "cancellations_by_store": [
+        {
+          "Store Name": "McDonald's (28451-NORTHFIELD RELO)",
+          "cancellations": 77
+        },
+        {
+          "Store Name": "McDonald's (6789-TWINSBURG-AURORA)",
+          "cancellations": 57
+        },
+        {
+          "Store Name": "McDonald's (10859-BRUNSWICK-CENTER)",
+          "cancellations": 52
+        },
+        {
+          "Store Name": "McDonald's (3314-STRONGSVL-PEARL)",
+          "cancellations": 41
+        },
+        {
+          "Store Name": "McDonald's (26316-SIX FLAGS)",
+          "cancellations": 36
+        },
+        {
+          "Store Name": "McDonald's (12034-MEDINA-N COURT)",
+          "cancellations": 31
+        },
+        {
+          "Store Name": "McDonald's (28451 - Northfield)",
+          "cancellations": 27
+        },
+        {
+          "Store Name": "McDonald's (11525 - SEVILLE/SPEEDWAY)",
+          "cancellations": 26
+        },
+        {
+          "Store Name": "McDonald's (5525-NORTH ROYALTON)",
+          "cancellations": 26
+        },
+        {
+          "Store Name": "McDonald's (31289 - MEDINA III)",
+          "cancellations": 19
+        },
+        {
+          "Store Name": "McDonald's (25335-BRUNSWICK RELO)",
+          "cancellations": 18
+        },
+        {
+          "Store Name": "McDonald's (6789 - Twinsburg)",
+          "cancellations": 17
+        },
+        {
+          "Store Name": "McDonald's (3314 - Strongsville)",
+          "cancellations": 15
+        },
+        {
+          "Store Name": "McDonald's (5525 - North Royalton)",
+          "cancellations": 14
+        },
+        {
+          "Store Name": "McDonald's (11525 - Seville)",
+          "cancellations": 13
+        },
+        {
+          "Store Name": "McDonald's (36762 - Whitney)",
+          "cancellations": 12
+        },
+        {
+          "Store Name": "McDonald's (10859 - Brunswick 303)",
+          "cancellations": 10
+        },
+        {
+          "Store Name": "McDonald's (26316 - Aurora)",
+          "cancellations": 9
+        },
+        {
+          "Store Name": "McDonald's (31289 - Montville)",
+          "cancellations": 9
+        },
+        {
+          "Store Name": "McDonald's (25335 - Brunswick 42)",
+          "cancellations": 9
+        },
+        {
+          "Store Name": "McDonald's (36762-STRONGSVILLE - PEARL AND WHITNEY)",
+          "cancellations": 9
+        },
+        {
+          "Store Name": "McDonald's (12034 - Medina)",
+          "cancellations": 7
+        }
+      ],
+      "total_error_items": 1963,
+      "total_error_charges": 9455.529999999999,
+      "error_categories": {
+        "Missing Item": 1328,
+        "Missing Side Item": 393,
+        "Ingredient Error": 110,
+        "Entirely Wrong Order": 66,
+        "Incorrect Quantity": 41,
+        "Incorrect Size": 23,
+        "Special Request Ignored": 2
+      },
+      "errors_by_menu_category": [
+        {
+          "Menu Category": "Extra Value Meals",
+          "count": 431,
+          "total_charge": 2620.5
+        },
+        {
+          "Menu Category": "Chicken",
+          "count": 213,
+          "total_charge": 1330.41
+        },
+        {
+          "Menu Category": "Sweets & Treats",
+          "count": 196,
+          "total_charge": 806.48
+        },
+        {
+          "Menu Category": "Individual Items",
+          "count": 128,
+          "total_charge": 574.78
+        },
+        {
+          "Menu Category": "Happy Meal",
+          "count": 111,
+          "total_charge": 457.32
+        },
+        {
+          "Menu Category": "Burgers",
+          "count": 101,
+          "total_charge": 441.55
+        },
+        {
+          "Menu Category": "Hash Browns and Sides",
+          "count": 96,
+          "total_charge": 327.3
+        },
+        {
+          "Menu Category": "Beverages",
+          "count": 86,
+          "total_charge": 195.2
+        },
+        {
+          "Menu Category": "Most Popular",
+          "count": 85,
+          "total_charge": 452.16
+        },
+        {
+          "Menu Category": "Sandwiches",
+          "count": 83,
+          "total_charge": 364.37
+        },
+        {
+          "Menu Category": "Condiments",
+          "count": 81,
+          "total_charge": 48.6
+        },
+        {
+          "Menu Category": "Fries",
+          "count": 81,
+          "total_charge": 327.88
+        },
+        {
+          "Menu Category": "Homestyle Breakfasts",
+          "count": 80,
+          "total_charge": 425.26
+        },
+        {
+          "Menu Category": "McCaf\u00e9\u00ae Coffees",
+          "count": 71,
+          "total_charge": 250.91
+        },
+        {
+          "Menu Category": "Shareables",
+          "count": 34,
+          "total_charge": 444.53
+        }
+      ],
+      "top_error_items": [
+        {
+          "Item Name": "Hash Browns",
+          "count": 101,
+          "total_charge": 352.99
+        },
+        {
+          "Item Name": "10 pc. Chicken McNuggets\u00ae",
+          "count": 91,
+          "total_charge": 596.89
+        },
+        {
+          "Item Name": "French Fries",
+          "count": 89,
+          "total_charge": 359.04
+        },
+        {
+          "Item Name": "10 pc. Chicken McNuggets\u00ae Meal",
+          "count": 71,
+          "total_charge": 470.56
+        },
+        {
+          "Item Name": "6 pc. Chicken McNuggets\u00ae Happy Meal\u00ae",
+          "count": 70,
+          "total_charge": 303.29
+        },
+        {
+          "Item Name": "2 Cheeseburger Meal",
+          "count": 60,
+          "total_charge": 390.35
+        },
+        {
+          "Item Name": "20 pc. Chicken McNuggets\u00ae",
+          "count": 51,
+          "total_charge": 491.19
+        },
+        {
+          "Item Name": "Double Cheeseburger Meal",
+          "count": 39,
+          "total_charge": 200.61
+        },
+        {
+          "Item Name": "Big Mac\u00ae Meal",
+          "count": 38,
+          "total_charge": 197.69
+        },
+        {
+          "Item Name": "2 Cookies",
+          "count": 36,
+          "total_charge": 94.46
+        },
+        {
+          "Item Name": "6 pc. Chicken McNuggets\u00ae",
+          "count": 34,
+          "total_charge": 147.3
+        },
+        {
+          "Item Name": "McChicken\u00ae",
+          "count": 34,
+          "total_charge": 137.52
+        },
+        {
+          "Item Name": "Apple Pie",
+          "count": 32,
+          "total_charge": 117.92
+        },
+        {
+          "Item Name": "Strawberry & Cr\u00e8me Pie",
+          "count": 31,
+          "total_charge": 108.81
+        },
+        {
+          "Item Name": "Sausage McMuffin\u00ae",
+          "count": 29,
+          "total_charge": 103.41
+        }
+      ],
+      "errors_by_store": [
+        {
+          "Store Name": "McDonald's (6789-TWINSBURG-AURORA)",
+          "error_count": 226,
+          "total_charge": 1015.14
+        },
+        {
+          "Store Name": "McDonald's (25335-BRUNSWICK RELO)",
+          "error_count": 198,
+          "total_charge": 1036.96
+        },
+        {
+          "Store Name": "McDonald's (31289 - MEDINA III)",
+          "error_count": 158,
+          "total_charge": 998.72
+        },
+        {
+          "Store Name": "McDonald's (12034-MEDINA-N COURT)",
+          "error_count": 154,
+          "total_charge": 795.53
+        },
+        {
+          "Store Name": "McDonald's (3314-STRONGSVL-PEARL)",
+          "error_count": 143,
+          "total_charge": 693.32
+        },
+        {
+          "Store Name": "McDonald's (10859-BRUNSWICK-CENTER)",
+          "error_count": 135,
+          "total_charge": 622.95
+        },
+        {
+          "Store Name": "McDonald's (26316-SIX FLAGS)",
+          "error_count": 108,
+          "total_charge": 521.3100000000001
+        },
+        {
+          "Store Name": "McDonald's (28451-NORTHFIELD RELO)",
+          "error_count": 103,
+          "total_charge": 432.48
+        },
+        {
+          "Store Name": "McDonald's (5525-NORTH ROYALTON)",
+          "error_count": 101,
+          "total_charge": 412.36
+        },
+        {
+          "Store Name": "McDonald's (6789 - Twinsburg)",
+          "error_count": 90,
+          "total_charge": 424.62
+        },
+        {
+          "Store Name": "McDonald's (25335 - Brunswick 42)",
+          "error_count": 71,
+          "total_charge": 310.92
+        },
+        {
+          "Store Name": "McDonald's (3314 - Strongsville)",
+          "error_count": 65,
+          "total_charge": 381.08
+        },
+        {
+          "Store Name": "McDonald's (12034 - Medina)",
+          "error_count": 63,
+          "total_charge": 260.41
+        },
+        {
+          "Store Name": "McDonald's (31289 - Montville)",
+          "error_count": 56,
+          "total_charge": 237.88
+        },
+        {
+          "Store Name": "McDonald's (10859 - Brunswick 303)",
+          "error_count": 51,
+          "total_charge": 252.83
+        },
+        {
+          "Store Name": "McDonald's (28451 - Northfield)",
+          "error_count": 49,
+          "total_charge": 259.33
+        },
+        {
+          "Store Name": "McDonald's (5525 - North Royalton)",
+          "error_count": 46,
+          "total_charge": 166.05
+        },
+        {
+          "Store Name": "McDonald's (26316 - Aurora)",
+          "error_count": 41,
+          "total_charge": 202.09
+        },
+        {
+          "Store Name": "McDonald's (36762-STRONGSVILLE - PEARL AND WHITNEY)",
+          "error_count": 37,
+          "total_charge": 155.54
+        },
+        {
+          "Store Name": "McDonald's (11525 - SEVILLE/SPEEDWAY)",
+          "error_count": 28,
+          "total_charge": 121.95
+        },
+        {
+          "Store Name": "McDonald's (36762 - Whitney)",
+          "error_count": 27,
+          "total_charge": 91.62
+        },
+        {
+          "Store Name": "McDonald's (11525 - Seville)",
+          "error_count": 13,
+          "total_charge": 62.44
+        }
+      ]
+    },
+    "ops_store": {
+      "store_scorecard": [
+        {
+          "Store Name": "McDonald's (10859 - Brunswick 303)",
+          "Store ID": 2108684,
+          "Merchant Supplied ID": 10859,
+          "Total Orders Including Cancelled Orders": 2891,
+          "Total Delivered or Picked Up Orders": 2829,
+          "Total Missing or Incorrect Orders": 133,
+          "Missing/Incorrect %": 4.6,
+          "Total Cancelled Orders": 62,
+          "Total Cancellation Rate %": 2.14,
+          "Total Avoidable Cancellations": 8,
+          "Avoidable Cancellation Rate %": 0.28,
+          "Average Avoidable Dasher Wait": 3.33,
+          "Average Dasher Wait": 4.31,
+          "Average Delivery Time (ASAP)": 20.89,
+          "Uptime %": 99.02,
+          "Downtime %": 0.98,
+          "Total Downtime in Minutes": 1004,
+          "Average Rating": NaN,
+          "Total Number of Ratings Received in Period of Time": 167,
+          "Total 5 Star Ratings": NaN,
+          "Total 1 Star Ratings": NaN,
+          "Number of Loved": 42,
+          "Percentage of Loved": 25.15
+        },
+        {
+          "Store Name": "McDonald's (10859-BRUNSWICK-CENTER)",
+          "Store ID": 2108684,
+          "Merchant Supplied ID": 10859,
+          "Total Orders Including Cancelled Orders": 2891,
+          "Total Delivered or Picked Up Orders": 2829,
+          "Total Missing or Incorrect Orders": 133,
+          "Missing/Incorrect %": 4.6,
+          "Total Cancelled Orders": 62,
+          "Total Cancellation Rate %": 2.14,
+          "Total Avoidable Cancellations": 8,
+          "Avoidable Cancellation Rate %": 0.28,
+          "Average Avoidable Dasher Wait": 3.33,
+          "Average Dasher Wait": 4.31,
+          "Average Delivery Time (ASAP)": 20.89,
+          "Uptime %": 99.02,
+          "Downtime %": 0.98,
+          "Total Downtime in Minutes": 1004,
+          "Average Rating": NaN,
+          "Total Number of Ratings Received in Period of Time": 167,
+          "Total 5 Star Ratings": NaN,
+          "Total 1 Star Ratings": NaN,
+          "Number of Loved": 42,
+          "Percentage of Loved": 25.15
+        },
+        {
+          "Store Name": "McDonald's (11525 - SEVILLE/SPEEDWAY)",
+          "Store ID": 24507563,
+          "Merchant Supplied ID": 11525,
+          "Total Orders Including Cancelled Orders": 1024,
+          "Total Delivered or Picked Up Orders": 985,
+          "Total Missing or Incorrect Orders": 31,
+          "Missing/Incorrect %": 3.03,
+          "Total Cancelled Orders": 39,
+          "Total Cancellation Rate %": 3.81,
+          "Total Avoidable Cancellations": 13,
+          "Avoidable Cancellation Rate %": 1.27,
+          "Average Avoidable Dasher Wait": 4.76,
+          "Average Dasher Wait": 5.94,
+          "Average Delivery Time (ASAP)": 34.1,
+          "Uptime %": 99.25,
+          "Downtime %": 0.75,
+          "Total Downtime in Minutes": 724,
+          "Average Rating": NaN,
+          "Total Number of Ratings Received in Period of Time": 47,
+          "Total 5 Star Ratings": NaN,
+          "Total 1 Star Ratings": NaN,
+          "Number of Loved": 18,
+          "Percentage of Loved": 38.3
+        },
+        {
+          "Store Name": "McDonald's (11525 - Seville)",
+          "Store ID": 24507563,
+          "Merchant Supplied ID": 11525,
+          "Total Orders Including Cancelled Orders": 1024,
+          "Total Delivered or Picked Up Orders": 985,
+          "Total Missing or Incorrect Orders": 31,
+          "Missing/Incorrect %": 3.03,
+          "Total Cancelled Orders": 39,
+          "Total Cancellation Rate %": 3.81,
+          "Total Avoidable Cancellations": 13,
+          "Avoidable Cancellation Rate %": 1.27,
+          "Average Avoidable Dasher Wait": 4.76,
+          "Average Dasher Wait": 5.94,
+          "Average Delivery Time (ASAP)": 34.1,
+          "Uptime %": 99.25,
+          "Downtime %": 0.75,
+          "Total Downtime in Minutes": 724,
+          "Average Rating": NaN,
+          "Total Number of Ratings Received in Period of Time": 47,
+          "Total 5 Star Ratings": NaN,
+          "Total 1 Star Ratings": NaN,
+          "Number of Loved": 18,
+          "Percentage of Loved": 38.3
+        },
+        {
+          "Store Name": "McDonald's (12034 - Medina)",
+          "Store ID": 686416,
+          "Merchant Supplied ID": 12034,
+          "Total Orders Including Cancelled Orders": 4082,
+          "Total Delivered or Picked Up Orders": 4044,
+          "Total Missing or Incorrect Orders": 162,
+          "Missing/Incorrect %": 3.97,
+          "Total Cancelled Orders": 38,
+          "Total Cancellation Rate %": 0.93,
+          "Total Avoidable Cancellations": 8,
+          "Avoidable Cancellation Rate %": 0.2,
+          "Average Avoidable Dasher Wait": 2.78,
+          "Average Dasher Wait": 4.24,
+          "Average Delivery Time (ASAP)": 20.72,
+          "Uptime %": 99.92,
+          "Downtime %": 0.08,
+          "Total Downtime in Minutes": 77,
+          "Average Rating": NaN,
+          "Total Number of Ratings Received in Period of Time": 202,
+          "Total 5 Star Ratings": NaN,
+          "Total 1 Star Ratings": NaN,
+          "Number of Loved": 53,
+          "Percentage of Loved": 26.24
+        },
+        {
+          "Store Name": "McDonald's (12034-MEDINA-N COURT)",
+          "Store ID": 686416,
+          "Merchant Supplied ID": 12034,
+          "Total Orders Including Cancelled Orders": 4082,
+          "Total Delivered or Picked Up Orders": 4044,
+          "Total Missing or Incorrect Orders": 162,
+          "Missing/Incorrect %": 3.97,
+          "Total Cancelled Orders": 38,
+          "Total Cancellation Rate %": 0.93,
+          "Total Avoidable Cancellations": 8,
+          "Avoidable Cancellation Rate %": 0.2,
+          "Average Avoidable Dasher Wait": 2.78,
+          "Average Dasher Wait": 4.24,
+          "Average Delivery Time (ASAP)": 20.72,
+          "Uptime %": 99.92,
+          "Downtime %": 0.08,
+          "Total Downtime in Minutes": 77,
+          "Average Rating": NaN,
+          "Total Number of Ratings Received in Period of Time": 202,
+          "Total 5 Star Ratings": NaN,
+          "Total 1 Star Ratings": NaN,
+          "Number of Loved": 53,
+          "Percentage of Loved": 26.24
+        },
+        {
+          "Store Name": "McDonald's (25335 - Brunswick 42)",
+          "Store ID": 2108095,
+          "Merchant Supplied ID": 25335,
+          "Total Orders Including Cancelled Orders": 4443,
+          "Total Delivered or Picked Up Orders": 4416,
+          "Total Missing or Incorrect Orders": 190,
+          "Missing/Incorrect %": 4.28,
+          "Total Cancelled Orders": 27,
+          "Total Cancellation Rate %": 0.61,
+          "Total Avoidable Cancellations": 4,
+          "Avoidable Cancellation Rate %": 0.09,
+          "Average Avoidable Dasher Wait": 3.02,
+          "Average Dasher Wait": 4.29,
+          "Average Delivery Time (ASAP)": 20.53,
+          "Uptime %": 99.93,
+          "Downtime %": 0.07,
+          "Total Downtime in Minutes": 72,
+          "Average Rating": NaN,
+          "Total Number of Ratings Received in Period of Time": 217,
+          "Total 5 Star Ratings": NaN,
+          "Total 1 Star Ratings": NaN,
+          "Number of Loved": 69,
+          "Percentage of Loved": 31.8
+        },
+        {
+          "Store Name": "McDonald's (25335-BRUNSWICK RELO)",
+          "Store ID": 2108095,
+          "Merchant Supplied ID": 25335,
+          "Total Orders Including Cancelled Orders": 4443,
+          "Total Delivered or Picked Up Orders": 4416,
+          "Total Missing or Incorrect Orders": 190,
+          "Missing/Incorrect %": 4.28,
+          "Total Cancelled Orders": 27,
+          "Total Cancellation Rate %": 0.61,
+          "Total Avoidable Cancellations": 4,
+          "Avoidable Cancellation Rate %": 0.09,
+          "Average Avoidable Dasher Wait": 3.02,
+          "Average Dasher Wait": 4.29,
+          "Average Delivery Time (ASAP)": 20.53,
+          "Uptime %": 99.93,
+          "Downtime %": 0.07,
+          "Total Downtime in Minutes": 72,
+          "Average Rating": NaN,
+          "Total Number of Ratings Received in Period of Time": 217,
+          "Total 5 Star Ratings": NaN,
+          "Total 1 Star Ratings": NaN,
+          "Number of Loved": 69,
+          "Percentage of Loved": 31.8
+        },
+        {
+          "Store Name": "McDonald's (26316 - Aurora)",
+          "Store ID": 1159897,
+          "Merchant Supplied ID": 26316,
+          "Total Orders Including Cancelled Orders": 2355,
+          "Total Delivered or Picked Up Orders": 2310,
+          "Total Missing or Incorrect Orders": 102,
+          "Missing/Incorrect %": 4.33,
+          "Total Cancelled Orders": 45,
+          "Total Cancellation Rate %": 1.91,
+          "Total Avoidable Cancellations": 13,
+          "Avoidable Cancellation Rate %": 0.55,
+          "Average Avoidable Dasher Wait": 4.11,
+          "Average Dasher Wait": 5.74,
+          "Average Delivery Time (ASAP)": 27.63,
+          "Uptime %": 99.12,
+          "Downtime %": 0.88,
+          "Total Downtime in Minutes": 791,
+          "Average Rating": NaN,
+          "Total Number of Ratings Received in Period of Time": 109,
+          "Total 5 Star Ratings": NaN,
+          "Total 1 Star Ratings": NaN,
+          "Number of Loved": 34,
+          "Percentage of Loved": 31.19
+        },
+        {
+          "Store Name": "McDonald's (26316-SIX FLAGS)",
+          "Store ID": 1159897,
+          "Merchant Supplied ID": 26316,
+          "Total Orders Including Cancelled Orders": 2355,
+          "Total Delivered or Picked Up Orders": 2310,
+          "Total Missing or Incorrect Orders": 102,
+          "Missing/Incorrect %": 4.33,
+          "Total Cancelled Orders": 45,
+          "Total Cancellation Rate %": 1.91,
+          "Total Avoidable Cancellations": 13,
+          "Avoidable Cancellation Rate %": 0.55,
+          "Average Avoidable Dasher Wait": 4.11,
+          "Average Dasher Wait": 5.74,
+          "Average Delivery Time (ASAP)": 27.63,
+          "Uptime %": 99.12,
+          "Downtime %": 0.88,
+          "Total Downtime in Minutes": 791,
+          "Average Rating": NaN,
+          "Total Number of Ratings Received in Period of Time": 109,
+          "Total 5 Star Ratings": NaN,
+          "Total 1 Star Ratings": NaN,
+          "Number of Loved": 34,
+          "Percentage of Loved": 31.19
+        },
+        {
+          "Store Name": "McDonald's (28451 - Northfield)",
+          "Store ID": 1159904,
+          "Merchant Supplied ID": 28451,
+          "Total Orders Including Cancelled Orders": 2923,
+          "Total Delivered or Picked Up Orders": 2819,
+          "Total Missing or Incorrect Orders": 108,
+          "Missing/Incorrect %": 3.69,
+          "Total Cancelled Orders": 104,
+          "Total Cancellation Rate %": 3.56,
+          "Total Avoidable Cancellations": 10,
+          "Avoidable Cancellation Rate %": 0.34,
+          "Average Avoidable Dasher Wait": 3.35,
+          "Average Dasher Wait": 4.65,
+          "Average Delivery Time (ASAP)": 30.74,
+          "Uptime %": 99.77,
+          "Downtime %": 0.23,
+          "Total Downtime in Minutes": 212,
+          "Average Rating": NaN,
+          "Total Number of Ratings Received in Period of Time": 172,
+          "Total 5 Star Ratings": NaN,
+          "Total 1 Star Ratings": NaN,
+          "Number of Loved": 43,
+          "Percentage of Loved": 25.0
+        },
+        {
+          "Store Name": "McDonald's (28451-NORTHFIELD RELO)",
+          "Store ID": 1159904,
+          "Merchant Supplied ID": 28451,
+          "Total Orders Including Cancelled Orders": 2923,
+          "Total Delivered or Picked Up Orders": 2819,
+          "Total Missing or Incorrect Orders": 108,
+          "Missing/Incorrect %": 3.69,
+          "Total Cancelled Orders": 104,
+          "Total Cancellation Rate %": 3.56,
+          "Total Avoidable Cancellations": 10,
+          "Avoidable Cancellation Rate %": 0.34,
+          "Average Avoidable Dasher Wait": 3.35,
+          "Average Dasher Wait": 4.65,
+          "Average Delivery Time (ASAP)": 30.74,
+          "Uptime %": 99.77,
+          "Downtime %": 0.23,
+          "Total Downtime in Minutes": 212,
+          "Average Rating": NaN,
+          "Total Number of Ratings Received in Period of Time": 172,
+          "Total 5 Star Ratings": NaN,
+          "Total 1 Star Ratings": NaN,
+          "Number of Loved": 43,
+          "Percentage of Loved": 25.0
+        },
+        {
+          "Store Name": "McDonald's (31289 - MEDINA III)",
+          "Store ID": 752863,
+          "Merchant Supplied ID": 31289,
+          "Total Orders Including Cancelled Orders": 4087,
+          "Total Delivered or Picked Up Orders": 4059,
+          "Total Missing or Incorrect Orders": 141,
+          "Missing/Incorrect %": 3.45,
+          "Total Cancelled Orders": 28,
+          "Total Cancellation Rate %": 0.69,
+          "Total Avoidable Cancellations": 8,
+          "Avoidable Cancellation Rate %": 0.2,
+          "Average Avoidable Dasher Wait": 3.17,
+          "Average Dasher Wait": 4.38,
+          "Average Delivery Time (ASAP)": 20.87,
+          "Uptime %": 99.83,
+          "Downtime %": 0.17,
+          "Total Downtime in Minutes": 157,
+          "Average Rating": NaN,
+          "Total Number of Ratings Received in Period of Time": 165,
+          "Total 5 Star Ratings": NaN,
+          "Total 1 Star Ratings": NaN,
+          "Number of Loved": 40,
+          "Percentage of Loved": 24.24
+        },
+        {
+          "Store Name": "McDonald's (31289 - Montville)",
+          "Store ID": 752863,
+          "Merchant Supplied ID": 31289,
+          "Total Orders Including Cancelled Orders": 4087,
+          "Total Delivered or Picked Up Orders": 4059,
+          "Total Missing or Incorrect Orders": 141,
+          "Missing/Incorrect %": 3.45,
+          "Total Cancelled Orders": 28,
+          "Total Cancellation Rate %": 0.69,
+          "Total Avoidable Cancellations": 8,
+          "Avoidable Cancellation Rate %": 0.2,
+          "Average Avoidable Dasher Wait": 3.17,
+          "Average Dasher Wait": 4.38,
+          "Average Delivery Time (ASAP)": 20.87,
+          "Uptime %": 99.83,
+          "Downtime %": 0.17,
+          "Total Downtime in Minutes": 157,
+          "Average Rating": NaN,
+          "Total Number of Ratings Received in Period of Time": 165,
+          "Total 5 Star Ratings": NaN,
+          "Total 1 Star Ratings": NaN,
+          "Number of Loved": 40,
+          "Percentage of Loved": 24.24
+        },
+        {
+          "Store Name": "McDonald's (3314 - Strongsville)",
+          "Store ID": 2109077,
+          "Merchant Supplied ID": 3314,
+          "Total Orders Including Cancelled Orders": 3583,
+          "Total Delivered or Picked Up Orders": 3527,
+          "Total Missing or Incorrect Orders": 144,
+          "Missing/Incorrect %": 4.02,
+          "Total Cancelled Orders": 56,
+          "Total Cancellation Rate %": 1.56,
+          "Total Avoidable Cancellations": 12,
+          "Avoidable Cancellation Rate %": 0.33,
+          "Average Avoidable Dasher Wait": 3.49,
+          "Average Dasher Wait": 4.75,
+          "Average Delivery Time (ASAP)": 23.46,
+          "Uptime %": 99.77,
+          "Downtime %": 0.23,
+          "Total Downtime in Minutes": 221,
+          "Average Rating": NaN,
+          "Total Number of Ratings Received in Period of Time": 197,
+          "Total 5 Star Ratings": NaN,
+          "Total 1 Star Ratings": NaN,
+          "Number of Loved": 60,
+          "Percentage of Loved": 30.46
+        },
+        {
+          "Store Name": "McDonald's (3314-STRONGSVL-PEARL)",
+          "Store ID": 2109077,
+          "Merchant Supplied ID": 3314,
+          "Total Orders Including Cancelled Orders": 3583,
+          "Total Delivered or Picked Up Orders": 3527,
+          "Total Missing or Incorrect Orders": 144,
+          "Missing/Incorrect %": 4.02,
+          "Total Cancelled Orders": 56,
+          "Total Cancellation Rate %": 1.56,
+          "Total Avoidable Cancellations": 12,
+          "Avoidable Cancellation Rate %": 0.33,
+          "Average Avoidable Dasher Wait": 3.49,
+          "Average Dasher Wait": 4.75,
+          "Average Delivery Time (ASAP)": 23.46,
+          "Uptime %": 99.77,
+          "Downtime %": 0.23,
+          "Total Downtime in Minutes": 221,
+          "Average Rating": NaN,
+          "Total Number of Ratings Received in Period of Time": 197,
+          "Total 5 Star Ratings": NaN,
+          "Total 1 Star Ratings": NaN,
+          "Number of Loved": 60,
+          "Percentage of Loved": 30.46
+        },
+        {
+          "Store Name": "McDonald's (36762 - Whitney)",
+          "Store ID": 2108285,
+          "Merchant Supplied ID": 36762,
+          "Total Orders Including Cancelled Orders": 1439,
+          "Total Delivered or Picked Up Orders": 1418,
+          "Total Missing or Incorrect Orders": 45,
+          "Missing/Incorrect %": 3.13,
+          "Total Cancelled Orders": 21,
+          "Total Cancellation Rate %": 1.46,
+          "Total Avoidable Cancellations": 9,
+          "Avoidable Cancellation Rate %": 0.63,
+          "Average Avoidable Dasher Wait": 2.88,
+          "Average Dasher Wait": 4.13,
+          "Average Delivery Time (ASAP)": 21.53,
+          "Uptime %": 98.68,
+          "Downtime %": 1.32,
+          "Total Downtime in Minutes": 1269,
+          "Average Rating": NaN,
+          "Total Number of Ratings Received in Period of Time": 86,
+          "Total 5 Star Ratings": NaN,
+          "Total 1 Star Ratings": NaN,
+          "Number of Loved": 25,
+          "Percentage of Loved": 29.07
+        },
+        {
+          "Store Name": "McDonald's (36762-STRONGSVILLE - PEARL AND WHITNEY)",
+          "Store ID": 2108285,
+          "Merchant Supplied ID": 36762,
+          "Total Orders Including Cancelled Orders": 1439,
+          "Total Delivered or Picked Up Orders": 1418,
+          "Total Missing or Incorrect Orders": 45,
+          "Missing/Incorrect %": 3.13,
+          "Total Cancelled Orders": 21,
+          "Total Cancellation Rate %": 1.46,
+          "Total Avoidable Cancellations": 9,
+          "Avoidable Cancellation Rate %": 0.63,
+          "Average Avoidable Dasher Wait": 2.88,
+          "Average Dasher Wait": 4.13,
+          "Average Delivery Time (ASAP)": 21.53,
+          "Uptime %": 98.68,
+          "Downtime %": 1.32,
+          "Total Downtime in Minutes": 1269,
+          "Average Rating": NaN,
+          "Total Number of Ratings Received in Period of Time": 86,
+          "Total 5 Star Ratings": NaN,
+          "Total 1 Star Ratings": NaN,
+          "Number of Loved": 25,
+          "Percentage of Loved": 29.07
+        },
+        {
+          "Store Name": "McDonald's (5525 - North Royalton)",
+          "Store ID": 1160025,
+          "Merchant Supplied ID": 5525,
+          "Total Orders Including Cancelled Orders": 3048,
+          "Total Delivered or Picked Up Orders": 3008,
+          "Total Missing or Incorrect Orders": 105,
+          "Missing/Incorrect %": 3.44,
+          "Total Cancelled Orders": 40,
+          "Total Cancellation Rate %": 1.31,
+          "Total Avoidable Cancellations": 7,
+          "Avoidable Cancellation Rate %": 0.23,
+          "Average Avoidable Dasher Wait": 3.6,
+          "Average Dasher Wait": 4.4,
+          "Average Delivery Time (ASAP)": 21.74,
+          "Uptime %": 99.09,
+          "Downtime %": 0.91,
+          "Total Downtime in Minutes": 853,
+          "Average Rating": NaN,
+          "Total Number of Ratings Received in Period of Time": 172,
+          "Total 5 Star Ratings": NaN,
+          "Total 1 Star Ratings": NaN,
+          "Number of Loved": 46,
+          "Percentage of Loved": 26.74
+        },
+        {
+          "Store Name": "McDonald's (5525-NORTH ROYALTON)",
+          "Store ID": 1160025,
+          "Merchant Supplied ID": 5525,
+          "Total Orders Including Cancelled Orders": 3048,
+          "Total Delivered or Picked Up Orders": 3008,
+          "Total Missing or Incorrect Orders": 105,
+          "Missing/Incorrect %": 3.44,
+          "Total Cancelled Orders": 40,
+          "Total Cancellation Rate %": 1.31,
+          "Total Avoidable Cancellations": 7,
+          "Avoidable Cancellation Rate %": 0.23,
+          "Average Avoidable Dasher Wait": 3.6,
+          "Average Dasher Wait": 4.4,
+          "Average Delivery Time (ASAP)": 21.74,
+          "Uptime %": 99.09,
+          "Downtime %": 0.91,
+          "Total Downtime in Minutes": 853,
+          "Average Rating": NaN,
+          "Total Number of Ratings Received in Period of Time": 172,
+          "Total 5 Star Ratings": NaN,
+          "Total 1 Star Ratings": NaN,
+          "Number of Loved": 46,
+          "Percentage of Loved": 26.74
+        },
+        {
+          "Store Name": "McDonald's (6789 - Twinsburg)",
+          "Store ID": 2157843,
+          "Merchant Supplied ID": 6789,
+          "Total Orders Including Cancelled Orders": 4611,
+          "Total Delivered or Picked Up Orders": 4537,
+          "Total Missing or Incorrect Orders": 219,
+          "Missing/Incorrect %": 4.75,
+          "Total Cancelled Orders": 74,
+          "Total Cancellation Rate %": 1.6,
+          "Total Avoidable Cancellations": 13,
+          "Avoidable Cancellation Rate %": 0.28,
+          "Average Avoidable Dasher Wait": 3.86,
+          "Average Dasher Wait": 5.47,
+          "Average Delivery Time (ASAP)": 25.34,
+          "Uptime %": 99.53,
+          "Downtime %": 0.47,
+          "Total Downtime in Minutes": 437,
+          "Average Rating": NaN,
+          "Total Number of Ratings Received in Period of Time": 311,
+          "Total 5 Star Ratings": NaN,
+          "Total 1 Star Ratings": NaN,
+          "Number of Loved": 68,
+          "Percentage of Loved": 21.87
+        },
+        {
+          "Store Name": "McDonald's (6789-TWINSBURG-AURORA)",
+          "Store ID": 2157843,
+          "Merchant Supplied ID": 6789,
+          "Total Orders Including Cancelled Orders": 4611,
+          "Total Delivered or Picked Up Orders": 4537,
+          "Total Missing or Incorrect Orders": 219,
+          "Missing/Incorrect %": 4.75,
+          "Total Cancelled Orders": 74,
+          "Total Cancellation Rate %": 1.6,
+          "Total Avoidable Cancellations": 13,
+          "Avoidable Cancellation Rate %": 0.28,
+          "Average Avoidable Dasher Wait": 3.86,
+          "Average Dasher Wait": 5.47,
+          "Average Delivery Time (ASAP)": 25.34,
+          "Uptime %": 99.53,
+          "Downtime %": 0.47,
+          "Total Downtime in Minutes": 437,
+          "Average Rating": NaN,
+          "Total Number of Ratings Received in Period of Time": 311,
+          "Total 5 Star Ratings": NaN,
+          "Total 1 Star Ratings": NaN,
+          "Number of Loved": 68,
+          "Percentage of Loved": 21.87
+        }
+      ],
+      "avg_missing_incorrect_pct": 3.88,
+      "avg_total_cancellation_rate_pct": 1.78,
+      "avg_average_avoidable_dasher_wait": 3.49,
+      "avg_average_delivery_time_asap": 24.32,
+      "avg_uptime_pct": 99.45,
+      "cancellation_categories": {
+        "Customer Cancellations": 396,
+        "Avoidable Store Operations": 105,
+        "Other": 33
+      },
+      "cancellations_by_store_category": [
+        {
+          "Store name": "McDonald's (10859 - Brunswick 303)",
+          "category": "Avoidable Store Operations",
+          "count": 3
+        },
+        {
+          "Store name": "McDonald's (10859 - Brunswick 303)",
+          "category": "Customer Cancellations",
+          "count": 7
+        },
+        {
+          "Store name": "McDonald's (10859-BRUNSWICK-CENTER)",
+          "category": "Avoidable Store Operations",
+          "count": 5
+        },
+        {
+          "Store name": "McDonald's (10859-BRUNSWICK-CENTER)",
+          "category": "Customer Cancellations",
+          "count": 47
+        },
+        {
+          "Store name": "McDonald's (11525 - SEVILLE/SPEEDWAY)",
+          "category": "Avoidable Store Operations",
+          "count": 3
+        },
+        {
+          "Store name": "McDonald's (11525 - SEVILLE/SPEEDWAY)",
+          "category": "Customer Cancellations",
+          "count": 23
+        },
+        {
+          "Store name": "McDonald's (11525 - Seville)",
+          "category": "Avoidable Store Operations",
+          "count": 10
+        },
+        {
+          "Store name": "McDonald's (11525 - Seville)",
+          "category": "Customer Cancellations",
+          "count": 3
+        },
+        {
+          "Store name": "McDonald's (12034 - Medina)",
+          "category": "Avoidable Store Operations",
+          "count": 3
+        },
+        {
+          "Store name": "McDonald's (12034 - Medina)",
+          "category": "Customer Cancellations",
+          "count": 4
+        },
+        {
+          "Store name": "McDonald's (12034-MEDINA-N COURT)",
+          "category": "Avoidable Store Operations",
+          "count": 5
+        },
+        {
+          "Store name": "McDonald's (12034-MEDINA-N COURT)",
+          "category": "Customer Cancellations",
+          "count": 23
+        },
+        {
+          "Store name": "McDonald's (12034-MEDINA-N COURT)",
+          "category": "Other",
+          "count": 3
+        },
+        {
+          "Store name": "McDonald's (25335 - Brunswick 42)",
+          "category": "Avoidable Store Operations",
+          "count": 2
+        },
+        {
+          "Store name": "McDonald's (25335 - Brunswick 42)",
+          "category": "Customer Cancellations",
+          "count": 6
+        },
+        {
+          "Store name": "McDonald's (25335 - Brunswick 42)",
+          "category": "Other",
+          "count": 1
+        },
+        {
+          "Store name": "McDonald's (25335-BRUNSWICK RELO)",
+          "category": "Avoidable Store Operations",
+          "count": 2
+        },
+        {
+          "Store name": "McDonald's (25335-BRUNSWICK RELO)",
+          "category": "Customer Cancellations",
+          "count": 14
+        },
+        {
+          "Store name": "McDonald's (25335-BRUNSWICK RELO)",
+          "category": "Other",
+          "count": 2
+        },
+        {
+          "Store name": "McDonald's (26316 - Aurora)",
+          "category": "Avoidable Store Operations",
+          "count": 2
+        },
+        {
+          "Store name": "McDonald's (26316 - Aurora)",
+          "category": "Customer Cancellations",
+          "count": 7
+        },
+        {
+          "Store name": "McDonald's (26316-SIX FLAGS)",
+          "category": "Avoidable Store Operations",
+          "count": 11
+        },
+        {
+          "Store name": "McDonald's (26316-SIX FLAGS)",
+          "category": "Customer Cancellations",
+          "count": 18
+        },
+        {
+          "Store name": "McDonald's (26316-SIX FLAGS)",
+          "category": "Other",
+          "count": 7
+        },
+        {
+          "Store name": "McDonald's (28451 - Northfield)",
+          "category": "Avoidable Store Operations",
+          "count": 4
+        },
+        {
+          "Store name": "McDonald's (28451 - Northfield)",
+          "category": "Customer Cancellations",
+          "count": 21
+        },
+        {
+          "Store name": "McDonald's (28451 - Northfield)",
+          "category": "Other",
+          "count": 2
+        },
+        {
+          "Store name": "McDonald's (28451-NORTHFIELD RELO)",
+          "category": "Avoidable Store Operations",
+          "count": 6
+        },
+        {
+          "Store name": "McDonald's (28451-NORTHFIELD RELO)",
+          "category": "Customer Cancellations",
+          "count": 68
+        },
+        {
+          "Store name": "McDonald's (28451-NORTHFIELD RELO)",
+          "category": "Other",
+          "count": 3
+        },
+        {
+          "Store name": "McDonald's (31289 - MEDINA III)",
+          "category": "Avoidable Store Operations",
+          "count": 5
+        },
+        {
+          "Store name": "McDonald's (31289 - MEDINA III)",
+          "category": "Customer Cancellations",
+          "count": 13
+        },
+        {
+          "Store name": "McDonald's (31289 - MEDINA III)",
+          "category": "Other",
+          "count": 1
+        },
+        {
+          "Store name": "McDonald's (31289 - Montville)",
+          "category": "Avoidable Store Operations",
+          "count": 3
+        },
+        {
+          "Store name": "McDonald's (31289 - Montville)",
+          "category": "Customer Cancellations",
+          "count": 6
+        },
+        {
+          "Store name": "McDonald's (3314 - Strongsville)",
+          "category": "Avoidable Store Operations",
+          "count": 4
+        },
+        {
+          "Store name": "McDonald's (3314 - Strongsville)",
+          "category": "Customer Cancellations",
+          "count": 10
+        },
+        {
+          "Store name": "McDonald's (3314 - Strongsville)",
+          "category": "Other",
+          "count": 1
+        },
+        {
+          "Store name": "McDonald's (3314-STRONGSVL-PEARL)",
+          "category": "Avoidable Store Operations",
+          "count": 8
+        },
+        {
+          "Store name": "McDonald's (3314-STRONGSVL-PEARL)",
+          "category": "Customer Cancellations",
+          "count": 31
+        },
+        {
+          "Store name": "McDonald's (3314-STRONGSVL-PEARL)",
+          "category": "Other",
+          "count": 2
+        },
+        {
+          "Store name": "McDonald's (36762 - Whitney)",
+          "category": "Avoidable Store Operations",
+          "count": 5
+        },
+        {
+          "Store name": "McDonald's (36762 - Whitney)",
+          "category": "Customer Cancellations",
+          "count": 6
+        },
+        {
+          "Store name": "McDonald's (36762 - Whitney)",
+          "category": "Other",
+          "count": 1
+        },
+        {
+          "Store name": "McDonald's (36762-STRONGSVILLE - PEARL AND WHITNEY)",
+          "category": "Avoidable Store Operations",
+          "count": 4
+        },
+        {
+          "Store name": "McDonald's (36762-STRONGSVILLE - PEARL AND WHITNEY)",
+          "category": "Customer Cancellations",
+          "count": 4
+        },
+        {
+          "Store name": "McDonald's (36762-STRONGSVILLE - PEARL AND WHITNEY)",
+          "category": "Other",
+          "count": 1
+        },
+        {
+          "Store name": "McDonald's (5525 - North Royalton)",
+          "category": "Avoidable Store Operations",
+          "count": 1
+        },
+        {
+          "Store name": "McDonald's (5525 - North Royalton)",
+          "category": "Customer Cancellations",
+          "count": 13
+        },
+        {
+          "Store name": "McDonald's (5525-NORTH ROYALTON)",
+          "category": "Avoidable Store Operations",
+          "count": 6
+        },
+        {
+          "Store name": "McDonald's (5525-NORTH ROYALTON)",
+          "category": "Customer Cancellations",
+          "count": 20
+        },
+        {
+          "Store name": "McDonald's (6789 - Twinsburg)",
+          "category": "Avoidable Store Operations",
+          "count": 1
+        },
+        {
+          "Store name": "McDonald's (6789 - Twinsburg)",
+          "category": "Customer Cancellations",
+          "count": 14
+        },
+        {
+          "Store name": "McDonald's (6789 - Twinsburg)",
+          "category": "Other",
+          "count": 2
+        },
+        {
+          "Store name": "McDonald's (6789-TWINSBURG-AURORA)",
+          "category": "Avoidable Store Operations",
+          "count": 12
+        },
+        {
+          "Store name": "McDonald's (6789-TWINSBURG-AURORA)",
+          "category": "Customer Cancellations",
+          "count": 38
+        },
+        {
+          "Store name": "McDonald's (6789-TWINSBURG-AURORA)",
+          "category": "Other",
+          "count": 7
+        }
+      ],
+      "downtime_categories": {
+        "Store Closure": 4007,
+        "Store Too Busy": 1606,
+        "Store Issue": 204
+      },
+      "total_downtime_minutes": 5817,
+      "downtime_by_store": [
+        {
+          "Store name": "McDonald's (36762 - Whitney)",
+          "downtime_minutes": 1240
+        },
+        {
+          "Store name": "McDonald's (10859-BRUNSWICK-CENTER)",
+          "downtime_minutes": 957
+        },
+        {
+          "Store name": "McDonald's (5525-NORTH ROYALTON)",
+          "downtime_minutes": 832
+        },
+        {
+          "Store name": "McDonald's (11525 - SEVILLE/SPEEDWAY)",
+          "downtime_minutes": 487
+        },
+        {
+          "Store name": "McDonald's (26316-SIX FLAGS)",
+          "downtime_minutes": 480
+        },
+        {
+          "Store name": "McDonald's (6789-TWINSBURG-AURORA)",
+          "downtime_minutes": 350
+        },
+        {
+          "Store name": "McDonald's (26316 - Aurora)",
+          "downtime_minutes": 311
+        },
+        {
+          "Store name": "McDonald's (11525 - Seville)",
+          "downtime_minutes": 237
+        },
+        {
+          "Store name": "McDonald's (28451-NORTHFIELD RELO)",
+          "downtime_minutes": 182
+        },
+        {
+          "Store name": "McDonald's (3314 - Strongsville)",
+          "downtime_minutes": 174
+        },
+        {
+          "Store name": "McDonald's (31289 - MEDINA III)",
+          "downtime_minutes": 138
+        },
+        {
+          "Store name": "McDonald's (6789 - Twinsburg)",
+          "downtime_minutes": 87
+        },
+        {
+          "Store name": "McDonald's (12034-MEDINA-N COURT)",
+          "downtime_minutes": 56
+        },
+        {
+          "Store name": "McDonald's (3314-STRONGSVL-PEARL)",
+          "downtime_minutes": 47
+        },
+        {
+          "Store name": "McDonald's (10859 - Brunswick 303)",
+          "downtime_minutes": 47
+        },
+        {
+          "Store name": "McDonald's (25335-BRUNSWICK RELO)",
+          "downtime_minutes": 45
+        },
+        {
+          "Store name": "McDonald's (28451 - Northfield)",
+          "downtime_minutes": 30
+        },
+        {
+          "Store name": "McDonald's (36762-STRONGSVILLE - PEARL AND WHITNEY)",
+          "downtime_minutes": 29
+        },
+        {
+          "Store name": "McDonald's (25335 - Brunswick 42)",
+          "downtime_minutes": 27
+        },
+        {
+          "Store name": "McDonald's (5525 - North Royalton)",
+          "downtime_minutes": 21
+        },
+        {
+          "Store name": "McDonald's (12034 - Medina)",
+          "downtime_minutes": 21
+        },
+        {
+          "Store name": "McDonald's (31289 - Montville)",
+          "downtime_minutes": 19
+        }
+      ],
+      "error_type_breakdown": {
+        "Missing Item": 1328,
+        "Missing Side Item": 393,
+        "Ingredient Error": 110,
+        "Incorrect Quantity": 41,
+        "Incorrect Size": 23
+      }
+    },
+    "ops_time": {
+      "daily_quality_trend": [
+        {
+          "date": "2026-01-01",
+          "Total Orders Including Cancelled Orders": 382,
+          "Total Delivered or Picked Up Orders": 362,
+          "Missing/Incorrect %": 3.14,
+          "Total Cancellation Rate %": 5.24,
+          "Average Avoidable Dasher Wait": 2.51,
+          "Average Delivery Time (ASAP)": 34.15
+        },
+        {
+          "date": "2026-01-02",
+          "Total Orders Including Cancelled Orders": 432,
+          "Total Delivered or Picked Up Orders": 425,
+          "Missing/Incorrect %": 3.94,
+          "Total Cancellation Rate %": 1.62,
+          "Average Avoidable Dasher Wait": 2.83,
+          "Average Delivery Time (ASAP)": 27.31
+        },
+        {
+          "date": "2026-01-03",
+          "Total Orders Including Cancelled Orders": 413,
+          "Total Delivered or Picked Up Orders": 410,
+          "Missing/Incorrect %": 2.91,
+          "Total Cancellation Rate %": 0.73,
+          "Average Avoidable Dasher Wait": 3.38,
+          "Average Delivery Time (ASAP)": 21.83
+        },
+        {
+          "date": "2026-01-04",
+          "Total Orders Including Cancelled Orders": 370,
+          "Total Delivered or Picked Up Orders": 367,
+          "Missing/Incorrect %": 6.49,
+          "Total Cancellation Rate %": 0.81,
+          "Average Avoidable Dasher Wait": 3.7,
+          "Average Delivery Time (ASAP)": 22.76
+        },
+        {
+          "date": "2026-01-05",
+          "Total Orders Including Cancelled Orders": 353,
+          "Total Delivered or Picked Up Orders": 348,
+          "Missing/Incorrect %": 2.27,
+          "Total Cancellation Rate %": 1.42,
+          "Average Avoidable Dasher Wait": 3.16,
+          "Average Delivery Time (ASAP)": 20.23
+        },
+        {
+          "date": "2026-01-06",
+          "Total Orders Including Cancelled Orders": 292,
+          "Total Delivered or Picked Up Orders": 289,
+          "Missing/Incorrect %": 4.11,
+          "Total Cancellation Rate %": 1.03,
+          "Average Avoidable Dasher Wait": 2.94,
+          "Average Delivery Time (ASAP)": 19.52
+        },
+        {
+          "date": "2026-01-07",
+          "Total Orders Including Cancelled Orders": 309,
+          "Total Delivered or Picked Up Orders": 307,
+          "Missing/Incorrect %": 4.21,
+          "Total Cancellation Rate %": 0.65,
+          "Average Avoidable Dasher Wait": 2.73,
+          "Average Delivery Time (ASAP)": 19.43
+        },
+        {
+          "date": "2026-01-08",
+          "Total Orders Including Cancelled Orders": 349,
+          "Total Delivered or Picked Up Orders": 348,
+          "Missing/Incorrect %": 2.87,
+          "Total Cancellation Rate %": 0.29,
+          "Average Avoidable Dasher Wait": 3.06,
+          "Average Delivery Time (ASAP)": 20.57
+        },
+        {
+          "date": "2026-01-09",
+          "Total Orders Including Cancelled Orders": 367,
+          "Total Delivered or Picked Up Orders": 363,
+          "Missing/Incorrect %": 2.18,
+          "Total Cancellation Rate %": 1.09,
+          "Average Avoidable Dasher Wait": 2.93,
+          "Average Delivery Time (ASAP)": 20.87
+        },
+        {
+          "date": "2026-01-10",
+          "Total Orders Including Cancelled Orders": 405,
+          "Total Delivered or Picked Up Orders": 400,
+          "Missing/Incorrect %": 3.95,
+          "Total Cancellation Rate %": 1.23,
+          "Average Avoidable Dasher Wait": 3.18,
+          "Average Delivery Time (ASAP)": 21.41
+        },
+        {
+          "date": "2026-01-11",
+          "Total Orders Including Cancelled Orders": 369,
+          "Total Delivered or Picked Up Orders": 364,
+          "Missing/Incorrect %": 2.98,
+          "Total Cancellation Rate %": 1.36,
+          "Average Avoidable Dasher Wait": 3.58,
+          "Average Delivery Time (ASAP)": 22.84
+        },
+        {
+          "date": "2026-01-12",
+          "Total Orders Including Cancelled Orders": 286,
+          "Total Delivered or Picked Up Orders": 284,
+          "Missing/Incorrect %": 4.2,
+          "Total Cancellation Rate %": 0.7,
+          "Average Avoidable Dasher Wait": 3.1,
+          "Average Delivery Time (ASAP)": 19.1
+        },
+        {
+          "date": "2026-01-13",
+          "Total Orders Including Cancelled Orders": 325,
+          "Total Delivered or Picked Up Orders": 322,
+          "Missing/Incorrect %": 4.62,
+          "Total Cancellation Rate %": 0.92,
+          "Average Avoidable Dasher Wait": 3.41,
+          "Average Delivery Time (ASAP)": 19.44
+        },
+        {
+          "date": "2026-01-14",
+          "Total Orders Including Cancelled Orders": 310,
+          "Total Delivered or Picked Up Orders": 301,
+          "Missing/Incorrect %": 4.52,
+          "Total Cancellation Rate %": 2.9,
+          "Average Avoidable Dasher Wait": 3.2,
+          "Average Delivery Time (ASAP)": 23.89
+        },
+        {
+          "date": "2026-01-15",
+          "Total Orders Including Cancelled Orders": 402,
+          "Total Delivered or Picked Up Orders": 374,
+          "Missing/Incorrect %": 2.74,
+          "Total Cancellation Rate %": 6.97,
+          "Average Avoidable Dasher Wait": 2.73,
+          "Average Delivery Time (ASAP)": 34.69
+        },
+        {
+          "date": "2026-01-16",
+          "Total Orders Including Cancelled Orders": 440,
+          "Total Delivered or Picked Up Orders": 432,
+          "Missing/Incorrect %": 2.95,
+          "Total Cancellation Rate %": 1.82,
+          "Average Avoidable Dasher Wait": 3.26,
+          "Average Delivery Time (ASAP)": 26.75
+        },
+        {
+          "date": "2026-01-17",
+          "Total Orders Including Cancelled Orders": 384,
+          "Total Delivered or Picked Up Orders": 379,
+          "Missing/Incorrect %": 4.43,
+          "Total Cancellation Rate %": 1.3,
+          "Average Avoidable Dasher Wait": 3.27,
+          "Average Delivery Time (ASAP)": 23.11
+        },
+        {
+          "date": "2026-01-18",
+          "Total Orders Including Cancelled Orders": 383,
+          "Total Delivered or Picked Up Orders": 377,
+          "Missing/Incorrect %": 4.7,
+          "Total Cancellation Rate %": 1.57,
+          "Average Avoidable Dasher Wait": 3.57,
+          "Average Delivery Time (ASAP)": 21.15
+        },
+        {
+          "date": "2026-01-19",
+          "Total Orders Including Cancelled Orders": 339,
+          "Total Delivered or Picked Up Orders": 336,
+          "Missing/Incorrect %": 5.31,
+          "Total Cancellation Rate %": 0.89,
+          "Average Avoidable Dasher Wait": 3.33,
+          "Average Delivery Time (ASAP)": 22.06
+        },
+        {
+          "date": "2026-01-20",
+          "Total Orders Including Cancelled Orders": 376,
+          "Total Delivered or Picked Up Orders": 371,
+          "Missing/Incorrect %": 2.93,
+          "Total Cancellation Rate %": 1.33,
+          "Average Avoidable Dasher Wait": 3.15,
+          "Average Delivery Time (ASAP)": 21.95
+        },
+        {
+          "date": "2026-01-21",
+          "Total Orders Including Cancelled Orders": 334,
+          "Total Delivered or Picked Up Orders": 330,
+          "Missing/Incorrect %": 3.59,
+          "Total Cancellation Rate %": 1.2,
+          "Average Avoidable Dasher Wait": 3.76,
+          "Average Delivery Time (ASAP)": 21.3
+        },
+        {
+          "date": "2026-01-22",
+          "Total Orders Including Cancelled Orders": 353,
+          "Total Delivered or Picked Up Orders": 350,
+          "Missing/Incorrect %": 2.55,
+          "Total Cancellation Rate %": 0.85,
+          "Average Avoidable Dasher Wait": 2.7,
+          "Average Delivery Time (ASAP)": 20.44
+        },
+        {
+          "date": "2026-01-23",
+          "Total Orders Including Cancelled Orders": 386,
+          "Total Delivered or Picked Up Orders": 383,
+          "Missing/Incorrect %": 2.33,
+          "Total Cancellation Rate %": 0.78,
+          "Average Avoidable Dasher Wait": 2.8,
+          "Average Delivery Time (ASAP)": 25.72
+        },
+        {
+          "date": "2026-01-24",
+          "Total Orders Including Cancelled Orders": 376,
+          "Total Delivered or Picked Up Orders": 375,
+          "Missing/Incorrect %": 4.26,
+          "Total Cancellation Rate %": 0.27,
+          "Average Avoidable Dasher Wait": 3.4,
+          "Average Delivery Time (ASAP)": 22.15
+        },
+        {
+          "date": "2026-01-25",
+          "Total Orders Including Cancelled Orders": 337,
+          "Total Delivered or Picked Up Orders": 316,
+          "Missing/Incorrect %": 2.97,
+          "Total Cancellation Rate %": 6.23,
+          "Average Avoidable Dasher Wait": 3.62,
+          "Average Delivery Time (ASAP)": 33.42
+        },
+        {
+          "date": "2026-01-26",
+          "Total Orders Including Cancelled Orders": 374,
+          "Total Delivered or Picked Up Orders": 365,
+          "Missing/Incorrect %": 4.55,
+          "Total Cancellation Rate %": 2.41,
+          "Average Avoidable Dasher Wait": 3.26,
+          "Average Delivery Time (ASAP)": 25.52
+        },
+        {
+          "date": "2026-01-27",
+          "Total Orders Including Cancelled Orders": 364,
+          "Total Delivered or Picked Up Orders": 358,
+          "Missing/Incorrect %": 5.22,
+          "Total Cancellation Rate %": 1.65,
+          "Average Avoidable Dasher Wait": 3.29,
+          "Average Delivery Time (ASAP)": 30.39
+        },
+        {
+          "date": "2026-01-28",
+          "Total Orders Including Cancelled Orders": 392,
+          "Total Delivered or Picked Up Orders": 386,
+          "Missing/Incorrect %": 3.83,
+          "Total Cancellation Rate %": 1.53,
+          "Average Avoidable Dasher Wait": 3.57,
+          "Average Delivery Time (ASAP)": 27.89
+        },
+        {
+          "date": "2026-01-29",
+          "Total Orders Including Cancelled Orders": 374,
+          "Total Delivered or Picked Up Orders": 365,
+          "Missing/Incorrect %": 5.35,
+          "Total Cancellation Rate %": 2.41,
+          "Average Avoidable Dasher Wait": 2.97,
+          "Average Delivery Time (ASAP)": 28.24
+        },
+        {
+          "date": "2026-01-30",
+          "Total Orders Including Cancelled Orders": 405,
+          "Total Delivered or Picked Up Orders": 397,
+          "Missing/Incorrect %": 2.96,
+          "Total Cancellation Rate %": 1.98,
+          "Average Avoidable Dasher Wait": 2.97,
+          "Average Delivery Time (ASAP)": 28.01
+        },
+        {
+          "date": "2026-01-31",
+          "Total Orders Including Cancelled Orders": 450,
+          "Total Delivered or Picked Up Orders": 442,
+          "Missing/Incorrect %": 5.33,
+          "Total Cancellation Rate %": 1.78,
+          "Average Avoidable Dasher Wait": 3.53,
+          "Average Delivery Time (ASAP)": 26.79
+        },
+        {
+          "date": "2026-02-01",
+          "Total Orders Including Cancelled Orders": 405,
+          "Total Delivered or Picked Up Orders": 393,
+          "Missing/Incorrect %": 4.2,
+          "Total Cancellation Rate %": 2.96,
+          "Average Avoidable Dasher Wait": 4.33,
+          "Average Delivery Time (ASAP)": 24.42
+        },
+        {
+          "date": "2026-02-02",
+          "Total Orders Including Cancelled Orders": 346,
+          "Total Delivered or Picked Up Orders": 343,
+          "Missing/Incorrect %": 4.91,
+          "Total Cancellation Rate %": 0.87,
+          "Average Avoidable Dasher Wait": 2.96,
+          "Average Delivery Time (ASAP)": 21.06
+        },
+        {
+          "date": "2026-02-03",
+          "Total Orders Including Cancelled Orders": 324,
+          "Total Delivered or Picked Up Orders": 321,
+          "Missing/Incorrect %": 2.47,
+          "Total Cancellation Rate %": 0.93,
+          "Average Avoidable Dasher Wait": 3.27,
+          "Average Delivery Time (ASAP)": 20.05
+        },
+        {
+          "date": "2026-02-04",
+          "Total Orders Including Cancelled Orders": 365,
+          "Total Delivered or Picked Up Orders": 357,
+          "Missing/Incorrect %": 4.93,
+          "Total Cancellation Rate %": 2.19,
+          "Average Avoidable Dasher Wait": 3.55,
+          "Average Delivery Time (ASAP)": 22.62
+        },
+        {
+          "date": "2026-02-05",
+          "Total Orders Including Cancelled Orders": 392,
+          "Total Delivered or Picked Up Orders": 391,
+          "Missing/Incorrect %": 2.81,
+          "Total Cancellation Rate %": 0.26,
+          "Average Avoidable Dasher Wait": 3.17,
+          "Average Delivery Time (ASAP)": 21.24
+        },
+        {
+          "date": "2026-02-06",
+          "Total Orders Including Cancelled Orders": 429,
+          "Total Delivered or Picked Up Orders": 418,
+          "Missing/Incorrect %": 3.73,
+          "Total Cancellation Rate %": 2.56,
+          "Average Avoidable Dasher Wait": 2.97,
+          "Average Delivery Time (ASAP)": 26.83
+        },
+        {
+          "date": "2026-02-07",
+          "Total Orders Including Cancelled Orders": 454,
+          "Total Delivered or Picked Up Orders": 447,
+          "Missing/Incorrect %": 3.74,
+          "Total Cancellation Rate %": 1.54,
+          "Average Avoidable Dasher Wait": 3.12,
+          "Average Delivery Time (ASAP)": 26.5
+        },
+        {
+          "date": "2026-02-08",
+          "Total Orders Including Cancelled Orders": 384,
+          "Total Delivered or Picked Up Orders": 379,
+          "Missing/Incorrect %": 6.25,
+          "Total Cancellation Rate %": 1.3,
+          "Average Avoidable Dasher Wait": 3.2,
+          "Average Delivery Time (ASAP)": 21.66
+        },
+        {
+          "date": "2026-02-09",
+          "Total Orders Including Cancelled Orders": 299,
+          "Total Delivered or Picked Up Orders": 299,
+          "Missing/Incorrect %": 7.36,
+          "Total Cancellation Rate %": 0.0,
+          "Average Avoidable Dasher Wait": 4.53,
+          "Average Delivery Time (ASAP)": 23.68
+        },
+        {
+          "date": "2026-02-10",
+          "Total Orders Including Cancelled Orders": 319,
+          "Total Delivered or Picked Up Orders": 318,
+          "Missing/Incorrect %": 4.08,
+          "Total Cancellation Rate %": 0.31,
+          "Average Avoidable Dasher Wait": 3.24,
+          "Average Delivery Time (ASAP)": 19.75
+        },
+        {
+          "date": "2026-02-11",
+          "Total Orders Including Cancelled Orders": 371,
+          "Total Delivered or Picked Up Orders": 366,
+          "Missing/Incorrect %": 3.5,
+          "Total Cancellation Rate %": 1.35,
+          "Average Avoidable Dasher Wait": 3.36,
+          "Average Delivery Time (ASAP)": 19.7
+        },
+        {
+          "date": "2026-02-12",
+          "Total Orders Including Cancelled Orders": 399,
+          "Total Delivered or Picked Up Orders": 393,
+          "Missing/Incorrect %": 5.01,
+          "Total Cancellation Rate %": 1.5,
+          "Average Avoidable Dasher Wait": 3.8,
+          "Average Delivery Time (ASAP)": 21.87
+        },
+        {
+          "date": "2026-02-13",
+          "Total Orders Including Cancelled Orders": 409,
+          "Total Delivered or Picked Up Orders": 406,
+          "Missing/Incorrect %": 3.91,
+          "Total Cancellation Rate %": 0.73,
+          "Average Avoidable Dasher Wait": 3.76,
+          "Average Delivery Time (ASAP)": 24.66
+        },
+        {
+          "date": "2026-02-14",
+          "Total Orders Including Cancelled Orders": 408,
+          "Total Delivered or Picked Up Orders": 403,
+          "Missing/Incorrect %": 3.19,
+          "Total Cancellation Rate %": 1.23,
+          "Average Avoidable Dasher Wait": 3.78,
+          "Average Delivery Time (ASAP)": 21.66
+        },
+        {
+          "date": "2026-02-15",
+          "Total Orders Including Cancelled Orders": 424,
+          "Total Delivered or Picked Up Orders": 416,
+          "Missing/Incorrect %": 5.66,
+          "Total Cancellation Rate %": 1.89,
+          "Average Avoidable Dasher Wait": 3.93,
+          "Average Delivery Time (ASAP)": 22.14
+        },
+        {
+          "date": "2026-02-16",
+          "Total Orders Including Cancelled Orders": 354,
+          "Total Delivered or Picked Up Orders": 352,
+          "Missing/Incorrect %": 3.67,
+          "Total Cancellation Rate %": 0.57,
+          "Average Avoidable Dasher Wait": 3.42,
+          "Average Delivery Time (ASAP)": 22.0
+        },
+        {
+          "date": "2026-02-17",
+          "Total Orders Including Cancelled Orders": 312,
+          "Total Delivered or Picked Up Orders": 311,
+          "Missing/Incorrect %": 1.6,
+          "Total Cancellation Rate %": 0.32,
+          "Average Avoidable Dasher Wait": 3.47,
+          "Average Delivery Time (ASAP)": 19.52
+        },
+        {
+          "date": "2026-02-18",
+          "Total Orders Including Cancelled Orders": 349,
+          "Total Delivered or Picked Up Orders": 348,
+          "Missing/Incorrect %": 4.87,
+          "Total Cancellation Rate %": 0.29,
+          "Average Avoidable Dasher Wait": 3.31,
+          "Average Delivery Time (ASAP)": 19.22
+        },
+        {
+          "date": "2026-02-19",
+          "Total Orders Including Cancelled Orders": 407,
+          "Total Delivered or Picked Up Orders": 404,
+          "Missing/Incorrect %": 2.7,
+          "Total Cancellation Rate %": 0.74,
+          "Average Avoidable Dasher Wait": 3.58,
+          "Average Delivery Time (ASAP)": 19.9
+        },
+        {
+          "date": "2026-02-20",
+          "Total Orders Including Cancelled Orders": 470,
+          "Total Delivered or Picked Up Orders": 460,
+          "Missing/Incorrect %": 3.19,
+          "Total Cancellation Rate %": 2.13,
+          "Average Avoidable Dasher Wait": 3.23,
+          "Average Delivery Time (ASAP)": 24.08
+        },
+        {
+          "date": "2026-02-21",
+          "Total Orders Including Cancelled Orders": 444,
+          "Total Delivered or Picked Up Orders": 439,
+          "Missing/Incorrect %": 4.05,
+          "Total Cancellation Rate %": 1.13,
+          "Average Avoidable Dasher Wait": 3.63,
+          "Average Delivery Time (ASAP)": 21.55
+        },
+        {
+          "date": "2026-02-22",
+          "Total Orders Including Cancelled Orders": 416,
+          "Total Delivered or Picked Up Orders": 415,
+          "Missing/Incorrect %": 5.29,
+          "Total Cancellation Rate %": 0.24,
+          "Average Avoidable Dasher Wait": 3.99,
+          "Average Delivery Time (ASAP)": 23.57
+        },
+        {
+          "date": "2026-02-23",
+          "Total Orders Including Cancelled Orders": 343,
+          "Total Delivered or Picked Up Orders": 332,
+          "Missing/Incorrect %": 3.5,
+          "Total Cancellation Rate %": 3.21,
+          "Average Avoidable Dasher Wait": 2.28,
+          "Average Delivery Time (ASAP)": 33.41
+        },
+        {
+          "date": "2026-02-24",
+          "Total Orders Including Cancelled Orders": 396,
+          "Total Delivered or Picked Up Orders": 390,
+          "Missing/Incorrect %": 4.29,
+          "Total Cancellation Rate %": 1.52,
+          "Average Avoidable Dasher Wait": 2.82,
+          "Average Delivery Time (ASAP)": 25.65
+        },
+        {
+          "date": "2026-02-25",
+          "Total Orders Including Cancelled Orders": 391,
+          "Total Delivered or Picked Up Orders": 382,
+          "Missing/Incorrect %": 4.09,
+          "Total Cancellation Rate %": 2.3,
+          "Average Avoidable Dasher Wait": 3.32,
+          "Average Delivery Time (ASAP)": 26.87
+        },
+        {
+          "date": "2026-02-26",
+          "Total Orders Including Cancelled Orders": 443,
+          "Total Delivered or Picked Up Orders": 432,
+          "Missing/Incorrect %": 4.06,
+          "Total Cancellation Rate %": 2.48,
+          "Average Avoidable Dasher Wait": 3.37,
+          "Average Delivery Time (ASAP)": 25.79
+        },
+        {
+          "date": "2026-02-27",
+          "Total Orders Including Cancelled Orders": 522,
+          "Total Delivered or Picked Up Orders": 509,
+          "Missing/Incorrect %": 3.45,
+          "Total Cancellation Rate %": 2.49,
+          "Average Avoidable Dasher Wait": 3.15,
+          "Average Delivery Time (ASAP)": 28.07
+        },
+        {
+          "date": "2026-02-28",
+          "Total Orders Including Cancelled Orders": 485,
+          "Total Delivered or Picked Up Orders": 475,
+          "Missing/Incorrect %": 4.54,
+          "Total Cancellation Rate %": 2.06,
+          "Average Avoidable Dasher Wait": 3.66,
+          "Average Delivery Time (ASAP)": 25.18
+        },
+        {
+          "date": "2026-03-01",
+          "Total Orders Including Cancelled Orders": 403,
+          "Total Delivered or Picked Up Orders": 397,
+          "Missing/Incorrect %": 5.71,
+          "Total Cancellation Rate %": 1.49,
+          "Average Avoidable Dasher Wait": 4.42,
+          "Average Delivery Time (ASAP)": 23.36
+        },
+        {
+          "date": "2026-03-02",
+          "Total Orders Including Cancelled Orders": 351,
+          "Total Delivered or Picked Up Orders": 344,
+          "Missing/Incorrect %": 3.13,
+          "Total Cancellation Rate %": 1.99,
+          "Average Avoidable Dasher Wait": 3.38,
+          "Average Delivery Time (ASAP)": 21.5
+        },
+        {
+          "date": "2026-03-03",
+          "Total Orders Including Cancelled Orders": 341,
+          "Total Delivered or Picked Up Orders": 340,
+          "Missing/Incorrect %": 2.64,
+          "Total Cancellation Rate %": 0.29,
+          "Average Avoidable Dasher Wait": 3.48,
+          "Average Delivery Time (ASAP)": 22.7
+        },
+        {
+          "date": "2026-03-04",
+          "Total Orders Including Cancelled Orders": 383,
+          "Total Delivered or Picked Up Orders": 378,
+          "Missing/Incorrect %": 4.7,
+          "Total Cancellation Rate %": 1.31,
+          "Average Avoidable Dasher Wait": 3.2,
+          "Average Delivery Time (ASAP)": 22.31
+        },
+        {
+          "date": "2026-03-05",
+          "Total Orders Including Cancelled Orders": 412,
+          "Total Delivered or Picked Up Orders": 406,
+          "Missing/Incorrect %": 3.88,
+          "Total Cancellation Rate %": 1.46,
+          "Average Avoidable Dasher Wait": 3.3,
+          "Average Delivery Time (ASAP)": 24.22
+        },
+        {
+          "date": "2026-03-06",
+          "Total Orders Including Cancelled Orders": 426,
+          "Total Delivered or Picked Up Orders": 425,
+          "Missing/Incorrect %": 3.29,
+          "Total Cancellation Rate %": 0.23,
+          "Average Avoidable Dasher Wait": 3.31,
+          "Average Delivery Time (ASAP)": 22.26
+        },
+        {
+          "date": "2026-03-07",
+          "Total Orders Including Cancelled Orders": 469,
+          "Total Delivered or Picked Up Orders": 463,
+          "Missing/Incorrect %": 4.69,
+          "Total Cancellation Rate %": 1.28,
+          "Average Avoidable Dasher Wait": 4.01,
+          "Average Delivery Time (ASAP)": 24.29
+        },
+        {
+          "date": "2026-03-08",
+          "Total Orders Including Cancelled Orders": 374,
+          "Total Delivered or Picked Up Orders": 372,
+          "Missing/Incorrect %": 6.15,
+          "Total Cancellation Rate %": 0.53,
+          "Average Avoidable Dasher Wait": 3.67,
+          "Average Delivery Time (ASAP)": 22.13
+        },
+        {
+          "date": "2026-03-09",
+          "Total Orders Including Cancelled Orders": 342,
+          "Total Delivered or Picked Up Orders": 341,
+          "Missing/Incorrect %": 4.68,
+          "Total Cancellation Rate %": 0.29,
+          "Average Avoidable Dasher Wait": 3.3,
+          "Average Delivery Time (ASAP)": 21.55
+        },
+        {
+          "date": "2026-03-10",
+          "Total Orders Including Cancelled Orders": 359,
+          "Total Delivered or Picked Up Orders": 358,
+          "Missing/Incorrect %": 5.29,
+          "Total Cancellation Rate %": 0.28,
+          "Average Avoidable Dasher Wait": 3.16,
+          "Average Delivery Time (ASAP)": 21.05
+        },
+        {
+          "date": "2026-03-11",
+          "Total Orders Including Cancelled Orders": 368,
+          "Total Delivered or Picked Up Orders": 358,
+          "Missing/Incorrect %": 5.71,
+          "Total Cancellation Rate %": 2.72,
+          "Average Avoidable Dasher Wait": 2.87,
+          "Average Delivery Time (ASAP)": 25.06
+        },
+        {
+          "date": "2026-03-12",
+          "Total Orders Including Cancelled Orders": 405,
+          "Total Delivered or Picked Up Orders": 399,
+          "Missing/Incorrect %": 2.72,
+          "Total Cancellation Rate %": 1.48,
+          "Average Avoidable Dasher Wait": 3.16,
+          "Average Delivery Time (ASAP)": 21.24
+        },
+        {
+          "date": "2026-03-13",
+          "Total Orders Including Cancelled Orders": 447,
+          "Total Delivered or Picked Up Orders": 427,
+          "Missing/Incorrect %": 2.91,
+          "Total Cancellation Rate %": 4.47,
+          "Average Avoidable Dasher Wait": 3.86,
+          "Average Delivery Time (ASAP)": 29.56
+        },
+        {
+          "date": "2026-03-14",
+          "Total Orders Including Cancelled Orders": 419,
+          "Total Delivered or Picked Up Orders": 411,
+          "Missing/Incorrect %": 3.34,
+          "Total Cancellation Rate %": 1.91,
+          "Average Avoidable Dasher Wait": 4.37,
+          "Average Delivery Time (ASAP)": 24.56
+        },
+        {
+          "date": "2026-03-15",
+          "Total Orders Including Cancelled Orders": 392,
+          "Total Delivered or Picked Up Orders": 390,
+          "Missing/Incorrect %": 4.85,
+          "Total Cancellation Rate %": 0.51,
+          "Average Avoidable Dasher Wait": 3.96,
+          "Average Delivery Time (ASAP)": 24.44
+        },
+        {
+          "date": "2026-03-16",
+          "Total Orders Including Cancelled Orders": 339,
+          "Total Delivered or Picked Up Orders": 334,
+          "Missing/Incorrect %": 3.24,
+          "Total Cancellation Rate %": 1.47,
+          "Average Avoidable Dasher Wait": 3.1,
+          "Average Delivery Time (ASAP)": 22.83
+        },
+        {
+          "date": "2026-03-17",
+          "Total Orders Including Cancelled Orders": 376,
+          "Total Delivered or Picked Up Orders": 371,
+          "Missing/Incorrect %": 3.99,
+          "Total Cancellation Rate %": 1.33,
+          "Average Avoidable Dasher Wait": 3.07,
+          "Average Delivery Time (ASAP)": 22.8
+        },
+        {
+          "date": "2026-03-18",
+          "Total Orders Including Cancelled Orders": 363,
+          "Total Delivered or Picked Up Orders": 356,
+          "Missing/Incorrect %": 3.03,
+          "Total Cancellation Rate %": 1.93,
+          "Average Avoidable Dasher Wait": 3.0,
+          "Average Delivery Time (ASAP)": 21.56
+        },
+        {
+          "date": "2026-03-19",
+          "Total Orders Including Cancelled Orders": 415,
+          "Total Delivered or Picked Up Orders": 408,
+          "Missing/Incorrect %": 4.34,
+          "Total Cancellation Rate %": 1.69,
+          "Average Avoidable Dasher Wait": 2.88,
+          "Average Delivery Time (ASAP)": 21.75
+        },
+        {
+          "date": "2026-03-20",
+          "Total Orders Including Cancelled Orders": 434,
+          "Total Delivered or Picked Up Orders": 430,
+          "Missing/Incorrect %": 1.84,
+          "Total Cancellation Rate %": 0.92,
+          "Average Avoidable Dasher Wait": 3.12,
+          "Average Delivery Time (ASAP)": 21.85
+        },
+        {
+          "date": "2026-03-21",
+          "Total Orders Including Cancelled Orders": 417,
+          "Total Delivered or Picked Up Orders": 412,
+          "Missing/Incorrect %": 3.6,
+          "Total Cancellation Rate %": 1.2,
+          "Average Avoidable Dasher Wait": 2.95,
+          "Average Delivery Time (ASAP)": 21.2
+        },
+        {
+          "date": "2026-03-22",
+          "Total Orders Including Cancelled Orders": 405,
+          "Total Delivered or Picked Up Orders": 399,
+          "Missing/Incorrect %": 5.68,
+          "Total Cancellation Rate %": 1.48,
+          "Average Avoidable Dasher Wait": 3.52,
+          "Average Delivery Time (ASAP)": 22.28
+        },
+        {
+          "date": "2026-03-23",
+          "Total Orders Including Cancelled Orders": 357,
+          "Total Delivered or Picked Up Orders": 356,
+          "Missing/Incorrect %": 2.52,
+          "Total Cancellation Rate %": 0.28,
+          "Average Avoidable Dasher Wait": 2.68,
+          "Average Delivery Time (ASAP)": 20.67
+        },
+        {
+          "date": "2026-03-24",
+          "Total Orders Including Cancelled Orders": 339,
+          "Total Delivered or Picked Up Orders": 330,
+          "Missing/Incorrect %": 4.13,
+          "Total Cancellation Rate %": 2.65,
+          "Average Avoidable Dasher Wait": 3.43,
+          "Average Delivery Time (ASAP)": 21.17
+        },
+        {
+          "date": "2026-03-25",
+          "Total Orders Including Cancelled Orders": 338,
+          "Total Delivered or Picked Up Orders": 337,
+          "Missing/Incorrect %": 4.14,
+          "Total Cancellation Rate %": 0.3,
+          "Average Avoidable Dasher Wait": 3.24,
+          "Average Delivery Time (ASAP)": 19.62
+        },
+        {
+          "date": "2026-03-26",
+          "Total Orders Including Cancelled Orders": 353,
+          "Total Delivered or Picked Up Orders": 345,
+          "Missing/Incorrect %": 3.68,
+          "Total Cancellation Rate %": 2.27,
+          "Average Avoidable Dasher Wait": 3.33,
+          "Average Delivery Time (ASAP)": 23.29
+        },
+        {
+          "date": "2026-03-27",
+          "Total Orders Including Cancelled Orders": 436,
+          "Total Delivered or Picked Up Orders": 432,
+          "Missing/Incorrect %": 3.9,
+          "Total Cancellation Rate %": 0.92,
+          "Average Avoidable Dasher Wait": 4.16,
+          "Average Delivery Time (ASAP)": 20.02
+        },
+        {
+          "date": "2026-03-28",
+          "Total Orders Including Cancelled Orders": 429,
+          "Total Delivered or Picked Up Orders": 424,
+          "Missing/Incorrect %": 4.43,
+          "Total Cancellation Rate %": 1.17,
+          "Average Avoidable Dasher Wait": 4.12,
+          "Average Delivery Time (ASAP)": 23.03
+        },
+        {
+          "date": "2026-03-29",
+          "Total Orders Including Cancelled Orders": 387,
+          "Total Delivered or Picked Up Orders": 374,
+          "Missing/Incorrect %": 5.43,
+          "Total Cancellation Rate %": 3.36,
+          "Average Avoidable Dasher Wait": 3.93,
+          "Average Delivery Time (ASAP)": 21.03
+        },
+        {
+          "date": "2026-03-30",
+          "Total Orders Including Cancelled Orders": 340,
+          "Total Delivered or Picked Up Orders": 338,
+          "Missing/Incorrect %": 3.53,
+          "Total Cancellation Rate %": 0.59,
+          "Average Avoidable Dasher Wait": 3.5,
+          "Average Delivery Time (ASAP)": 20.42
+        },
+        {
+          "date": "2026-03-31",
+          "Total Orders Including Cancelled Orders": 376,
+          "Total Delivered or Picked Up Orders": 372,
+          "Missing/Incorrect %": 6.12,
+          "Total Cancellation Rate %": 1.06,
+          "Average Avoidable Dasher Wait": 3.82,
+          "Average Delivery Time (ASAP)": 21.4
+        }
+      ],
+      "store_quality_averages": [
+        {
+          "Store name": "McDonald's (6789-TWINSBURG-AURORA)",
+          "avg_error_pct": 4.75,
+          "avg_cancel_pct": 1.57,
+          "avg_wait": 3.86
+        },
+        {
+          "Store name": "McDonald's (6789 - Twinsburg)",
+          "avg_error_pct": 4.75,
+          "avg_cancel_pct": 1.57,
+          "avg_wait": 3.86
+        },
+        {
+          "Store name": "McDonald's (10859-BRUNSWICK-CENTER)",
+          "avg_error_pct": 4.54,
+          "avg_cancel_pct": 2.33,
+          "avg_wait": 3.34
+        },
+        {
+          "Store name": "McDonald's (10859 - Brunswick 303)",
+          "avg_error_pct": 4.54,
+          "avg_cancel_pct": 2.33,
+          "avg_wait": 3.34
+        },
+        {
+          "Store name": "McDonald's (26316 - Aurora)",
+          "avg_error_pct": 4.3,
+          "avg_cancel_pct": 2.01,
+          "avg_wait": 4.08
+        },
+        {
+          "Store name": "McDonald's (26316-SIX FLAGS)",
+          "avg_error_pct": 4.3,
+          "avg_cancel_pct": 2.01,
+          "avg_wait": 4.08
+        },
+        {
+          "Store name": "McDonald's (25335 - Brunswick 42)",
+          "avg_error_pct": 4.29,
+          "avg_cancel_pct": 0.57,
+          "avg_wait": 3.0
+        },
+        {
+          "Store name": "McDonald's (25335-BRUNSWICK RELO)",
+          "avg_error_pct": 4.29,
+          "avg_cancel_pct": 0.57,
+          "avg_wait": 3.0
+        },
+        {
+          "Store name": "McDonald's (3314-STRONGSVL-PEARL)",
+          "avg_error_pct": 4.1,
+          "avg_cancel_pct": 1.51,
+          "avg_wait": 3.45
+        },
+        {
+          "Store name": "McDonald's (3314 - Strongsville)",
+          "avg_error_pct": 4.1,
+          "avg_cancel_pct": 1.51,
+          "avg_wait": 3.45
+        },
+        {
+          "Store name": "McDonald's (12034 - Medina)",
+          "avg_error_pct": 3.95,
+          "avg_cancel_pct": 0.94,
+          "avg_wait": 2.78
+        },
+        {
+          "Store name": "McDonald's (12034-MEDINA-N COURT)",
+          "avg_error_pct": 3.95,
+          "avg_cancel_pct": 0.94,
+          "avg_wait": 2.78
+        },
+        {
+          "Store name": "McDonald's (28451-NORTHFIELD RELO)",
+          "avg_error_pct": 3.76,
+          "avg_cancel_pct": 3.12,
+          "avg_wait": 3.31
+        },
+        {
+          "Store name": "McDonald's (28451 - Northfield)",
+          "avg_error_pct": 3.76,
+          "avg_cancel_pct": 3.12,
+          "avg_wait": 3.31
+        },
+        {
+          "Store name": "McDonald's (31289 - MEDINA III)",
+          "avg_error_pct": 3.45,
+          "avg_cancel_pct": 0.69,
+          "avg_wait": 3.13
+        },
+        {
+          "Store name": "McDonald's (31289 - Montville)",
+          "avg_error_pct": 3.45,
+          "avg_cancel_pct": 0.69,
+          "avg_wait": 3.13
+        },
+        {
+          "Store name": "McDonald's (5525 - North Royalton)",
+          "avg_error_pct": 3.42,
+          "avg_cancel_pct": 1.39,
+          "avg_wait": 3.56
+        },
+        {
+          "Store name": "McDonald's (5525-NORTH ROYALTON)",
+          "avg_error_pct": 3.42,
+          "avg_cancel_pct": 1.39,
+          "avg_wait": 3.56
+        },
+        {
+          "Store name": "McDonald's (11525 - Seville)",
+          "avg_error_pct": 2.99,
+          "avg_cancel_pct": 3.64,
+          "avg_wait": 4.62
+        },
+        {
+          "Store name": "McDonald's (11525 - SEVILLE/SPEEDWAY)",
+          "avg_error_pct": 2.99,
+          "avg_cancel_pct": 3.64,
+          "avg_wait": 4.62
+        },
+        {
+          "Store name": "McDonald's (36762 - Whitney)",
+          "avg_error_pct": 2.86,
+          "avg_cancel_pct": 2.24,
+          "avg_wait": 2.82
+        },
+        {
+          "Store name": "McDonald's (36762-STRONGSVILLE - PEARL AND WHITNEY)",
+          "avg_error_pct": 2.86,
+          "avg_cancel_pct": 2.24,
+          "avg_wait": 2.82
+        }
+      ],
+      "item_quality_ranking": [
+        {
+          "item_name": "Hash Browns",
+          "Gross Item Sales": 30656.47,
+          "Item Volume": 10253,
+          "Total Item Missing or Incorrect Errors": 98,
+          "Item Missing/Incorrect %": 0.9,
+          "Total Item Error Charges": 352.99
+        },
+        {
+          "item_name": "10 pc. Chicken McNuggets\u00ae",
+          "Gross Item Sales": 52997.13,
+          "Item Volume": 6717,
+          "Total Item Missing or Incorrect Errors": 88,
+          "Item Missing/Incorrect %": 1.32,
+          "Total Item Error Charges": 596.89
+        },
+        {
+          "item_name": "French Fries",
+          "Gross Item Sales": 39220.8,
+          "Item Volume": 8780,
+          "Total Item Missing or Incorrect Errors": 86,
+          "Item Missing/Incorrect %": 0.96,
+          "Total Item Error Charges": 359.04
+        },
+        {
+          "item_name": "10 pc. Chicken McNuggets\u00ae Meal",
+          "Gross Item Sales": 35202.58,
+          "Item Volume": 2642,
+          "Total Item Missing or Incorrect Errors": 68,
+          "Item Missing/Incorrect %": 2.93,
+          "Total Item Error Charges": 470.56
+        },
+        {
+          "item_name": "6 pc. Chicken McNuggets\u00ae Happy Meal\u00ae",
+          "Gross Item Sales": 17628.63,
+          "Item Volume": 2337,
+          "Total Item Missing or Incorrect Errors": 68,
+          "Item Missing/Incorrect %": 2.87,
+          "Total Item Error Charges": 303.29
+        },
+        {
+          "item_name": "2 Cheeseburger Meal",
+          "Gross Item Sales": 25251.56,
+          "Item Volume": 2094,
+          "Total Item Missing or Incorrect Errors": 58,
+          "Item Missing/Incorrect %": 1.42,
+          "Total Item Error Charges": 390.35
+        },
+        {
+          "item_name": "20 pc. Chicken McNuggets\u00ae",
+          "Gross Item Sales": 23067.05,
+          "Item Volume": 2019,
+          "Total Item Missing or Incorrect Errors": 51,
+          "Item Missing/Incorrect %": 2.4,
+          "Total Item Error Charges": 491.19
+        },
+        {
+          "item_name": "Double Cheeseburger Meal",
+          "Gross Item Sales": 14101.07,
+          "Item Volume": 1365,
+          "Total Item Missing or Incorrect Errors": 39,
+          "Item Missing/Incorrect %": 2.6,
+          "Total Item Error Charges": 200.61
+        },
+        {
+          "item_name": "Big Mac\u00ae Meal",
+          "Gross Item Sales": 22695.15,
+          "Item Volume": 1832,
+          "Total Item Missing or Incorrect Errors": 38,
+          "Item Missing/Incorrect %": 1.94,
+          "Total Item Error Charges": 197.69
+        },
+        {
+          "item_name": "2 Cookies",
+          "Gross Item Sales": 3793.21,
+          "Item Volume": 1474,
+          "Total Item Missing or Incorrect Errors": 35,
+          "Item Missing/Incorrect %": 2.48,
+          "Total Item Error Charges": 94.46
+        },
+        {
+          "item_name": "6 pc. Chicken McNuggets\u00ae",
+          "Gross Item Sales": 14905.65,
+          "Item Volume": 3156,
+          "Total Item Missing or Incorrect Errors": 34,
+          "Item Missing/Incorrect %": 1.01,
+          "Total Item Error Charges": 147.3
+        },
+        {
+          "item_name": "McChicken\u00ae",
+          "Gross Item Sales": 12269.2,
+          "Item Volume": 3053,
+          "Total Item Missing or Incorrect Errors": 32,
+          "Item Missing/Incorrect %": 1.02,
+          "Total Item Error Charges": 137.52
+        },
+        {
+          "item_name": "Apple Pie",
+          "Gross Item Sales": 3814.7,
+          "Item Volume": 1060,
+          "Total Item Missing or Incorrect Errors": 32,
+          "Item Missing/Incorrect %": 3.12,
+          "Total Item Error Charges": 117.92
+        },
+        {
+          "item_name": "Strawberry & Cr\u00e8me Pie",
+          "Gross Item Sales": 3563.7,
+          "Item Volume": 930,
+          "Total Item Missing or Incorrect Errors": 31,
+          "Item Missing/Incorrect %": 3.66,
+          "Total Item Error Charges": 108.81
+        },
+        {
+          "item_name": "Sausage McMuffin\u00ae",
+          "Gross Item Sales": 11220.44,
+          "Item Volume": 3135,
+          "Total Item Missing or Incorrect Errors": 28,
+          "Item Missing/Incorrect %": 1.02,
+          "Total Item Error Charges": 103.41
+        },
+        {
+          "item_name": "OREO\u00ae McFlurry\u00ae",
+          "Gross Item Sales": 5659.79,
+          "Item Volume": 991,
+          "Total Item Missing or Incorrect Errors": 27,
+          "Item Missing/Incorrect %": 5.64,
+          "Total Item Error Charges": 131.45
+        },
+        {
+          "item_name": "Sausage McMuffin\u00ae with Egg",
+          "Gross Item Sales": 22136.15,
+          "Item Volume": 3656,
+          "Total Item Missing or Incorrect Errors": 26,
+          "Item Missing/Incorrect %": 0.78,
+          "Total Item Error Charges": 163.77
+        },
+        {
+          "item_name": "Cheeseburger",
+          "Gross Item Sales": 6695.14,
+          "Item Volume": 2044,
+          "Total Item Missing or Incorrect Errors": 25,
+          "Item Missing/Incorrect %": 1.22,
+          "Total Item Error Charges": 76.24
+        },
+        {
+          "item_name": "Coke\u00ae",
+          "Gross Item Sales": 6012.59,
+          "Item Volume": 2391,
+          "Total Item Missing or Incorrect Errors": 23,
+          "Item Missing/Incorrect %": 0.55,
+          "Total Item Error Charges": 47.21
+        },
+        {
+          "item_name": "Hamburger Happy Meal\u00ae",
+          "Gross Item Sales": 6727.03,
+          "Item Volume": 1049,
+          "Total Item Missing or Incorrect Errors": 23,
+          "Item Missing/Incorrect %": 2.1,
+          "Total Item Error Charges": 104.42
+        }
+      ]
+    },
+    "support": {},
+    "executive_summary": {
+      "total_revenue": 0.0,
+      "total_net_payout": 0.0,
+      "total_orders": 0,
+      "avg_order_value": 0.0,
+      "payout_ratio_pct": 0.0,
+      "dashpass_rate_pct": 0,
+      "cancellation_rate_pct": 0,
+      "error_rate_pct": 0,
+      "new_customers": 0,
+      "repeat_customers": 0,
+      "total_marketing_spend": 0,
+      "marketing_roas": 0.0,
+      "new_customers_acquired": 0,
+      "total_cancellations": 534,
+      "avg_avoidable_wait_min": 3.38,
+      "total_support_cases": 0,
+      "total_menu_items": 0,
+      "product_mix_sales": 0,
+      "avg_uptime_pct": 99.45,
+      "total_downtime_minutes": 5817,
+      "insights": []
+    },
+    "metric_hierarchy": {
+      "source": "none",
+      "message": "No FINANCIAL_DETAILED_TRANSACTIONS data loaded."
+    }
+  }
+}

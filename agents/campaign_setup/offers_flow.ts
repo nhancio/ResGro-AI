@@ -1,24 +1,5 @@
-import type { OperatorAgentCatalogItem } from "../shared/models/operator";
-
-/** Maps to `campaign_type: "offers"` + promo/combo rows (portal automation path). */
-export const OFFERS_FLOW_AGENT_ID = "promo-setup" as const;
-
-export const offersFlowCatalogEntry: OperatorAgentCatalogItem = {
-  id: "promo-setup",
-  title: "Promo campaigns (portal)",
-  description:
-    "Browser automation path for promo / combo campaigns in the merchant portal after a plan is approved.",
-  requires: [
-    "Approved marketing_plan (promo / combo rows)",
-    "campaign_type: offers",
-    "store_ids, merchant portal credentials (secrets — never stored in-browser)",
-  ],
-  produces: [
-    "setup.json — campaigns_created[] with portal campaign_id",
-    "status: active | scheduled | failed per campaign",
-    "review_scheduled_at (e.g. +7 days)",
-  ],
-};
+/** Maps to ResgroAI — Offers (`campaign_type: "offers"` + promo/combo rows). */
+export const OFFERS_FLOW_AGENT_ID = "resgro-offers" as const;
 
 export const SAMPLE_MARKETING_PLAN_JSON = `{
   "operator_id": "demo_operator",

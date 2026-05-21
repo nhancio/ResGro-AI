@@ -1,0 +1,126 @@
+{
+  "operator_id": "SSM",
+  "analysis_date": "2026-04-23T09:05:47+00:00",
+  "order_breakdown": {
+    "organic": 33647,
+    "ads_only": 4345,
+    "promo_only": 12745,
+    "combo": 0,
+    "cancelled_refund": 0
+  },
+  "revenue_metrics": {
+    "total_net_revenue": 575739.8799999999,
+    "avg_order_value": 22.09,
+    "aov_by_day_part": {}
+  },
+  "top_items": [],
+  "promo_performance": [
+    {
+      "Campaign name": "mcd-bogonuggs-010426-020826-allcx",
+      "orders": 3138,
+      "sales": 97215.71,
+      "spend": 23988.21,
+      "new_customers": 127,
+      "roas": 4.05
+    },
+    {
+      "Campaign name": "DD_NAT'L_All_5 off 20_3.9-3.31.26_W2",
+      "orders": 2116,
+      "sales": 53836.83,
+      "spend": 10580.0,
+      "new_customers": 41,
+      "roas": 5.09
+    },
+    {
+      "Campaign name": "mcd-freeitem15-010126-020826-allcx",
+      "orders": 1481,
+      "sales": 44009.6,
+      "spend": 8629.39,
+      "new_customers": 36,
+      "roas": 5.1
+    },
+    {
+      "Campaign name": "mcd-freeitem-020926-022826-allcx",
+      "orders": 1386,
+      "sales": 43320.51,
+      "spend": 10556.699999999997,
+      "new_customers": 47,
+      "roas": 4.1
+    },
+    {
+      "Campaign name": "mcd-freeitem15sando-020926-022826-allcx",
+      "orders": 847,
+      "sales": 24751.0,
+      "spend": 5217.2300000000005,
+      "new_customers": 19,
+      "roas": 4.74
+    },
+    {
+      "Campaign name": "mcd | allcx | sxgy | 03/09/26 - 03/15/26 | Ad Ops | 5off20",
+      "orders": 974,
+      "sales": 24279.64,
+      "spend": 4870.0,
+      "new_customers": 24,
+      "roas": 4.99
+    },
+    {
+      "Campaign name": "mcd-freeitem15-030126-030826-allcx",
+      "orders": 353,
+      "sales": 10923.34,
+      "spend": 2430.37,
+      "new_customers": 4,
+      "roas": 4.49
+    },
+    {
+      "Campaign name": "mcd-bogo-010126-010326-allcx",
+      "orders": 288,
+      "sales": 9117.49,
+      "spend": 2298.87,
+      "new_customers": 18,
+      "roas": 3.97
+    },
+    {
+      "Campaign name": "mcd-freeitem15-010126-022826-newcx-lapsed",
+      "orders": 232,
+      "sales": 6916.26,
+      "spend": 1596.4799999999998,
+      "new_customers": 39,
+      "roas": 4.33
+    },
+    {
+      "Campaign name": "mcd-freeitem15-030126-030826-allcx-v2",
+      "orders": 232,
+      "sales": 6896.08,
+      "spend": 1357.9799999999998,
+      "new_customers": 5,
+      "roas": 5.08
+    }
+  ],
+  "ads_performance": [
+    {
+      "segment": "Corporate",
+      "orders": 2635,
+      "sales": 58850.71,
+      "spend": 8058.150000000001,
+      "impressions": 128071,
+      "clicks": 7409,
+      "roas": 7.3,
+      "ctr": 5.79
+    },
+    {
+      "segment": "Resgro",
+      "orders": 1710,
+      "sales": 35348.74,
+      "spend": 5130.0,
+      "impressions": 29915,
+      "clicks": 2671,
+      "roas": 6.89,
+      "ctr": 8.93
+    }
+  ],
+  "anomalies": [
+    "Cancellation rate: 0%",
+    "Error rate: 0%"
+  ],
+  "recommendations_seed": "Net payout ratio is 76.3% — every $1 in sales yields $0.76 net. Combined marketing ROAS is 5.02x — $94,769 spend drove $476,129 in sales."
+}

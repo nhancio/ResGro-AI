@@ -1,4 +1,4 @@
-/** Aligned with campaign types in the TODC-style pipeline (marketing plan → portal setup). */
+/** Aligned with campaign types in the Resgro-style pipeline (marketing plan → portal setup). */
 
 export type CampaignKind = "promo" | "combo" | "sponsored_listing";
 

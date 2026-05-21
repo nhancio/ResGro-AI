@@ -1,0 +1,197 @@
+{
+  "operator_id": "SSM",
+  "plan_date": "2026-04-23T09:17:59+00:00",
+  "recommended_campaigns": [
+    {
+      "campaign_type": "promo",
+      "campaign_name": "Resgro-18474-$5",
+      "budget": 0.0,
+      "start_date": "2026-04-23T09:17:59+00:00",
+      "duration_days": 7,
+      "target_day_parts": [
+        "1",
+        "2",
+        "4",
+        "5"
+      ],
+      "target_items": [],
+      "discount_pct": 15.0,
+      "rationale": "Built from mapping for store 18474 (min subtotal 5.0, slot tags ['1', '2', '4', '5'], status Pending)."
+    },
+    {
+      "campaign_type": "promo",
+      "campaign_name": "Resgro-18474-$25",
+      "budget": 0.0,
+      "start_date": "2026-04-23T09:17:59+00:00",
+      "duration_days": 7,
+      "target_day_parts": [
+        "8",
+        "9",
+        "11",
+        "12",
+        "17",
+        "18",
+        "22",
+        "23",
+        "24",
+        "41",
+        "42"
+      ],
+      "target_items": [],
+      "discount_pct": 15.0,
+      "rationale": "Built from mapping for store 18474 (min subtotal 25.0, slot tags ['8', '9', '11', '12', '17', '18', '22', '23', '24', '41', '42'], status Pending)."
+    },
+    {
+      "campaign_type": "promo",
+      "campaign_name": "Resgro-18474-$30",
+      "budget": 0.0,
+      "start_date": "2026-04-23T09:17:59+00:00",
+      "duration_days": 7,
+      "target_day_parts": [
+        "10",
+        "13",
+        "14",
+        "15",
+        "16",
+        "19",
+        "20",
+        "21",
+        "25",
+        "26",
+        "27",
+        "28",
+        "29",
+        "30",
+        "31",
+        "32",
+        "33",
+        "34",
+        "35",
+        "36",
+        "37",
+        "38",
+        "39",
+        "40"
+      ],
+      "target_items": [],
+      "discount_pct": 15.0,
+      "rationale": "Built from mapping for store 18474 (min subtotal 30.0, slot tags ['10', '13', '14', '15', '16', '19', '20', '21', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '40'], status Pending)."
+    },
+    {
+      "campaign_type": "promo",
+      "campaign_name": "Resgro-18474-$15",
+      "budget": 0.0,
+      "start_date": "2026-04-23T09:17:59+00:00",
+      "duration_days": 7,
+      "target_day_parts": [
+        "6"
+      ],
+      "target_items": [],
+      "discount_pct": 15.0,
+      "rationale": "Built from mapping for store 18474 (min subtotal 15.0, slot tags ['6'], status Pending)."
+    },
+    {
+      "campaign_type": "promo",
+      "campaign_name": "Resgro-18474-$10",
+      "budget": 0.0,
+      "start_date": "2026-04-23T09:17:59+00:00",
+      "duration_days": 7,
+      "target_day_parts": [
+        "7"
+      ],
+      "target_items": [],
+      "discount_pct": 15.0,
+      "rationale": "Built from mapping for store 18474 (min subtotal 10.0, slot tags ['7'], status Pending)."
+    },
+    {
+      "campaign_type": "promo",
+      "campaign_name": "Resgro-27444-$25",
+      "budget": 0.0,
+      "start_date": "2026-04-23T09:17:59+00:00",
+      "duration_days": 7,
+      "target_day_parts": [
+        "8",
+        "9",
+        "10",
+        "12",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27",
+        "30",
+        "31",
+        "32",
+        "35",
+        "36",
+        "37",
+        "38",
+        "41"
+      ],
+      "target_items": [],
+      "discount_pct": 15.0,
+      "rationale": "Built from mapping for store 27444 (min subtotal 25.0, slot tags ['8', '9', '10', '12', '15', '16', '17', '18', '19', '22', '23', '24', '25', '26', '27', '30', '31', '32', '35', '36', '37', '38', '41'], status Pending)."
+    },
+    {
+      "campaign_type": "promo",
+      "campaign_name": "Resgro-27444-$30",
+      "budget": 0.0,
+      "start_date": "2026-04-23T09:17:59+00:00",
+      "duration_days": 7,
+      "target_day_parts": [
+        "11",
+        "13",
+        "14",
+        "20",
+        "21",
+        "28",
+        "29",
+        "33",
+        "34",
+        "39",
+        "40",
+        "42"
+      ],
+      "target_items": [],
+      "discount_pct": 15.0,
+      "rationale": "Built from mapping for store 27444 (min subtotal 30.0, slot tags ['11', '13', '14', '20', '21', '28', '29', '33', '34', '39', '40', '42'], status Pending)."
+    },
+    {
+      "campaign_type": "promo",
+      "campaign_name": "Resgro-27444-$10",
+      "budget": 0.0,
+      "start_date": "2026-04-23T09:17:59+00:00",
+      "duration_days": 7,
+      "target_day_parts": [
+        "2",
+        "3",
+        "5"
+      ],
+      "target_items": [],
+      "discount_pct": 15.0,
+      "rationale": "Built from mapping for store 27444 (min subtotal 10.0, slot tags ['2', '3', '5'], status Pending)."
+    },
+    {
+      "campaign_type": "promo",
+      "campaign_name": "Resgro-27444-$5",
+      "budget": 0.0,
+      "start_date": "2026-04-23T09:17:59+00:00",
+      "duration_days": 7,
+      "target_day_parts": [
+        "4",
+        "6"
+      ],
+      "target_items": [],
+      "discount_pct": 15.0,
+      "rationale": "Built from mapping for store 27444 (min subtotal 5.0, slot tags ['4', '6'], status Pending)."
+    }
+  ],
+  "approval_status": "pending",
+  "approver_notes": ""
+}

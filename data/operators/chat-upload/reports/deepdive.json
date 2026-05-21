@@ -1,0 +1,75 @@
+{
+  "operator_id": "chat-upload",
+  "analysis_date": "2026-05-19T08:12:12+00:00",
+  "order_breakdown": {
+    "organic": 0,
+    "ads_only": 0,
+    "promo_only": 0,
+    "combo": 0,
+    "cancelled_refund": 534
+  },
+  "revenue_metrics": {
+    "total_net_revenue": 0.0,
+    "avg_order_value": 0.0,
+    "aov_by_day_part": {}
+  },
+  "top_items": [
+    {
+      "item_name": "Hash Browns",
+      "orders": 101,
+      "net_revenue": 352.99
+    },
+    {
+      "item_name": "10 pc. Chicken McNuggets®",
+      "orders": 91,
+      "net_revenue": 596.89
+    },
+    {
+      "item_name": "French Fries",
+      "orders": 89,
+      "net_revenue": 359.04
+    },
+    {
+      "item_name": "10 pc. Chicken McNuggets® Meal",
+      "orders": 71,
+      "net_revenue": 470.56
+    },
+    {
+      "item_name": "6 pc. Chicken McNuggets® Happy Meal®",
+      "orders": 70,
+      "net_revenue": 303.29
+    },
+    {
+      "item_name": "2 Cheeseburger Meal",
+      "orders": 60,
+      "net_revenue": 390.35
+    },
+    {
+      "item_name": "20 pc. Chicken McNuggets®",
+      "orders": 51,
+      "net_revenue": 491.19
+    },
+    {
+      "item_name": "Double Cheeseburger Meal",
+      "orders": 39,
+      "net_revenue": 200.61
+    },
+    {
+      "item_name": "Big Mac® Meal",
+      "orders": 38,
+      "net_revenue": 197.69
+    },
+    {
+      "item_name": "2 Cookies",
+      "orders": 36,
+      "net_revenue": 94.46
+    }
+  ],
+  "promo_performance": [],
+  "ads_performance": [],
+  "anomalies": [
+    "Cancellation rate: 0%",
+    "Error rate: 0%"
+  ],
+  "recommendations_seed": "Use DeepDive KPI and hierarchy output to drive campaign selection."
+}

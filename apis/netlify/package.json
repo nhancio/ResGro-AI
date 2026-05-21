@@ -1,0 +1,9 @@
+{
+  "name": "resgro-netlify-functions",
+  "private": true,
+  "description": "Dependencies for serverless handlers in ./functions (Netlify resolves these when the functions directory is outside resgro-landing/)",
+  "dependencies": {
+    "nodemailer": "^6.9.16",
+    "stripe": "^20.4.1"
+  }
+}

@@ -1,0 +1,41 @@
+node_modules
+dist
+.DS_Store
+*.log
+Thumbs.db
+
+# Secrets & local env (never commit)
+.env
+.env.*
+!.env.example
+!.env.gcp.example
+.env.gcp
+.env.local
+.env.production
+.env.*.local
+
+# Deploy temp files (written by deploy-gcp.sh; may contain secrets)
+.tmp.resgro-*
+
+# Local Netlify / Vercel
+.netlify
+.vercel
+
+# Python
+__pycache__
+*.pyc
+.venv
+backend/.venv
+backend/db.sqlite3
+backend/staticfiles/
+
+# Runtime data & large uploads (local dev / agent sessions)
+data/sessions/
+data/runs/
+DD_LAZ_Everything_Data/
+sample_data/
+RalphAI/
+
+# Logs / PIDs
+logs/
+.resgro-pids

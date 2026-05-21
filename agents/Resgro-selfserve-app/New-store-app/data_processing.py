@@ -189,15 +189,15 @@ def build_dd_promotions_metrics_table(pre_promo, post_promo, pre_sponsored, post
     """
     Build DoorDash metrics table like the image:
     Rows: Sales, Total Spend, ROAS, New Customers, Orders, AOV, Cost per Order, CAC
-    Cols: TODC Promo, TODC Ads, Corp Promo, Corp Ads
+    Cols: Resgro Promo, Resgro Ads, Corp Promo, Corp Ads
     """
     pc, sc = DD_PROMO_COLS, DD_SPONSORED_COLS
-    slot_order = ['TODC Promo', 'TODC Ads', 'Corp Promo', 'Corp Ads']
+    slot_order = ['Resgro Promo', 'Resgro Ads', 'Corp Promo', 'Corp Ads']
 
     def _agg_promo(df, is_todc):
         if df.empty:
             return {'sales': 0, 'spend': 0, 'orders': 0, 'new_customers': 0}
-        # Is self serve: True/true = TODC, False/false = Corporate
+        # Is self serve: True/true = Resgro, False/false = Corporate
         val = True if is_todc else False
         mask = (df[pc['campaign']] == val) | (df[pc['campaign']].astype(str).str.lower() == str(val).lower())
         d = df[mask]
@@ -223,14 +223,14 @@ def build_dd_promotions_metrics_table(pre_promo, post_promo, pre_sponsored, post
         orders = pd.to_numeric(d[sc['orders']], errors='coerce').fillna(0).sum()
         return {'sales': sales, 'spend': spend, 'orders': orders, 'new_customers': 0}
 
-    # Use POST period for the main metrics table (like Corporate vs TODC in main app)
+    # Use POST period for the main metrics table (like Corporate vs Resgro in main app)
     todc_promo = _agg_promo(post_promo, True)
     corp_promo = _agg_promo(post_promo, False)
     todc_ads = _agg_sponsored(post_sponsored, True)
     corp_ads = _agg_sponsored(post_sponsored, False)
 
     data = {
-        'TODC Promo': [
+        'Resgro Promo': [
             todc_promo['sales'],
             todc_promo['spend'],
             todc_promo['sales'] / todc_promo['spend'] if todc_promo['spend'] else 0,
@@ -240,7 +240,7 @@ def build_dd_promotions_metrics_table(pre_promo, post_promo, pre_sponsored, post
             todc_promo['spend'] / todc_promo['orders'] if todc_promo['orders'] else 0,
             todc_promo['spend'] / todc_promo['new_customers'] if todc_promo['new_customers'] else 0,
         ],
-        'TODC Ads': [
+        'Resgro Ads': [
             todc_ads['sales'],
             todc_ads['spend'],
             todc_ads['sales'] / todc_ads['spend'] if todc_ads['spend'] else 0,
@@ -602,7 +602,7 @@ def _dd_financial_with_dims(file_path, start_date, end_date, excluded_dates=None
 def build_pivot_metrics_dd(dd_path, promo_df, sponsored_df, start_date, end_date, pivot_by, excluded_dates=None):
     """
     pivot_by: list of 'Store', 'Slot', 'Days'. Build one row per group with all metrics.
-    Labels: Self (was TODC), Corp for promo/ads.
+    Labels: Self (was Resgro), Corp for promo/ads.
     """
     if not pivot_by:
         pivot_by = ['Store']

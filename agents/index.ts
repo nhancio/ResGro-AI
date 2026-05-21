@@ -1,4 +1,4 @@
-/** @module agents — TODC-style layout: `shared/`, per-agent folders, `campaign_setup/*_flow`, `orchestrator/registry`. */
+/** @module agents — Resgro-style layout: `shared/`, per-agent folders, `campaign_setup/*_flow`, `orchestrator/registry`. */
 
 export * from "./shared";
 export * from "./deepdive";

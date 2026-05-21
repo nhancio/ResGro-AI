@@ -1,0 +1,16 @@
+RalphAI/
+# resgro-ui needs resgro-landing/ (see resgro-landing/Dockerfile); exclude heavy subtrees only
+resgro-landing/node_modules/
+resgro-landing/dist/
+# Keep apis/ for resgro-api image (apis/http/Dockerfile); ignore heavy subtrees only
+apis/http/node_modules
+apis/netlify/node_modules
+node_modules/
+.git/
+.env
+__pycache__/
+*.pyc
+logs/
+.resgro-pids
+*.zip
+.claude/

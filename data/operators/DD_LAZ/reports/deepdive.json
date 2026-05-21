@@ -1,0 +1,177 @@
+{
+  "operator_id": "DD_LAZ",
+  "analysis_date": "2026-05-18T10:56:54+00:00",
+  "order_breakdown": {
+    "organic": 516700,
+    "ads_only": 45116,
+    "promo_only": 147984,
+    "combo": 0,
+    "cancelled_refund": 9888
+  },
+  "revenue_metrics": {
+    "total_net_revenue": 6651100.08,
+    "avg_order_value": 19.9,
+    "aov_by_day_part": {}
+  },
+  "top_items": [
+    {
+      "item_name": "French Fries",
+      "orders": 1378,
+      "net_revenue": 4586.4
+    },
+    {
+      "item_name": "10 pc. Chicken McNuggets® Meal",
+      "orders": 1310,
+      "net_revenue": 7933.08
+    },
+    {
+      "item_name": "10 pc. Chicken McNuggets®",
+      "orders": 1256,
+      "net_revenue": 5954.96
+    },
+    {
+      "item_name": "Hash Browns",
+      "orders": 1094,
+      "net_revenue": 3821.6
+    },
+    {
+      "item_name": "2 Cheeseburger Meal",
+      "orders": 1040,
+      "net_revenue": 5558.66
+    },
+    {
+      "item_name": "6 pc. Chicken McNuggets® Happy Meal®",
+      "orders": 794,
+      "net_revenue": 4662.28
+    },
+    {
+      "item_name": "Big Mac® Meal",
+      "orders": 690,
+      "net_revenue": 4422.18
+    },
+    {
+      "item_name": "McChicken®",
+      "orders": 668,
+      "net_revenue": 2136.34
+    },
+    {
+      "item_name": "Coke®",
+      "orders": 532,
+      "net_revenue": 1261.52
+    },
+    {
+      "item_name": "OREO® McFlurry®",
+      "orders": 530,
+      "net_revenue": 2375.6
+    }
+  ],
+  "promo_performance": [
+    {
+      "Campaign name": "TODC - All Customer Disc Updated",
+      "orders": 5946,
+      "sales": 239199.06,
+      "spend": 33689.979999999996,
+      "new_customers": 174,
+      "roas": 7.1
+    },
+    {
+      "Campaign name": "mcd-bogonuggs-010426-020826-allcx",
+      "orders": 6898,
+      "sales": 186658.46,
+      "spend": 48321.899999999994,
+      "new_customers": 298,
+      "roas": 3.86
+    },
+    {
+      "Campaign name": "TODC 15% Off all customer max disc $7",
+      "orders": 5140,
+      "sales": 182838.46,
+      "spend": 26409.699999999997,
+      "new_customers": 92,
+      "roas": 6.92
+    },
+    {
+      "Campaign name": "mcd-5off20-081225-082925-allcx",
+      "orders": 5402,
+      "sales": 149880.64,
+      "spend": 27010.0,
+      "new_customers": 140,
+      "roas": 5.55
+    },
+    {
+      "Campaign name": "20% off up to 3",
+      "orders": 6508,
+      "sales": 130477.82,
+      "spend": 18414.379999999997,
+      "new_customers": 242,
+      "roas": 7.09
+    },
+    {
+      "Campaign name": "mcd-free10pcbm15-010125-013125-allcx",
+      "orders": 4340,
+      "sales": 111732.78,
+      "spend": 27428.4,
+      "new_customers": 158,
+      "roas": 4.07
+    },
+    {
+      "Campaign name": "DD_NAT'L_All_5 off 20_3.9-3.31.26_W2",
+      "orders": 4520,
+      "sales": 110733.86,
+      "spend": 22600.0,
+      "new_customers": 106,
+      "roas": 4.9
+    },
+    {
+      "Campaign name": "mcd-5off20-120125-121225-allcx",
+      "orders": 3856,
+      "sales": 108233.12,
+      "spend": 19280.0,
+      "new_customers": 120,
+      "roas": 5.61
+    },
+    {
+      "Campaign name": "DD_NATL_5 off 25_4.7-4.30.26",
+      "orders": 3600,
+      "sales": 98929.5,
+      "spend": 17990.0,
+      "new_customers": 26,
+      "roas": 5.5
+    },
+    {
+      "Campaign name": "mcd-bogo-100425-122025-allcx - v2",
+      "orders": 3434,
+      "sales": 91684.96,
+      "spend": 22055.260000000002,
+      "new_customers": 176,
+      "roas": 4.16
+    }
+  ],
+  "ads_performance": [
+    {
+      "segment": "Corporate",
+      "orders": 5404,
+      "sales": 113153.34,
+      "spend": 16682.1,
+      "impressions": 186536,
+      "clicks": 12706,
+      "roas": 6.78,
+      "ctr": 6.81
+    },
+    {
+      "segment": "Resgro",
+      "orders": 39712,
+      "sales": 829695.38,
+      "spend": 120212.3,
+      "impressions": 666544,
+      "clicks": 72984,
+      "roas": 6.9,
+      "ctr": 10.95
+    }
+  ],
+  "anomalies": [
+    "Cancellation rate: 0.42%",
+    "Error rate: 3.9%"
+  ],
+  "recommendations_seed": "Net payout ratio is 63.6% — every $1 in sales yields $0.64 net. DashPass orders dominate at 59.5% — loyalty base is strong. Combined marketing ROAS is 5.26x — $942,170 spend drove $4,952,690 in sales. New customers make up 5.7% of orders (29,986 new vs 231,668 repeat)."
+}

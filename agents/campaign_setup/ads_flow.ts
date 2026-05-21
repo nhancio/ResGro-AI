@@ -1,23 +1,5 @@
-import type { OperatorAgentCatalogItem } from "../shared/models/operator";
-
-/** Maps to `campaign_type: "ads"` + sponsored_listing rows. */
-export const ADS_FLOW_AGENT_ID = "ads-setup" as const;
-
-export const adsFlowCatalogEntry: OperatorAgentCatalogItem = {
-  id: "ads-setup",
-  title: "Sponsored listings (portal)",
-  description: "Sponsored listing setup and scheduling in the merchant portal.",
-  requires: [
-    "Approved marketing_plan (sponsored_listing rows)",
-    "campaign_type: ads",
-    "store_ids, merchant portal credentials (secrets — never stored in-browser)",
-  ],
-  produces: [
-    "setup.json — campaigns_created[] (sponsored listings)",
-    "scheduled_start / scheduled_end per campaign",
-    "review_scheduled_at for performance review",
-  ],
-};
+/** Maps to ResgroAI — Ads (`campaign_type: "ads"` + sponsored_listing rows). */
+export const ADS_FLOW_AGENT_ID = "resgro-ads" as const;
 
 export const SAMPLE_MARKETING_PLAN_ADS_JSON = `{
   "operator_id": "demo_operator",

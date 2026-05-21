@@ -1,0 +1,53 @@
+# .gcloudignore — speeds up `gcloud builds submit` (Cloud Build upload context)
+# Build contexts: repo root for all services (see deploy-gcp.sh)
+#
+# Kept for Docker builds:
+#   backend/          — resgro-backend (backend/Dockerfile)
+#   apis/             — resgro-api (apis/http/Dockerfile)
+#   agents/           — resgro-agents-api + UI agent panel (minus heavy subtrees below)
+#   api/, orchestrator/, contracts/, shared/, data/ — resgro-agents-api (root Dockerfile)
+#   resgro-landing/   — Netlify frontend only (exclude from GCP upload)
+resgro-landing/
+#   requirements.txt  — root agents Dockerfile
+
+# Not used by any Cloud Run Dockerfile COPY
+RalphAI/
+DD_LAZ_Everything_Data/
+sample_data/
+
+# Heavy agent subtrees (not copied by root agents Dockerfile; UI only needs TS agent modules)
+agents/resgro-browser-automation/
+agents/Resgro-selfserve-app/
+
+# Runtime session/run artifacts (created at runtime; not needed in build context)
+data/sessions/
+data/runs/
+
+# VCS / local / secrets
+.git/
+.gitignore
+.env
+.env.*
+!.env.gcp.example
+backend/.venv/
+backend/db.sqlite3
+backend/staticfiles/
+**/__pycache__/
+**/.pytest_cache/
+**/.venv/
+*.pyc
+logs/
+.resgro-pids
+.claude/
+.DS_Store
+.tmp.resgro-*
+
+# Node (keep package manifests; ignore installed deps)
+**/node_modules/
+resgro-landing/dist/
+.netlify/
+.vercel/
+
+# Docs / local CSV dumps (agents use repo data/, not DD_LAZ)
+*.csv
+*.zip

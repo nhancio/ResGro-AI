@@ -5,8 +5,8 @@ Essential metrics for placing promotions. Slot-based analysis (Pre vs Post only,
 ## Metrics (DoorDash)
 
 - **Sales** – Total sales
-- **Promo driven sales** – From TODC Promo + Corp Promo
-- **Ads driven sales** – From TODC Ads + Corp Ads
+- **Promo driven sales** – From Resgro Promo + Corp Promo
+- **Ads driven sales** – From Resgro Ads + Corp Ads
 - **Budget (Total Spend)** – Marketing spend
 - **Promo ROAS** – Return on ad spend for promotions
 - **Ads ROAS** – Return on ad spend for sponsored listings

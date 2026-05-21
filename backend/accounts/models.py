@@ -1,0 +1,84 @@
+from django.db import models
+
+
+class WorkspaceUser(models.Model):
+    """Registered ResGro operator — source of truth (synced with Stripe)."""
+
+    id = models.CharField(max_length=32, primary_key=True)
+    email = models.EmailField(unique=True, db_index=True)
+    password_hash = models.CharField(max_length=256, blank=True)
+    stripe_customer_id = models.CharField(max_length=64, unique=True, null=True, blank=True, db_index=True)
+
+    business_name = models.CharField(max_length=255, blank=True)
+    restaurant_count = models.PositiveIntegerField(default=1)
+    date_of_birth = models.CharField(max_length=32, blank=True)
+    region = models.CharField(max_length=64, blank=True)
+    can_manage_users = models.BooleanField(default=True)
+
+    status = models.CharField(
+        max_length=20,
+        choices=[("active", "Active"), ("suspended", "Suspended"), ("cancelled", "Cancelled")],
+        default="active",
+        db_index=True,
+    )
+    suspended_at = models.DateTimeField(null=True, blank=True)
+    suspended_reason = models.TextField(blank=True)
+
+    reset_token = models.CharField(max_length=128, blank=True)
+    reset_expiry = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_login_at = models.DateTimeField(null=True, blank=True)
+    stripe_synced_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.email} ({self.id})"
+
+
+class Subscription(models.Model):
+    user = models.ForeignKey(WorkspaceUser, on_delete=models.CASCADE, related_name="subscriptions")
+    stripe_subscription_id = models.CharField(max_length=64, unique=True)
+    stripe_price_id = models.CharField(max_length=64, blank=True)
+    status = models.CharField(max_length=32, db_index=True)
+    plan_name = models.CharField(max_length=64, blank=True)
+
+    trial_start = models.DateTimeField(null=True, blank=True)
+    trial_end = models.DateTimeField(null=True, blank=True)
+    current_period_end = models.DateTimeField(null=True, blank=True)
+    canceled_at = models.DateTimeField(null=True, blank=True)
+
+    amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    currency = models.CharField(max_length=8, default="aud")
+    interval = models.CharField(max_length=16, default="month")
+
+    is_primary = models.BooleanField(default=True)
+    synced_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-synced_at"]
+
+
+class Invoice(models.Model):
+    user = models.ForeignKey(WorkspaceUser, on_delete=models.CASCADE, related_name="invoices")
+    stripe_invoice_id = models.CharField(max_length=64, unique=True)
+    stripe_subscription_id = models.CharField(max_length=64, blank=True)
+
+    status = models.CharField(max_length=32, db_index=True)
+    amount_due = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    currency = models.CharField(max_length=8, default="aud")
+
+    hosted_invoice_url = models.URLField(max_length=512, blank=True)
+    invoice_pdf = models.URLField(max_length=512, blank=True)
+    period_start = models.DateTimeField(null=True, blank=True)
+    period_end = models.DateTimeField(null=True, blank=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+
+    synced_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-period_end"]

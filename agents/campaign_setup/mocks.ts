@@ -3,10 +3,10 @@ import { isoNow } from "../shared/utils/iso";
 
 export function mockCampaignSetup(
   operatorId: string,
-  mode: "promo-setup" | "ads-setup",
+  mode: "resgro-offers" | "resgro-ads",
   storeIds: string[],
 ): CampaignSetupResult {
-  const isPromo = mode === "promo-setup";
+  const isPromo = mode === "resgro-offers";
   const created: CreatedCampaign[] = [
     {
       campaign_id: isPromo ? "portal_promo_001" : "portal_sl_001",

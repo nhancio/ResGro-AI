@@ -1,57 +1,16 @@
-const Stripe = require("stripe");
+const { getStripe, respond, wrapHandler } = require("./_shared");
 
-exports.handler = async (event) => {
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Content-Type": "application/json",
-  };
+exports.handler = wrapHandler(async (body, _event, headers) => {
+  const { customerId, returnUrl } = body;
 
-  if (event.httpMethod === "OPTIONS") {
-    return { statusCode: 200, headers, body: "" };
+  if (!customerId) {
+    return respond(400, { error: "Missing Stripe customer ID" }, headers);
   }
 
-  if (event.httpMethod !== "POST") {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: "Method not allowed" }),
-    };
-  }
+  const session = await getStripe().billingPortal.sessions.create({
+    customer: customerId,
+    return_url: returnUrl || "https://resgro.ai/#/app",
+  });
 
-  try {
-    if (!process.env.STRIPE_SECRET_KEY) {
-      throw new Error("Missing STRIPE_SECRET_KEY");
-    }
-
-    const { customerId, returnUrl } = JSON.parse(event.body || "{}");
-
-    if (!customerId) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: "Missing Stripe customer ID" }),
-      };
-    }
-
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-    const session = await stripe.billingPortal.sessions.create({
-      customer: customerId,
-      return_url: returnUrl || "https://resgro.ai/#/app",
-    });
-
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ url: session.url }),
-    };
-  } catch (err) {
-    console.error("Billing portal error:", err.message);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: err.message || "Failed to create billing portal session" }),
-    };
-  }
-};
+  return respond(200, { url: session.url }, headers);
+});
