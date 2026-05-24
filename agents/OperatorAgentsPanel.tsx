@@ -36,6 +36,15 @@ import { OPERATOR_AGENT_CATALOG } from "./orchestrator/registry";
 import type { OperatorAgentId, OperatorAgentStatus } from "./shared/models/operator";
 import type { DeepDiveReport, MonthlyReporterPreview } from "./shared/models/report";
 import { API_BASE, resolveAgentsApiUrl } from "@resgro-app/lib/agentsApi";
+import {
+  fetchAgentsApi,
+  runCampaignReviewWithFiles,
+  runDeepDiveWithFiles,
+  runMarketingRecoStandalone,
+  runMonthlyReporterWithFiles,
+  runSessionAgent,
+  uploadFilesToSession,
+} from "@resgro-app/lib/agentWorkflow";
 
 function isDeepDiveReportPayload(v: unknown): v is DeepDiveReport {
   if (!v || typeof v !== "object") return false;
@@ -477,28 +486,37 @@ export function OperatorAgentsPanel() {
 
     try {
       if (selected === "data") {
-        const form = new FormData();
-        form.append("operator_id", opId.trim());
-        form.append("operator_name", opName.trim());
-        form.append("date_range", dateRangeStr.trim());
         if (dataAgentMode === "autopilot") {
+          const form = new FormData();
+          form.append("operator_id", opId.trim());
+          form.append("operator_name", opName.trim());
+          form.append("date_range", dateRangeStr.trim());
           form.append("mode", "autopilot");
           form.append("doordash_email", ddEmail.trim());
           form.append("doordash_password", ddPassword);
+          const res = await fetchAgentsApi("/api/sessions", {
+            method: "POST",
+            body: form,
+            timeoutKind: "agent_run",
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ detail: res.statusText }));
+            throw new Error(err.detail || err.error || `API error ${res.status}`);
+          }
+          const data = (await res.json()) as Record<string, unknown>;
+          setDataResult(data);
+          const sid = typeof data.session_id === "string" ? data.session_id : "";
+          if (sid) setSessionId(sid);
         } else {
-          for (const f of dataZipFiles) form.append("zip_files", f);
-          for (const f of dataCsvFiles) form.append("csv_files", f);
+          const allFiles = [...dataZipFiles, ...dataCsvFiles];
+          const sid = await uploadFilesToSession(allFiles, {
+            operatorId: opId.trim(),
+            operatorName: opName.trim(),
+            dateRange: dateRangeStr.trim(),
+          });
+          setDataResult({ session_id: sid, status: "ready" });
+          setSessionId(sid);
         }
-
-        const res = await fetch(`${API_BASE}/sessions`, { method: "POST", body: form });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({ detail: res.statusText }));
-          throw new Error(err.detail || err.error || `API error ${res.status}`);
-        }
-        const data = (await res.json()) as Record<string, unknown>;
-        setDataResult(data);
-        const sid = typeof data.session_id === "string" ? data.session_id : "";
-        if (sid) setSessionId(sid);
       } else if (selected === "boss") {
         const form = new FormData();
         form.append("doordash_email", ddEmail.trim());
@@ -509,9 +527,9 @@ export function OperatorAgentsPanel() {
           form.append("skip_steps", bossSkipSteps.trim());
         }
 
-        const res = await fetch(
-          `${API_BASE}/sessions/${encodeURIComponent(sessionId.trim())}/run/boss`,
-          { method: "POST", body: form },
+        const res = await fetchAgentsApi(
+          `/api/sessions/${encodeURIComponent(sessionId.trim())}/run/boss`,
+          { method: "POST", body: form, timeoutKind: "agent_run" },
         );
         if (!res.ok) {
           const err = await res.json().catch(() => ({ detail: res.statusText }));
@@ -519,20 +537,7 @@ export function OperatorAgentsPanel() {
         }
         setBossResult((await res.json()) as Record<string, unknown>);
       } else if (selected === "deepdive") {
-        const form = new FormData();
-        form.append("operator_id", opId.trim());
-        for (const f of zipFiles) form.append("zip_files", f);
-
-        const res = await fetch(`${API_BASE}/runs/deepdive`, { method: "POST", body: form });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({ detail: res.statusText }));
-          throw new Error(err.detail || err.error || `API error ${res.status}`);
-        }
-        const data = (await res.json()) as {
-          report_url?: string;
-          deepdive_report?: DeepDiveReport;
-          [key: string]: unknown;
-        };
+        const data = await runDeepDiveWithFiles(opId.trim(), zipFiles);
 
         let htmlOk = false;
         if (data.report_url) {
@@ -569,7 +574,11 @@ export function OperatorAgentsPanel() {
         if (ueEmail.trim()) form.append("ue_email", ueEmail.trim());
         if (uePassword) form.append("ue_password", uePassword);
 
-        const res = await fetch(`${API_BASE}/runs/offers`, { method: "POST", body: form });
+        const res = await fetchAgentsApi("/api/runs/offers", {
+          method: "POST",
+          body: form,
+          timeoutKind: "agent_run",
+        });
         if (!res.ok) {
           const err = await res.json().catch(() => ({ detail: res.statusText }));
           throw new Error(err.detail || err.error || `API error ${res.status}`);
@@ -585,7 +594,11 @@ export function OperatorAgentsPanel() {
         if (ueEmail.trim()) form.append("ue_email", ueEmail.trim());
         if (uePassword) form.append("ue_password", uePassword);
 
-        const res = await fetch(`${API_BASE}/runs/ads`, { method: "POST", body: form });
+        const res = await fetchAgentsApi("/api/runs/ads", {
+          method: "POST",
+          body: form,
+          timeoutKind: "agent_run",
+        });
         if (!res.ok) {
           const err = await res.json().catch(() => ({ detail: res.statusText }));
           throw new Error(err.detail || err.error || `API error ${res.status}`);
@@ -593,30 +606,15 @@ export function OperatorAgentsPanel() {
         setSetupResult(await res.json());
 
       } else if (selected === "monthly-reporter") {
-        const form = new FormData();
-        form.append("pre_range", preRange.trim());
-        form.append("post_range", postRange.trim());
-        form.append("operator_id", opId.trim() || "SSM");
-        form.append("operator_name", opName.trim());
-        form.append("excluded_dates", excludedDates.trim());
-        form.append("dd_store_ids", ddStores.trim());
-        form.append("ue_store_ids", ueStores.trim());
-
+        const allFiles: File[] = [];
         const ddFile = ddFileRef.current?.files?.[0];
-        if (ddFile) form.append("dd_file", ddFile);
+        if (ddFile) allFiles.push(ddFile);
         const ueFile = ueFileRef.current?.files?.[0];
-        if (ueFile) form.append("ue_file", ueFile);
+        if (ueFile) allFiles.push(ueFile);
         const mktFiles = mktFilesRef.current?.files;
-        if (mktFiles) {
-          for (const f of Array.from(mktFiles)) form.append("marketing_files", f);
-        }
+        if (mktFiles) allFiles.push(...Array.from(mktFiles));
 
-        const res = await fetch(`${API_BASE}/runs/monthly-reporter`, { method: "POST", body: form });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({ detail: res.statusText }));
-          throw new Error(err.detail || err.error || `API error ${res.status}`);
-        }
-        const data = await res.json();
+        const data = await runMonthlyReporterWithFiles(allFiles);
         if (data.preview) {
           setMonthlyResult({
             run_id: data.run_id,
@@ -636,54 +634,72 @@ export function OperatorAgentsPanel() {
         }
         setDownloads(dl);
       } else if (selected === "marketingreco") {
-        const form = new FormData();
-        form.append("operator_id", opId.trim());
-        form.append("mode", mrkMode);
         if (mrkMode === "manual") {
-          const f = mrkFinancialRef.current?.files?.[0]!;
-          form.append("financial_file", f);
+          const f = mrkFinancialRef.current?.files?.[0];
+          if (!f) throw new Error("Manual mode requires a FINANCIAL_DETAILED file.");
+          const data = await runMarketingRecoStandalone(opId.trim(), f);
+          setMarketingRecoResult(data);
+          const dl = data.downloads as Record<string, string> | undefined;
+          const runId = typeof data.run_id === "string" ? data.run_id : "";
+          const campaigns =
+            (dl?.campaigns_excel && resolveAgentsApiUrl(dl.campaigns_excel)) ||
+            (runId ? resolveAgentsApiUrl(`/api/runs/marketingreco/${runId}/download/campaigns`) : "");
+          setDownloads(campaigns ? { campaigns_excel: campaigns } : {});
         } else {
+          const form = new FormData();
+          form.append("operator_id", opId.trim());
+          form.append("mode", mrkMode);
           form.append("doordash_email", ddEmail.trim());
           form.append("doordash_password", ddPassword);
           if (ueEmail.trim()) form.append("ue_email", ueEmail.trim());
           if (uePassword) form.append("ue_password", uePassword);
-        }
 
-        const res = await fetch(`${API_BASE}/runs/marketingreco`, { method: "POST", body: form });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({ detail: res.statusText }));
-          throw new Error(err.detail || err.error || `API error ${res.status}`);
+          const res = await fetchAgentsApi("/api/runs/marketingreco", {
+            method: "POST",
+            body: form,
+            timeoutKind: "agent_run",
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ detail: res.statusText }));
+            throw new Error(err.detail || err.error || `API error ${res.status}`);
+          }
+          const data = (await res.json()) as Record<string, unknown>;
+          setMarketingRecoResult(data);
+          const dl = data.downloads as Record<string, string> | undefined;
+          const runId = typeof data.run_id === "string" ? data.run_id : "";
+          const campaigns =
+            (dl?.campaigns_excel && resolveAgentsApiUrl(dl.campaigns_excel)) ||
+            (runId ? resolveAgentsApiUrl(`/api/runs/marketingreco/${runId}/download/campaigns`) : "");
+          setDownloads(campaigns ? { campaigns_excel: campaigns } : {});
         }
-        const data = (await res.json()) as Record<string, unknown>;
-        setMarketingRecoResult(data);
-        const dl = data.downloads as Record<string, string> | undefined;
-        const runId = typeof data.run_id === "string" ? data.run_id : "";
-        const campaigns =
-          (dl?.campaigns_excel && resolveAgentsApiUrl(dl.campaigns_excel)) ||
-          (runId ? resolveAgentsApiUrl(`/api/runs/marketingreco/${runId}/download/campaigns`) : "");
-        setDownloads(campaigns ? { campaigns_excel: campaigns } : {});
       } else if (selected === "review") {
-        const form = new FormData();
-        form.append("operator_id", opId.trim());
-        form.append("mode", reviewMode);
-        if (reviewDataDir.trim()) {
-          form.append("data_dir", reviewDataDir.trim());
-        }
         if (reviewMode === "manual") {
           const files = reviewMktFilesRef.current?.files;
-          if (files) {
-            for (const f of Array.from(files)) {
-              form.append("marketing_files", f);
-            }
+          if (!files?.length) throw new Error("Manual mode requires marketing export files.");
+          const data = await runCampaignReviewWithFiles(
+            opId.trim(),
+            Array.from(files),
+            { dataDir: reviewDataDir.trim() },
+          );
+          setCampaignReviewResult(data);
+        } else {
+          const form = new FormData();
+          form.append("operator_id", opId.trim());
+          form.append("mode", reviewMode);
+          if (reviewDataDir.trim()) {
+            form.append("data_dir", reviewDataDir.trim());
           }
+          const res = await fetchAgentsApi("/api/runs/campaign-review", {
+            method: "POST",
+            body: form,
+            timeoutKind: "agent_run",
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ detail: res.statusText }));
+            throw new Error(err.detail || err.error || `API error ${res.status}`);
+          }
+          setCampaignReviewResult((await res.json()) as Record<string, unknown>);
         }
-
-        const res = await fetch(`${API_BASE}/runs/campaign-review`, { method: "POST", body: form });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({ detail: res.statusText }));
-          throw new Error(err.detail || err.error || `API error ${res.status}`);
-        }
-        setCampaignReviewResult((await res.json()) as Record<string, unknown>);
         setDownloads({});
       }
     } catch (e) {

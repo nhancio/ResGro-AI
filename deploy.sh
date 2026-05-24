@@ -137,7 +137,10 @@ deploy_netlify() {
 
   header "Production build (vite)"
   cd "$SITE_DIR"
+  export VITE_API_BASE_URL="${VITE_API_BASE_URL:-https://resgro-api-432223990540.us-west2.run.app}"
   export VITE_AGENTS_API_URL="${VITE_AGENTS_API_URL:-https://resgro-agents-api-432223990540.us-west2.run.app}"
+  export VITE_SITE_URL="${VITE_SITE_URL:-https://resgro.ai}"
+  export VITE_APP_URL="${VITE_APP_URL:-https://app.resgro.ai}"
   npm run build
 
   if [ ! -d "$SITE_DIR/dist" ]; then

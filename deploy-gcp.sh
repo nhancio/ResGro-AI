@@ -335,8 +335,24 @@ deploy_agents() {
   build_and_push "Dockerfile" "$ROOT_DIR" "$tag"
 
   local env_args=()
-  if [ -n "${ANTHROPIC_API_KEY:-}" ] || [ -n "${GEMINI_API_KEY:-}" ]; then
-    env_args=(--set-env-vars "ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-},GEMINI_API_KEY=${GEMINI_API_KEY:-}")
+  local gcs_bucket="${GCS_UPLOAD_BUCKET:-}"
+  local gcs_signer="${GCS_SIGNING_SERVICE_ACCOUNT:-}"
+  local env_pairs=()
+  if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
+    env_pairs+=("ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}")
+  fi
+  if [ -n "${GEMINI_API_KEY:-}" ]; then
+    env_pairs+=("GEMINI_API_KEY=${GEMINI_API_KEY}")
+  fi
+  if [ -n "$gcs_bucket" ]; then
+    env_pairs+=("GCS_UPLOAD_BUCKET=${gcs_bucket}")
+  fi
+  if [ -n "$gcs_signer" ]; then
+    env_pairs+=("GCS_SIGNING_SERVICE_ACCOUNT=${gcs_signer}")
+  fi
+  if [ "${#env_pairs[@]}" -gt 0 ]; then
+    local IFS=,
+    env_args=(--set-env-vars "${env_pairs[*]}")
   fi
 
   gcloud run deploy resgro-agents-api \
@@ -346,9 +362,9 @@ deploy_agents() {
     --platform managed \
     --allow-unauthenticated \
     --port 8080 \
-    --memory 2Gi \
-    --timeout 900 \
-    --cpu 2 \
+    --memory 8Gi \
+    --timeout 3600 \
+    --cpu 4 \
     "${env_args[@]}"
 
   local agents_url

@@ -10,7 +10,7 @@ from typing import Any
 
 import json
 
-from .analyzer import analyze, analyze_rows
+from .analyzer import analyze, analyze_rows, build_slot_tables
 from .data_loader import load_ssm_zips, load_files, build_upload_audit
 from .reporter import generate_report, as_json_dict, write_report
 from shared.config.settings import data_root
@@ -140,6 +140,11 @@ def run(
 
     # Run analysis
     analysis = analyze(datasets, operator_id)
+
+    # Build slot-level AOV & profitability tables for marketing reco
+    slot_tables = build_slot_tables(datasets)
+    if slot_tables:
+        analysis["slot_tables"] = slot_tables
 
     # Generate HTML report
     report_path = generate_report(analysis)

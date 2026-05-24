@@ -94,6 +94,16 @@ app.add_middleware(
 )
 
 
+@app.get("/")
+def root():
+    return {
+        "ok": True,
+        "service": "resgro-agents-api",
+        "message": "Agents API. Use /api/health, /api/sessions, /api/chat, etc.",
+        "health": "/api/health",
+    }
+
+
 @app.get("/api/account-directory")
 def get_account_directory():
     """
@@ -310,7 +320,242 @@ def _read_all_runs(limit: int = 200) -> list[dict]:
 
 @app.get("/api/health")
 def health() -> dict:
-    return {"ok": True, "service": "resgro-api"}
+    return {"ok": True, "service": "resgro-agents-api"}
+
+
+# ── GCS large uploads (bypass Cloud Run 32 MiB body limit) ─────────────────
+
+from api import gcs_uploads as _gcs  # noqa: E402
+
+
+class _GcsFileSignSpec(BaseModel):
+    filename: str
+    content_type: str = "application/octet-stream"
+    size_bytes: int
+
+
+class _GcsSignRequest(BaseModel):
+    files: list[_GcsFileSignSpec]
+
+
+class _GcsObjectRef(BaseModel):
+    object_path: str
+    filename: str
+
+
+class _SessionFromGcsRequest(BaseModel):
+    operator_id: str
+    operator_name: str = ""
+    date_range: str = ""
+    objects: list[_GcsObjectRef]
+
+
+class _MonthlyReporterFromGcsRequest(BaseModel):
+    operator_id: str = ""
+    operator_name: str = ""
+    pre_range: str
+    post_range: str
+    excluded_dates: str = ""
+    dd_store_ids: str = ""
+    ue_store_ids: str = ""
+    dd_object: Optional[_GcsObjectRef] = None
+    ue_object: Optional[_GcsObjectRef] = None
+    marketing_objects: list[_GcsObjectRef] = []
+
+
+@app.get("/api/uploads/status")
+def uploads_status() -> dict:
+    return {
+        "enabled": _gcs.uploads_enabled(),
+        "bucket": _gcs.GCS_UPLOAD_BUCKET or None,
+        "direct_upload_max_bytes": 30 * 1024 * 1024,
+        "gcs_max_bytes_per_file": _gcs.MAX_UPLOAD_BYTES,
+    }
+
+
+@app.post("/api/uploads/sign")
+def uploads_sign(req: _GcsSignRequest):
+    if not req.files:
+        raise HTTPException(400, "Provide at least one file to sign.")
+    try:
+        return _gcs.sign_files([f.model_dump() for f in req.files])
+    except RuntimeError as exc:
+        raise HTTPException(503, str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    except Exception as exc:
+        _api_log.exception("uploads_sign failed")
+        raise HTTPException(500, f"Failed to create signed URLs: {exc}") from exc
+
+
+@app.post("/api/sessions/from-gcs")
+def post_session_from_gcs(req: _SessionFromGcsRequest):
+    if not req.objects:
+        raise HTTPException(400, "Provide at least one uploaded object.")
+    if not _gcs.uploads_enabled():
+        raise HTTPException(503, "GCS uploads are not configured on this server.")
+
+    work = Path(tempfile.mkdtemp(prefix="session_gcs_"))
+    gcs_paths: list[str] = []
+    try:
+        uploaded_zips, csv_pairs, gcs_paths = _gcs.materialize_objects(
+            [o.model_dump() for o in req.objects],
+            work,
+        )
+        if not uploaded_zips and not csv_pairs:
+            raise HTTPException(400, "No files found in GCS for this upload.")
+
+        result = data_agent_run_manual(
+            operator_id=req.operator_id.strip(),
+            operator_name=req.operator_name.strip(),
+            zip_paths=uploaded_zips if uploaded_zips else None,
+            csv_pairs=csv_pairs if csv_pairs else None,
+            date_range=req.date_range.strip(),
+        )
+        return JSONResponse(result)
+    except HTTPException:
+        raise
+    except FileNotFoundError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(500, str(exc)) from exc
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+        _gcs.delete_objects(gcs_paths)
+
+
+def _monthly_reporter_response(
+    run_id: str,
+    bundle: dict,
+    t0: datetime,
+    operator_id: str,
+    operator_name: str,
+) -> JSONResponse:
+    out_dir = RUNS_BASE / run_id
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    full_name = bundle["filename"]
+    (out_dir / full_name).write_bytes(bundle["excel_bytes"])
+
+    date_name = bundle.get("date_export_filename")
+    if bundle.get("date_export_bytes") and date_name:
+        (out_dir / date_name).write_bytes(bundle["date_export_bytes"])  # type: ignore[index]
+
+    preview = {"tables": bundle.get("tables") or {}, "summary_text": bundle.get("summary_text")}
+    (out_dir / "preview.json").write_text(json.dumps(preview, default=str), encoding="utf-8")
+
+    duration_s = (datetime.now(timezone.utc) - t0).total_seconds()
+    meta = {
+        "run_id": run_id,
+        "agent": "monthly_reporter",
+        "operator_id": operator_id.strip() or "—",
+        "operator_name": operator_name.strip(),
+        "status": "success",
+        "started": t0.isoformat(),
+        "duration_s": round(duration_s, 2),
+        "summary_text": bundle.get("summary_text"),
+        "full_report_filename": full_name,
+        "date_export_filename": date_name if bundle.get("date_export_bytes") else None,
+    }
+    (out_dir / "meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
+
+    _append_index(
+        {
+            "id": run_id,
+            "agent": "monthly_reporter",
+            "operator": operator_id.strip() or operator_name.strip() or "—",
+            "status": "success",
+            "started": t0.isoformat().replace("+00:00", "Z")[:19].replace("T", " "),
+            "duration": f"{int(duration_s // 60)}m {int(duration_s % 60):02d}s",
+        }
+    )
+
+    return JSONResponse(
+        {
+            "run_id": run_id,
+            "summary_text": bundle.get("summary_text"),
+            "preview": preview,
+            "downloads": {
+                "full": f"/api/runs/{run_id}/download/full",
+                "date": f"/api/runs/{run_id}/download/date"
+                if bundle.get("date_export_bytes")
+                else None,
+            },
+        }
+    )
+
+
+@app.post("/api/runs/monthly-reporter/from-gcs")
+def post_monthly_reporter_from_gcs(req: _MonthlyReporterFromGcsRequest):
+    if not _gcs.uploads_enabled():
+        raise HTTPException(503, "GCS uploads are not configured on this server.")
+
+    run_id = str(uuid.uuid4())
+    t0 = datetime.now(timezone.utc)
+    work = Path(tempfile.mkdtemp(prefix=f"mr_gcs_{run_id[:8]}_"))
+    gcs_paths: list[str] = []
+
+    try:
+        if req.dd_object:
+            p = _gcs.download_object_to_path(req.dd_object.object_path, work / "dd-data.csv")
+            gcs_paths.append(req.dd_object.object_path)
+            if not p.stat().st_size:
+                raise HTTPException(400, "DoorDash file is empty.")
+
+        if req.ue_object:
+            p = _gcs.download_object_to_path(req.ue_object.object_path, work / "ue-data.csv")
+            gcs_paths.append(req.ue_object.object_path)
+            if not p.stat().st_size:
+                raise HTTPException(400, "UberEats file is empty.")
+
+        mkt_pairs: list[tuple[str, bytes]] = []
+        for mobj in req.marketing_objects:
+            local = work / Path(mobj.filename).name
+            _gcs.download_object_to_path(mobj.object_path, local)
+            gcs_paths.append(mobj.object_path)
+            raw = local.read_bytes()
+            if raw:
+                mkt_pairs.append((mobj.filename, raw))
+        if mkt_pairs:
+            write_marketing_csvs_to_work_dir(work, mkt_pairs)
+
+        inputs = ReportInputs(
+            pre_range=req.pre_range.strip(),
+            post_range=req.post_range.strip(),
+            excluded_dates_text=req.excluded_dates.strip(),
+            operator_name=req.operator_name.strip(),
+            dd_store_ids_text=req.dd_store_ids.strip(),
+            ue_store_ids_text=req.ue_store_ids.strip(),
+        )
+        bundle = generate_monthly_report_bundle(inputs, data_root=work)
+        return _monthly_reporter_response(
+            run_id,
+            bundle,
+            t0,
+            req.operator_id,
+            req.operator_name,
+        )
+    except HTTPException:
+        raise
+    except FileNotFoundError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except Exception as exc:
+        duration_s = (datetime.now(timezone.utc) - t0).total_seconds()
+        _append_index(
+            {
+                "id": run_id,
+                "agent": "monthly_reporter",
+                "operator": req.operator_id.strip() or "—",
+                "status": "failed",
+                "started": t0.isoformat().replace("+00:00", "Z")[:19].replace("T", " "),
+                "duration": f"{int(duration_s)}s",
+                "error": str(exc),
+            }
+        )
+        raise HTTPException(500, str(exc)) from exc
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+        _gcs.delete_objects(gcs_paths)
 
 
 def _count_run_statuses(runs: list[dict]) -> dict[str, int]:
@@ -360,6 +605,8 @@ async def post_session(
     operator_id: str = Form(...),
     operator_name: str = Form(""),
     date_range: str = Form(""),
+    start_date: str = Form(""),
+    end_date: str = Form(""),
     mode: str = Form("manual"),
     zip_files: Optional[List[UploadFile]] = File(None),
     csv_files: Optional[List[UploadFile]] = File(None),
@@ -373,12 +620,16 @@ async def post_session(
         if mode_norm == "autopilot":
             if not doordash_email.strip() or not doordash_password:
                 raise HTTPException(400, "Autopilot mode requires doordash_email and doordash_password.")
-            result = data_agent_run_autopilot(
+            import asyncio
+            result = await asyncio.to_thread(
+                data_agent_run_autopilot,
                 operator_id=operator_id.strip(),
                 operator_name=operator_name.strip(),
                 doordash_email=doordash_email.strip(),
                 doordash_password=doordash_password,
                 date_range=date_range.strip(),
+                start_date=start_date.strip(),
+                end_date=end_date.strip(),
             )
             return JSONResponse(result)
 
@@ -591,45 +842,41 @@ async def session_run_marketingreco(session_id: str, request: Request):
     t0 = datetime.now(timezone.utc)
     try:
         data_dir = get_session_data_dir(session_id)
+
+        # Look for uploaded slot-table CSVs (downloaded from DeepDive)
+        aov_csv = None
+        prof_csv = None
+        for p in sorted(data_dir.rglob("*.csv")):
+            name_lower = p.name.lower()
+            if "aov" in name_lower:
+                aov_csv = str(p)
+            elif "profitability" in name_lower:
+                prof_csv = str(p)
+
+        # Also look for the financial detailed CSV (builds full slot tables)
         fin_csv = None
-        # 1) Strict DoorDash pattern
         for p in sorted(data_dir.rglob("*FINANCIAL*DETAILED*.csv")):
             fin_csv = str(p)
             break
-        # 2) Case-insensitive "financial" in filename
         if not fin_csv:
             for p in sorted(data_dir.rglob("*.csv")):
                 if "financial" in p.name.lower():
                     fin_csv = str(p)
                     break
-        # 3) Last resort: check CSV headers for financial column indicators
-        if not fin_csv:
-            _financial_indicators = {
-                "revenue", "sales", "cost", "profit", "amount",
-                "transaction", "payment", "payout", "subtotal", "commission",
-            }
-            for p in sorted(data_dir.rglob("*.csv")):
-                try:
-                    import pandas as _pd
-                    cols = {c.lower() for c in _pd.read_csv(p, nrows=0).columns}
-                    if cols & _financial_indicators:
-                        fin_csv = str(p)
-                        _api_log.info("Financial CSV matched by headers: %s", p.name)
-                        break
-                except Exception:
-                    continue
 
-        if fin_csv:
-            result = run_marketingreco(
-                op_id,
-                mode="manual",
-                financial_report_path=fin_csv,
-                reporting_root=str(ROOT / "agents/resgro-browser-automation"),
-            )
-        else:
+        if not aov_csv and not fin_csv:
             available = [p.name for p in data_dir.rglob("*.csv")]
-            _api_log.warning("No financial CSV found. Available: %s", available)
-            raise HTTPException(400, f"No financial CSV found in session data. Available files: {available}")
+            _api_log.warning("No usable CSV found. Available: %s", available)
+            raise HTTPException(400, f"No slot table or financial CSV found. Upload the AOV + Profitability CSVs from DeepDive, or a FINANCIAL_DETAILED export. Available: {available}")
+
+        result = run_marketingreco(
+            op_id,
+            mode="manual",
+            aov_csv_path=aov_csv,
+            profitability_csv_path=prof_csv,
+            financial_report_path=fin_csv,
+            reporting_root=str(ROOT / "agents/resgro-browser-automation"),
+        )
 
         run_id = str(uuid.uuid4())
         duration_s = (datetime.now(timezone.utc) - t0).total_seconds()
@@ -1051,6 +1298,258 @@ async def post_marketingreco(
         raise HTTPException(500, str(e))
     finally:
         shutil.rmtree(work, ignore_errors=True)
+
+
+class _MarketingRecoFromGcsRequest(BaseModel):
+    operator_id: str
+    mode: str = "manual"
+    financial_object: _GcsObjectRef
+    doordash_email: str = ""
+    doordash_password: str = ""
+
+
+@app.post("/api/runs/marketingreco/from-gcs")
+def post_marketingreco_from_gcs(req: _MarketingRecoFromGcsRequest):
+    if not _gcs.uploads_enabled():
+        raise HTTPException(503, "GCS uploads are not configured on this server.")
+
+    run_id = str(uuid.uuid4())
+    t0 = datetime.now(timezone.utc)
+    work = Path(tempfile.mkdtemp(prefix=f"mrk_gcs_{run_id[:8]}_"))
+    gcs_paths: list[str] = []
+
+    try:
+        mode_norm = req.mode.strip().lower()
+        if mode_norm != "manual":
+            raise HTTPException(400, "from-gcs only supports manual mode with financial_object.")
+
+        in_path = work / Path(req.financial_object.filename).name
+        _gcs.download_object_to_path(req.financial_object.object_path, in_path)
+        gcs_paths.append(req.financial_object.object_path)
+        if not in_path.stat().st_size:
+            raise HTTPException(400, "financial file is empty.")
+
+        result = run_marketingreco(
+            operator_id=req.operator_id.strip(),
+            mode="manual",
+            financial_report_path=str(in_path),
+            reporting_root=str(ROOT / "agents/resgro-browser-automation"),
+        )
+
+        duration_s = (datetime.now(timezone.utc) - t0).total_seconds()
+        out_dir = MRK_RUNS_BASE / run_id
+        out_dir.mkdir(parents=True, exist_ok=True)
+        meta = {
+            "run_id": run_id,
+            "agent": "marketingreco",
+            "operator_id": req.operator_id.strip(),
+            "mode": mode_norm,
+            "status": "success",
+            "started": t0.isoformat(),
+            "duration_s": round(duration_s, 2),
+            "recommended_campaigns": len(result.get("recommended_campaigns") or []),
+        }
+        (out_dir / "meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
+        (out_dir / "result.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
+        campaigns_xlsx = out_dir / "marketingreco_campaigns.xlsx"
+        _write_marketingreco_campaigns_excel(campaigns_xlsx, result)
+        _append_index(
+            {
+                "id": run_id,
+                "agent": "marketingreco",
+                "operator": req.operator_id.strip() or "—",
+                "status": "success",
+                "started": t0.isoformat().replace("+00:00", "Z")[:19].replace("T", " "),
+                "duration": f"{int(duration_s // 60)}m {int(duration_s % 60):02d}s",
+            }
+        )
+        ads_plan_payload = result.get("ads_plan") or {}
+        return JSONResponse(
+            {
+                **result,
+                "run_id": run_id,
+                "ads_upload_rows": resgro_ads_upload_rows(ads_plan_payload),
+                "downloads": {
+                    "campaigns_excel": f"/api/runs/marketingreco/{run_id}/download/campaigns",
+                },
+            }
+        )
+    except HTTPException:
+        raise
+    except FileNotFoundError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(500, str(exc)) from exc
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+        _gcs.delete_objects(gcs_paths)
+
+
+class _DeepDiveFromGcsRequest(BaseModel):
+    operator_id: str
+    objects: list[_GcsObjectRef]
+
+
+@app.post("/api/runs/deepdive/from-gcs")
+def post_deepdive_from_gcs(req: _DeepDiveFromGcsRequest):
+    if not req.objects:
+        raise HTTPException(400, "Provide at least one uploaded zip object.")
+    if not _gcs.uploads_enabled():
+        raise HTTPException(503, "GCS uploads are not configured on this server.")
+
+    run_id = str(uuid.uuid4())
+    t0 = datetime.now(timezone.utc)
+    work = Path(tempfile.mkdtemp(prefix=f"dd_gcs_{run_id[:8]}_"))
+    gcs_paths: list[str] = []
+
+    try:
+        uploaded_zips, _csv_pairs, gcs_paths = _gcs.materialize_objects(
+            [o.model_dump() for o in req.objects],
+            work,
+        )
+        if not uploaded_zips:
+            raise HTTPException(400, "DeepDive from-gcs requires at least one .zip file.")
+
+        res = run_deepdive(operator_id=req.operator_id.strip(), data_dir=work)
+        if res.get("status") != "success":
+            raise HTTPException(400, res.get("message", "DeepDive failed"))
+
+        duration_s = (datetime.now(timezone.utc) - t0).total_seconds()
+        report_path = Path(res["report_html_path"])
+        out_dir = DD_RUNS_BASE / run_id
+        out_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy(report_path, out_dir / "report.html")
+
+        legacy_path_str = res.get("deepdive_json_path") or ""
+        legacy_path = Path(legacy_path_str) if legacy_path_str else None
+        deepdive_report: dict | None = None
+        if legacy_path and legacy_path.is_file():
+            deepdive_report = json.loads(legacy_path.read_text(encoding="utf-8"))
+            shutil.copy(legacy_path, out_dir / "deepdive.json")
+
+        uploaded_names = [p.name for p in uploaded_zips]
+        meta = {
+            "run_id": run_id,
+            "agent": "deepdive",
+            "operator_id": req.operator_id.strip(),
+            "status": "success",
+            "started": t0.isoformat(),
+            "duration_s": round(duration_s, 2),
+            "uploaded_files": uploaded_names,
+            "datasets_loaded": res.get("datasets_loaded", []),
+            "upload_audit": res.get("upload_audit", {}),
+            "metric_hierarchy": (res.get("sections") or {}).get("metric_hierarchy") or {},
+            "deepdive_json_path": res.get("deepdive_json_path"),
+            "report_url": _deepdive_report_url(run_id),
+        }
+        if deepdive_report is not None:
+            meta["deepdive_report"] = deepdive_report
+        (out_dir / "meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
+
+        _append_index(
+            {
+                "id": run_id,
+                "agent": "deepdive",
+                "operator": req.operator_id.strip() or "—",
+                "status": "success",
+                "started": t0.isoformat().replace("+00:00", "Z")[:19].replace("T", " "),
+                "duration": f"{int(duration_s // 60)}m {int(duration_s % 60):02d}s",
+            }
+        )
+        return JSONResponse(meta)
+    except HTTPException:
+        raise
+    except FileNotFoundError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(500, str(exc)) from exc
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+        _gcs.delete_objects(gcs_paths)
+
+
+class _CampaignReviewFromGcsRequest(BaseModel):
+    operator_id: str
+    mode: str = "manual"
+    data_dir: str = ""
+    objects: list[_GcsObjectRef]
+
+
+@app.post("/api/runs/campaign-review/from-gcs")
+def post_campaign_review_from_gcs(req: _CampaignReviewFromGcsRequest):
+    if not req.objects:
+        raise HTTPException(400, "Provide at least one uploaded marketing file.")
+    if not _gcs.uploads_enabled():
+        raise HTTPException(503, "GCS uploads are not configured on this server.")
+
+    mode_norm = req.mode.strip().lower()
+    if mode_norm != "manual":
+        raise HTTPException(400, "from-gcs only supports manual mode with marketing files.")
+
+    run_id = str(uuid.uuid4())
+    t0 = datetime.now(timezone.utc)
+    work = Path(tempfile.mkdtemp(prefix=f"cr_gcs_{run_id[:8]}_"))
+    gcs_paths: list[str] = []
+
+    try:
+        data_files: list[str] = []
+        for obj in req.objects:
+            local = work / Path(obj.filename).name
+            _gcs.download_object_to_path(obj.object_path, local)
+            gcs_paths.append(obj.object_path)
+            if local.stat().st_size:
+                data_files.append(str(local))
+        if not data_files:
+            raise HTTPException(400, "No non-empty marketing files in GCS upload.")
+
+        result = campaign_review_to_json_safe(
+            run_campaign_review(
+                operator_id=req.operator_id.strip(),
+                mode="manual",
+                data_dir=(req.data_dir.strip() or None),
+                data_files=data_files,
+            )
+        )
+
+        duration_s = (datetime.now(timezone.utc) - t0).total_seconds()
+        out_dir = CR_RUNS_BASE / run_id
+        out_dir.mkdir(parents=True, exist_ok=True)
+        meta = {
+            "run_id": run_id,
+            "agent": "campaign_review",
+            "operator_id": req.operator_id.strip(),
+            "mode": mode_norm,
+            "status": "success",
+            "started": t0.isoformat(),
+            "duration_s": round(duration_s, 2),
+            "campaign_reviews": len(result.get("campaign_reviews") or []),
+            "datasets_loaded": (result.get("summary_metrics") or {}).get("datasets_loaded", []),
+        }
+        (out_dir / "meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
+        (out_dir / "result.json").write_text(
+            json.dumps(result, indent=2, allow_nan=False),
+            encoding="utf-8",
+        )
+        _append_index(
+            {
+                "id": run_id,
+                "agent": "campaign_review",
+                "operator": req.operator_id.strip() or "—",
+                "status": "success",
+                "started": t0.isoformat().replace("+00:00", "Z")[:19].replace("T", " "),
+                "duration": f"{int(duration_s // 60)}m {int(duration_s % 60):02d}s",
+            }
+        )
+        return JSONResponse({**result, "run_id": run_id})
+    except HTTPException:
+        raise
+    except FileNotFoundError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(500, str(exc)) from exc
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+        _gcs.delete_objects(gcs_paths)
 
 
 @app.post("/api/runs/offers")
@@ -1617,6 +2116,62 @@ class _ChatRequest(BaseModel):
     history: list[_ChatMessage] = []
 
 
+def _gemini_chat_stream(payload: dict):
+    """Call Gemini streaming API with retries; raise HTTPException on failure."""
+    import time
+
+    url = (
+        f"https://generativelanguage.googleapis.com/v1beta/models/"
+        f"{GEMINI_MODEL}:streamGenerateContent"
+    )
+    last_exc: Exception | None = None
+    for attempt in range(3):
+        try:
+            resp = _http_requests.post(
+                url,
+                params={"key": GEMINI_API_KEY, "alt": "sse"},
+                json=payload,
+                stream=True,
+                timeout=120,
+            )
+            if resp.status_code == 429:
+                resp.close()
+                if attempt < 2:
+                    time.sleep(1.5 * (attempt + 1))
+                    continue
+                raise HTTPException(
+                    503,
+                    "AI service is temporarily rate-limited. Wait a minute and try again, "
+                    "or check GEMINI_API_KEY quota in Google AI Studio.",
+                )
+            resp.raise_for_status()
+            return resp
+        except HTTPException:
+            raise
+        except _http_requests.RequestException as exc:
+            last_exc = exc
+            if attempt < 2:
+                time.sleep(1.0)
+                continue
+            break
+
+    detail = "AI service unavailable."
+    if last_exc is not None and last_exc.response is not None:
+        status = last_exc.response.status_code
+        if status == 429:
+            raise HTTPException(
+                503,
+                "AI service is temporarily rate-limited. Wait a minute and try again, "
+                "or check GEMINI_API_KEY quota in Google AI Studio.",
+            ) from last_exc
+        if status in (401, 403):
+            raise HTTPException(
+                503,
+                "AI service authentication failed. Check GEMINI_API_KEY on Cloud Run.",
+            ) from last_exc
+    raise HTTPException(503, detail) from last_exc
+
+
 @app.post("/api/chat")
 def chat_gemini(req: _ChatRequest):
     if not GEMINI_API_KEY:
@@ -1633,17 +2188,7 @@ def chat_gemini(req: _ChatRequest):
         "generationConfig": {"temperature": 0.7, "maxOutputTokens": 4096},
     }
 
-    try:
-        resp = _http_requests.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:streamGenerateContent",
-            params={"key": GEMINI_API_KEY, "alt": "sse"},
-            json=payload,
-            stream=True,
-            timeout=120,
-        )
-        resp.raise_for_status()
-    except _http_requests.RequestException as exc:
-        raise HTTPException(502, f"Gemini API error: {exc}") from exc
+    resp = _gemini_chat_stream(payload)
 
     def _stream():
         try:

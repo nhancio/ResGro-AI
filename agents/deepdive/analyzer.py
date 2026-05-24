@@ -848,6 +848,117 @@ def _safe_sum(df: pd.DataFrame, col: str) -> float:
     return float(pd.to_numeric(df[col], errors="coerce").sum())
 
 
+# ---------------------------------------------------------------------------
+# Slot AOV & Profitability tables  (Day+Daypart × Store)
+# ---------------------------------------------------------------------------
+
+_DAY_ORDER = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+_DAYPART_ORDER = ["Early Morning", "Breakfast", "Lunch", "Afternoon", "Dinner", "Late Night"]
+
+
+def _hour_to_daypart(h: int) -> str:
+    if 0 <= h <= 4:
+        return "Early Morning"
+    if 5 <= h <= 10:
+        return "Breakfast"
+    if 11 <= h <= 13:
+        return "Lunch"
+    if 14 <= h <= 16:
+        return "Afternoon"
+    if 17 <= h <= 19:
+        return "Dinner"
+    return "Late Night"
+
+
+# Slot numbering matches DoorDash custom-schedule grid (6 dayparts × 7 days = 42).
+# Row-major: for each daypart row, Mon→Sun, then next daypart.
+SLOT_NUMBER_MAP: dict[str, int] = {}
+for _dp_i, _dp in enumerate(_DAYPART_ORDER):
+    for _d_i, _d in enumerate(_DAY_ORDER):
+        SLOT_NUMBER_MAP[f"{_d}-{_dp}"] = _dp_i * 7 + _d_i + 1
+
+
+def _slot_sort_key(slot: str) -> tuple[int, int]:
+    parts = slot.split("-", 1)
+    day_idx = _DAY_ORDER.index(parts[0]) if parts[0] in _DAY_ORDER else 99
+    dp_idx = _DAYPART_ORDER.index(parts[1]) if len(parts) > 1 and parts[1] in _DAYPART_ORDER else 99
+    return (day_idx, dp_idx)
+
+
+def build_slot_tables(datasets: dict[str, pd.DataFrame]) -> dict[str, Any]:
+    """Build AOV and profitability pivot tables: Day+Daypart (rows) × Store (columns)."""
+    df = datasets.get("financial_detailed")
+    if df is None or df.empty:
+        return {}
+
+    df = df.copy()
+    if "Transaction type" in df.columns:
+        df = df[df["Transaction type"] == "Order"]
+    if df.empty:
+        return {}
+
+    ts_col = "Timestamp local time" if "Timestamp local time" in df.columns else None
+    if ts_col is None:
+        return {}
+
+    df["_ts"] = pd.to_datetime(df[ts_col], errors="coerce")
+    df = df.dropna(subset=["_ts"])
+
+    df["_day"] = df["_ts"].dt.day_name().str[:3]
+    df["_hour"] = df["_ts"].dt.hour
+    df["_daypart"] = df["_hour"].apply(_hour_to_daypart)
+    df["_slot"] = df["_day"] + "-" + df["_daypart"]
+
+    store_col = "Merchant store ID" if "Merchant store ID" in df.columns else "Store ID"
+    df[store_col] = df[store_col].astype(str)
+
+    for c in ("Subtotal", "Net total"):
+        if c in df.columns:
+            df[c] = pd.to_numeric(df[c], errors="coerce")
+
+    df = df.dropna(subset=["Subtotal"])
+    df = df[df["Subtotal"] > 0]
+
+    aov_pivot = df.pivot_table(
+        index="_slot", columns=store_col, values="Subtotal", aggfunc="mean",
+    ).round(2)
+
+    profit_num = df.pivot_table(
+        index="_slot", columns=store_col, values="Net total", aggfunc="sum",
+    )
+    profit_den = df.pivot_table(
+        index="_slot", columns=store_col, values="Subtotal", aggfunc="sum",
+    )
+    profitability_pivot = ((profit_num / profit_den.replace(0, np.nan)) * 100).round(1)
+
+    all_slots = sorted(aov_pivot.index.tolist(), key=_slot_sort_key)
+    stores = [str(s) for s in aov_pivot.columns.tolist()]
+
+    aov_records = []
+    for slot in all_slots:
+        row = {"slot": slot}
+        for s in stores:
+            val = aov_pivot.at[slot, s] if s in aov_pivot.columns and slot in aov_pivot.index else None
+            row[s] = float(val) if pd.notna(val) else None
+        aov_records.append(row)
+
+    prof_records = []
+    for slot in all_slots:
+        row = {"slot": slot}
+        for s in stores:
+            val = profitability_pivot.at[slot, s] if s in profitability_pivot.columns and slot in profitability_pivot.index else None
+            row[s] = float(val) if pd.notna(val) else None
+        prof_records.append(row)
+
+    return {
+        "slots": all_slots,
+        "stores": stores,
+        "aov_table": aov_records,
+        "profitability_table": prof_records,
+        "slot_number_map": {s: SLOT_NUMBER_MAP.get(s, 0) for s in all_slots},
+    }
+
+
 # Legacy compatibility
 def analyze_rows(rows: list[dict], operator_id: str):
     """Legacy stub — kept for backwards compat with old import."""

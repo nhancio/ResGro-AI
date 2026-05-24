@@ -26,8 +26,35 @@ const DJANGO_LEGACY_MAP = {
   "resolve-workspace-subscription": "resolve-workspace-subscription",
 };
 
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ||
+  "https://resgro.ai,https://www.resgro.ai,https://app.resgro.ai,http://localhost:8888,http://localhost:3000")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
 const app = express();
 app.set("trust proxy", true);
+
+/** Browser calls resgro-api cross-origin from Netlify (app.resgro.ai). */
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Vary", "Origin");
+  }
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, X-Admin-Email, Authorization",
+  );
+  if (req.method === "OPTIONS") {
+    res.sendStatus(204);
+    return;
+  }
+  next();
+});
+
 app.use(express.json({ limit: "512kb" }));
 
 function publicOrigin(req) {
@@ -133,6 +160,16 @@ function legacyMount(prefix) {
 
 legacyMount("/.netlify/functions");
 legacyMount("/api");
+
+app.get("/", (_req, res) => {
+  res.json({
+    ok: true,
+    service: "resgro-api",
+    message: "Auth/billing gateway. Use /api/accounts/* and /admin/.",
+    health: "/health",
+    accountsBackend: DJANGO_BACKEND_URL,
+  });
+});
 
 app.get("/health", (_req, res) => {
   res.json({ ok: true, service: "resgro-api", accountsBackend: DJANGO_BACKEND_URL });

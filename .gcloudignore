@@ -15,8 +15,7 @@ RalphAI/
 DD_LAZ_Everything_Data/
 sample_data/
 
-# Heavy agent subtrees (not copied by root agents Dockerfile; UI only needs TS agent modules)
-agents/resgro-browser-automation/
+# Heavy agent subtrees (not needed in agents-api image)
 agents/Resgro-selfserve-app/
 
 # Runtime session/run artifacts (created at runtime; not needed in build context)

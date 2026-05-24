@@ -220,7 +220,19 @@ case "${1:-all}" in
         header "ResGro-AI — Starting Services"
 
         mkdir -p "$ROOT_DIR/logs"
+
+        # Kill any leftover processes on our ports from a previous run
+        log "Clearing ports 3000, 8000, 8001, 8002, 8080, 8888..."
+        for p in 3000 8000 8001 8002 8080 8888; do
+            lsof -ti:"$p" 2>/dev/null | xargs kill -9 2>/dev/null || true
+        done
+        if [ -f "$PID_FILE" ]; then
+            while read -r pid; do
+                kill -9 "$pid" 2>/dev/null || true
+            done < "$PID_FILE"
+        fi
         rm -f "$PID_FILE"
+        sleep 1
 
         if needs_install; then
             install_all

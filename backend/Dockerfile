@@ -9,4 +9,4 @@ ENV PORT=8080
 ENV DJANGO_ON_CLOUD_RUN=1
 ENV DJANGO_DEBUG=false
 EXPOSE 8080
-CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput && python manage.py ensure_superuser && gunicorn config.wsgi:application --bind 0.0.0.0:${PORT} --workers 2"]
+CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput && python manage.py ensure_superuser && python manage.py ensure_demo_user && gunicorn config.wsgi:application --bind 0.0.0.0:${PORT} --workers 2"]

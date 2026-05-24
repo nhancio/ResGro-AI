@@ -163,6 +163,11 @@ def _run_deepdive(session_id: str, operator_id: str) -> dict[str, Any]:
         if dd_path.is_file():
             store_agent_artifact(session_id, "deepdive", "deepdive.json", dd_path.read_text())
 
+    if result.get("deepdive_analysis_path"):
+        da_path = Path(result["deepdive_analysis_path"])
+        if da_path.is_file():
+            store_agent_artifact(session_id, "deepdive", "deepdive_analysis.json", da_path.read_text())
+
     if result.get("report_html_path"):
         rpt_path = Path(result["report_html_path"])
         if rpt_path.is_file():
@@ -180,10 +185,14 @@ def _run_deepdive(session_id: str, operator_id: str) -> dict[str, Any]:
 def _run_marketingreco(session_id: str, operator_id: str) -> dict[str, Any]:
     from agents.marketingreco.agent import run as run_marketingreco
 
-    dd_artifact = get_agent_artifact(session_id, "deepdive", "deepdive.json")
+    # Prefer full analysis (has slot_tables) over legacy deepdive.json
     deepdive_report = None
-    if dd_artifact:
-        deepdive_report = json.loads(dd_artifact.read_text(encoding="utf-8"))
+    for fname in ("deepdive_analysis.json", "deepdive.json"):
+        artifact = get_agent_artifact(session_id, "deepdive", fname)
+        if artifact:
+            deepdive_report = json.loads(artifact.read_text(encoding="utf-8"))
+            if deepdive_report.get("slot_tables"):
+                break
 
     data_dir = get_session_data_dir(session_id)
     fin_csv = None
@@ -196,8 +205,6 @@ def _run_marketingreco(session_id: str, operator_id: str) -> dict[str, Any]:
                 fin_csv = str(p)
                 break
 
-    _ROOT = Path(__file__).resolve().parents[2]
-
     if deepdive_report:
         result = run_marketingreco(
             operator_id,
@@ -207,9 +214,7 @@ def _run_marketingreco(session_id: str, operator_id: str) -> dict[str, Any]:
     elif fin_csv:
         result = run_marketingreco(
             operator_id,
-            mode="manual",
             financial_report_path=fin_csv,
-            reporting_root=str(_ROOT / "agents/resgro-browser-automation"),
         )
     else:
         return {"status": "skipped", "message": "No deepdive report or financial CSV available."}

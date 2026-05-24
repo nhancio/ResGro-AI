@@ -86,6 +86,26 @@ def run_manual(
     }
 
 
+def _parse_date_range(date_range: str) -> tuple[str, str]:
+    """
+    Parse 'MM/DD/YYYY - MM/DD/YYYY' into (start, end).
+    Falls back to last 3 full months if empty or unparseable.
+    """
+    if date_range and " - " in date_range:
+        parts = [p.strip() for p in date_range.split(" - ", 1)]
+        if len(parts) == 2 and parts[0] and parts[1]:
+            return parts[0], parts[1]
+    today = datetime.now().date()
+    first_this_month = today.replace(day=1)
+    last_prev_month = first_this_month - timedelta(days=1)
+    y, m = first_this_month.year, first_this_month.month - 3
+    if m <= 0:
+        m += 12
+        y -= 1
+    start = datetime(y, m, 1).date()
+    return start.strftime("%m/%d/%Y"), last_prev_month.strftime("%m/%d/%Y")
+
+
 def run_autopilot(
     *,
     operator_id: str,
@@ -93,10 +113,22 @@ def run_autopilot(
     doordash_email: str,
     doordash_password: str,
     date_range: str = "",
+    start_date: str = "",
+    end_date: str = "",
 ) -> dict[str, Any]:
     """
-    Autopilot mode: download data from DoorDash portal using credentials.
+    Autopilot mode: download data from DoorDash portal using browser-use.
+    Accepts explicit start_date/end_date or a combined date_range string.
     """
+    if start_date and end_date:
+        sd, ed = start_date.strip(), end_date.strip()
+        if not date_range:
+            date_range = f"{sd} - {ed}"
+    else:
+        sd, ed = _parse_date_range(date_range)
+        if not date_range:
+            date_range = f"{sd} - {ed}"
+
     meta = create_session(
         operator_id,
         operator_name=operator_name,
@@ -111,39 +143,27 @@ def run_autopilot(
 
     data_dir = get_session_data_dir(session_id)
 
-    def _dates():
-        today = datetime.now().date()
-        first_this_month = today.replace(day=1)
-        last_prev_month = first_this_month - timedelta(days=1)
-        y, m = first_this_month.year, first_this_month.month - 3
-        if m <= 0:
-            m += 12
-            y -= 1
-        start = datetime(y, m, 1).date()
-        return start.strftime("%m/%d/%Y"), last_prev_month.strftime("%m/%d/%Y")
-
-    start_date, end_date = _dates()
-
     env = os.environ.copy()
     env["DOORDASH_EMAIL"] = doordash_email
     env["DOORDASH_PASSWORD"] = doordash_password
     env["DOWNLOAD_DIR"] = str(data_dir)
 
     script = f"""
-import asyncio
+import asyncio, os
 from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv()
 from agents.doordash_agent import run_reports_only
 
 async def _main():
-    import os
     download_dir = Path(os.environ["DOWNLOAD_DIR"])
     download_dir.mkdir(parents=True, exist_ok=True)
     marketing_path, financial_path = await run_reports_only(
         download_dir=download_dir,
         email=os.environ["DOORDASH_EMAIL"],
         password=os.environ["DOORDASH_PASSWORD"],
-        start_date="{start_date}",
-        end_date="{end_date}",
+        start_date="{sd}",
+        end_date="{ed}",
     )
     if financial_path:
         print(f"FINANCIAL_PATH={{financial_path}}")
