@@ -1,16 +1,16 @@
 {
   "operator_id": "chat-upload",
-  "analysis_date": "2026-05-24T19:28:16+00:00",
+  "analysis_date": "2026-05-25T02:57:38+00:00",
   "order_breakdown": {
-    "organic": 51976,
+    "organic": 5081,
     "ads_only": 0,
     "promo_only": 0,
     "combo": 0,
     "cancelled_refund": 0
   },
   "revenue_metrics": {
-    "total_net_revenue": 763522.0800000001,
-    "avg_order_value": 19.37,
+    "total_net_revenue": 69622.16,
+    "avg_order_value": 21.74,
     "aov_by_day_part": {}
   },
   "top_items": [],
@@ -20,5 +20,5 @@
     "Cancellation rate: 0%",
     "Error rate: 0%"
   ],
-  "recommendations_seed": "Net payout ratio is 75.8% — every $1 in sales yields $0.76 net."
+  "recommendations_seed": "Net payout ratio is 63.0% — every $1 in sales yields $0.63 net."
 }
