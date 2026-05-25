@@ -10,7 +10,7 @@
 # Prerequisites:
 #   gcloud CLI (logged in), billing enabled on GCP project
 #   Docker optional — without it, images are built in GCP via Cloud Build
-#   cp .env.gcp.example .env.gcp  — fill Stripe keys and project id
+#   cp .env.example .env  — fill Stripe keys and project id
 #
 # Usage:
 #   ./deploy-gcp.sh              # deploy backend → api → agents
@@ -24,7 +24,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
-ENV_FILE="${ENV_FILE:-$ROOT_DIR/.env.gcp}"
+ENV_FILE="${ENV_FILE:-$ROOT_DIR/.env}"
 
 header() { echo ""; echo "=== $1 ==="; }
 

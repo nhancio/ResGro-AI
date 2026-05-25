@@ -118,10 +118,10 @@ install_all() {
 start_django_backend() {
     log "Starting Django accounts API on port 8002..."
     cd "$BACKEND_DIR"
-    if [ -f "$ROOT_DIR/.env.gcp" ]; then
+    if [ -f "$ROOT_DIR/.env" ]; then
         set -a
         # shellcheck disable=SC1091
-        source "$ROOT_DIR/.env.gcp"
+        source "$ROOT_DIR/.env"
         set +a
     elif [ -f "$ROOT_DIR/resgro-landing/.env" ]; then
         set -a
@@ -148,10 +148,10 @@ start_http_api() {
     log "Starting HTTP API (Stripe, auth, admin) on port 8080..."
     cd "$HTTP_API_DIR"
     export DJANGO_BACKEND_URL=http://127.0.0.1:8002
-    if [ -f "$ROOT_DIR/.env.gcp" ]; then
+    if [ -f "$ROOT_DIR/.env" ]; then
         set -a
         # shellcheck disable=SC1091
-        source "$ROOT_DIR/.env.gcp"
+        source "$ROOT_DIR/.env"
         set +a
     elif [ -f "$ROOT_DIR/resgro-landing/.env" ]; then
         set -a

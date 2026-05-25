@@ -27,7 +27,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SITE_DIR="$ROOT_DIR/resgro-landing"
 NETLIFY_FN_ROOT="$ROOT_DIR/apis/netlify"
-ENV_FILE="${ENV_FILE:-$ROOT_DIR/.env.gcp}"
+ENV_FILE="${ENV_FILE:-$ROOT_DIR/.env}"
 
 header() { echo ""; echo "=== $1 ==="; }
 
