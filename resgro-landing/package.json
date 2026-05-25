@@ -1,0 +1,28 @@
+{
+  "name": "resgro-ai-website",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@emailjs/browser": "^4.4.1",
+    "@radix-ui/react-slot": "^1.1.2",
+    "@tailwindcss/vite": "^4.1.18",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "*",
+    "lucide-react": "^0.487.0",
+    "motion": "*",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "*",
+    "tailwindcss": "^4.1.18"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@vitejs/plugin-react-swc": "^3.10.2",
+    "vite": "6.3.5"
+  },
+  "scripts": {
+    "dev": "netlify dev",
+    "dev:vite": "vite",
+    "build": "vite build"
+  }
+}

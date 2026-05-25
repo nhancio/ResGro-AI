@@ -1,0 +1,67 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "../apis/netlify/functions"
+
+# Baked into the client at build time (Analysis Engine report fetch must not use resgro.ai).
+# Do NOT set VITE_FORCE_APP_HOST here — portal is app.resgro.ai only (see src/config/app.ts).
+[build.environment]
+  VITE_SITE_URL = "https://resgro.ai"
+  VITE_APP_URL = "https://app.resgro.ai"
+  VITE_API_BASE_URL = "https://resgro-api-432223990540.us-west2.run.app"
+  VITE_AGENTS_API_URL = "https://resgro-agents-api-432223990540.us-west2.run.app"
+
+# Local Netlify Dev only: bypass the dev proxy for agent runs (avoids "Stream body too big" on multi-zip uploads).
+[context.dev.environment]
+  VITE_API_BASE_URL = "http://localhost:8888"
+  VITE_AGENTS_API_URL = "http://localhost:8001"
+
+[dev]
+  command = "npx vite"
+  targetPort = 3000
+  port = 8888
+  autoLaunch = true
+
+[[redirects]]
+  from = "/@vite/*"
+  to = "/@vite/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/@fs/*"
+  to = "/@fs/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/@react-refresh"
+  to = "/@react-refresh"
+  status = 200
+
+[[redirects]]
+  from = "/src/*"
+  to = "/src/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/node_modules/*"
+  to = "/node_modules/:splat"
+  status = 200
+
+# API proxy — must come before the catch-all SPA rewrite.
+# In production the frontend calls Cloud Run directly (VITE_*_URL), so these only fire during local dev.
+[[redirects]]
+  from = "/api/accounts/*"
+  to = "http://localhost:8080/api/accounts/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/*"
+  to = "http://localhost:8001/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

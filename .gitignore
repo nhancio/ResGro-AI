@@ -1,41 +1,99 @@
-node_modules
-dist
-.DS_Store
-*.log
-Thumbs.db
+# ── Dependencies & packages ──
+node_modules/
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+.eggs/
 
-# Secrets & local env (never commit)
+# ── Build output ──
+dist/
+build/
+
+# ── Secrets & env (never commit) ──
 .env
 .env.*
 !.env.example
 !.env.gcp.example
-.env.gcp
-.env.local
-.env.production
-.env.*.local
-
-# Deploy temp files (written by deploy-gcp.sh; may contain secrets)
+!.env.production.example
 .tmp.resgro-*
 
-# Local Netlify / Vercel
-.netlify
-.vercel
+# ── GCP / cloud credentials ──
+todc-marketing-*.json
+*credentials*.json
+*service-account*.json
+*-key.json
+*.pem
+*.key
+*.cert
+*.p12
+*.pfx
 
-# Python
-__pycache__
-*.pyc
-.venv
-backend/.venv
-backend/db.sqlite3
-backend/staticfiles/
+# ── Python ──
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.coverage
+.mypy_cache/
+.dmypy.json
+dmypy.json
 
-# Runtime data & large uploads (local dev / agent sessions)
+# ── Streamlit ──
+.streamlit/secrets.toml
+
+# ── Platform hosting ──
+.netlify/
+.vercel/
+
+# ── IDE ──
+.vscode/
+.idea/
+.cursor/
+*.swp
+*.swo
+*~
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+
+# ── Logs / runtime ──
+*.log
+logs/
+.resgro-pids
+
+# ── Runtime data & uploads (local dev / agent sessions) ──
 data/sessions/
 data/runs/
 DD_LAZ_Everything_Data/
 sample_data/
 RalphAI/
+downloads/
 
-# Logs / PIDs
-logs/
-.resgro-pids
+# ── Django ──
+backend/db.sqlite3
+backend/staticfiles/
+
+# ── Playwright ──
+playwright-report/
+test-results/
+.playwright/
+
+# ── Jupyter ──
+.ipynb_checkpoints/
+
+# ── Large binary / office files ──
+*.pptx
+*.docx
+
+# ── Temp / backup ──
+tmp/
+temp/
+*.tmp
+*.bak
+*_backup/
+backup-*/

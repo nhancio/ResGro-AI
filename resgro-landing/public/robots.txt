@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /#/Start Now
+Disallow: /#/app-demo
+Disallow: /#/app
+
+Sitemap: https://resgro.ai/sitemap.xml
