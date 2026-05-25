@@ -1018,6 +1018,65 @@ async def session_run_monthly_reporter(
         raise HTTPException(500, str(e))
 
 
+# ── Campaign Setup endpoint ───────────────────────────────────────────────────
+
+CS_RUNS_BASE = ROOT / "data" / "runs" / "campaign_setup"
+CS_RUNS_BASE.mkdir(parents=True, exist_ok=True)
+
+
+@app.post("/api/sessions/{session_id}/run/campaign-setup")
+async def session_run_campaign_setup(
+    session_id: str,
+    doordash_email: str = Form(""),
+    doordash_password: str = Form(""),
+):
+    """Run Campaign Setup — create promo offers + sponsored listing campaigns via browser automation."""
+    try:
+        meta = get_session(session_id)
+    except FileNotFoundError:
+        raise HTTPException(404, "Session not found")
+
+    if not doordash_email.strip() or not doordash_password:
+        raise HTTPException(400, "DoorDash email and password are required for campaign setup.")
+
+    operator_id = meta["operator_id"]
+    t0 = datetime.now(timezone.utc)
+    run_id = str(uuid.uuid4())
+
+    try:
+        from agents.boss_agent.agent import _run_campaign_setup
+
+        import asyncio
+        result = await asyncio.to_thread(
+            _run_campaign_setup,
+            session_id,
+            operator_id,
+            doordash_email.strip(),
+            doordash_password,
+        )
+
+        duration_s = (datetime.now(timezone.utc) - t0).total_seconds()
+        record_agent_run(session_id, "campaign_setup", run_id, {
+            "status": result.get("status", "unknown"),
+            "offers_status": result.get("offers", {}).get("status", "skipped"),
+            "ads_status": result.get("ads", {}).get("status", "skipped"),
+        })
+
+        _append_index({
+            "id": run_id, "agent": "campaign_setup", "operator": operator_id,
+            "status": result.get("status", "success"),
+            "started": t0.isoformat().replace("+00:00", "Z")[:19].replace("T", " "),
+            "duration": f"{int(duration_s // 60)}m {int(duration_s % 60):02d}s",
+            "session_id": session_id,
+        })
+
+        return JSONResponse({**result, "run_id": run_id, "session_id": session_id})
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
 # ── Boss Agent endpoint ──────────────────────────────────────────────────────
 
 @app.post("/api/sessions/{session_id}/run/boss")

@@ -28,6 +28,7 @@ PipelineStep = Literal[
     "data",
     "deepdive",
     "marketingreco",
+    "campaign_setup",
     "offers",
     "ads",
     "campaign_review",
@@ -38,8 +39,7 @@ FULL_PIPELINE: list[PipelineStep] = [
     "data",
     "deepdive",
     "marketingreco",
-    "offers",
-    "ads",
+    "campaign_setup",
     "campaign_review",
     "monthly_reporter",
 ]
@@ -140,6 +140,8 @@ def _run_step(
         return _run_deepdive(session_id, operator_id)
     elif step == "marketingreco":
         return _run_marketingreco(session_id, operator_id)
+    elif step == "campaign_setup":
+        return _run_campaign_setup(session_id, operator_id, doordash_email, doordash_password)
     elif step == "offers":
         return _run_offers(session_id, operator_id, doordash_email, doordash_password)
     elif step == "ads":
@@ -229,6 +231,388 @@ def _run_marketingreco(session_id: str, operator_id: str) -> dict[str, Any]:
     })
     result["run_id"] = run_id
     return result
+
+
+def _run_campaign_setup(session_id: str, operator_id: str, email: str, password: str) -> dict[str, Any]:
+    """
+    Read the uploaded campaign plan (Offers sheet + Ads sheet) from the session
+    data directory and execute campaigns via browser automation.
+    """
+    if not email or not password:
+        return {"status": "skipped", "message": "DoorDash credentials required for campaign setup."}
+
+    data_dir = get_session_data_dir(session_id)
+
+    campaign_file = _find_campaign_plan_file(data_dir)
+    if not campaign_file:
+        return {"status": "skipped", "message": "No campaign plan file found in session. Upload a campaign plan CSV/Excel first."}
+
+    offers_result = _run_offers_from_file(campaign_file, email, password)
+    ads_result = _run_ads_from_file(campaign_file, email, password)
+
+    overall = "success"
+    if offers_result.get("status") == "failed" or ads_result.get("status") == "failed":
+        overall = "partial"
+    if offers_result.get("status") in ("skipped", "failed") and ads_result.get("status") in ("skipped", "failed"):
+        overall = "skipped" if offers_result.get("status") == "skipped" and ads_result.get("status") == "skipped" else "failed"
+
+    run_id = str(uuid.uuid4())
+    record_agent_run(session_id, "campaign_setup", run_id, {
+        "status": overall,
+        "offers_status": offers_result.get("status"),
+        "ads_status": ads_result.get("status"),
+    })
+
+    return {
+        "status": overall,
+        "run_id": run_id,
+        "offers": offers_result,
+        "ads": ads_result,
+    }
+
+
+def _find_campaign_plan_file(data_dir: Path) -> Path | None:
+    """Find an uploaded campaign plan file (Excel or CSV) in the session data dir."""
+    for ext in ("*.xlsx", "*.xls", "*.csv"):
+        for p in sorted(data_dir.rglob(ext), key=lambda f: f.stat().st_mtime, reverse=True):
+            name = p.name.lower()
+            if any(kw in name for kw in ("campaign", "plan", "marketingreco", "offers", "ads")):
+                return p
+    for ext in ("*.xlsx", "*.xls"):
+        for p in sorted(data_dir.rglob(ext), key=lambda f: f.stat().st_mtime, reverse=True):
+            return p
+    for p in sorted(data_dir.rglob("*.csv"), key=lambda f: f.stat().st_mtime, reverse=True):
+        return p
+    return None
+
+
+def _run_offers_from_file(campaign_file: Path, email: str, password: str) -> dict[str, Any]:
+    """Parse offers from the campaign plan file and run browser automation for each."""
+    import pandas as pd
+
+    combos: list[dict] = []
+    suffix = campaign_file.suffix.lower()
+
+    if suffix in (".xlsx", ".xls"):
+        try:
+            xl = pd.ExcelFile(campaign_file)
+            offers_sheet = next((s for s in xl.sheet_names if s.strip().lower() == "offers"), None)
+            if offers_sheet:
+                df = pd.read_excel(xl, sheet_name=offers_sheet)
+                df.columns = df.columns.astype(str).str.strip()
+                store_col = next((c for c in df.columns if "store" in c.lower() and "doordash" in c.lower()), None)
+                if not store_col:
+                    store_col = next((c for c in df.columns if "store" in c.lower() and "id" in c.lower()), None)
+                subtotal_col = next((c for c in df.columns if "subtotal" in c.lower()), None)
+                tags_col = next((c for c in df.columns if "tag" in c.lower() or "slot" in c.lower()), None)
+                name_col = next((c for c in df.columns if "campaign" in c.lower() and "name" in c.lower()), None)
+
+                if store_col and subtotal_col:
+                    for _, row in df.iterrows():
+                        sid = str(row.get(store_col, "")).strip()
+                        if not sid or sid.lower() == "nan":
+                            continue
+                        sub = row.get(subtotal_col, 10)
+                        try:
+                            sub = int(round(float(sub)))
+                        except (TypeError, ValueError):
+                            sub = 10
+                        tags = []
+                        if tags_col:
+                            raw = str(row.get(tags_col, ""))
+                            tags = [int(t.strip()) for t in raw.split(",") if t.strip().isdigit()]
+                        cname = str(row.get(name_col, "")) if name_col else f"Resgro-{sid}-${sub}"
+                        if cname.lower() == "nan":
+                            cname = f"Resgro-{sid}-${sub}"
+                        combos.append({
+                            "store_id": sid,
+                            "min_subtotal": sub,
+                            "slot_tags": tags,
+                            "campaign_name": cname,
+                        })
+        except Exception as e:
+            return {"status": "failed", "message": f"Failed to read Offers sheet: {e}"}
+    elif suffix == ".csv":
+        try:
+            df = pd.read_csv(campaign_file)
+            df.columns = df.columns.astype(str).str.strip()
+            store_col = next((c for c in df.columns if "store" in c.lower() and "id" in c.lower()), None)
+            subtotal_col = next((c for c in df.columns if "subtotal" in c.lower()), None)
+            tags_col = next((c for c in df.columns if "tag" in c.lower() or "slot" in c.lower()), None)
+            name_col = next((c for c in df.columns if "campaign" in c.lower() and "name" in c.lower()), None)
+
+            if store_col and subtotal_col:
+                for _, row in df.iterrows():
+                    sid = str(row.get(store_col, "")).strip()
+                    if not sid or sid.lower() == "nan":
+                        continue
+                    sub = row.get(subtotal_col, 10)
+                    try:
+                        sub = int(round(float(sub)))
+                    except (TypeError, ValueError):
+                        sub = 10
+                    tags = []
+                    if tags_col:
+                        raw = str(row.get(tags_col, ""))
+                        tags = [int(t.strip()) for t in raw.split(",") if t.strip().isdigit()]
+                    cname = str(row.get(name_col, "")) if name_col else f"Resgro-{sid}-${sub}"
+                    if cname.lower() == "nan":
+                        cname = f"Resgro-{sid}-${sub}"
+                    combos.append({
+                        "store_id": sid,
+                        "min_subtotal": sub,
+                        "slot_tags": tags,
+                        "campaign_name": cname,
+                    })
+        except Exception as e:
+            return {"status": "failed", "message": f"Failed to read CSV: {e}"}
+
+    if not combos:
+        return {"status": "skipped", "message": "No offer campaigns found in the uploaded file."}
+
+    import asyncio
+    import subprocess
+    import sys
+    import os
+    import tempfile
+
+    _ROOT = Path(__file__).resolve().parents[2]
+    reporting_root = _ROOT / "agents" / "resgro-browser-automation"
+
+    combos_path = Path(tempfile.mktemp(suffix=".json", prefix="offers_combos_"))
+    combos_path.write_text(json.dumps(combos, indent=2), encoding="utf-8")
+
+    env = os.environ.copy()
+    env["DOORDASH_EMAIL"] = email
+    env["DOORDASH_PASSWORD"] = password
+
+    script = f"""
+import asyncio, json, os, sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent if '__file__' in dir() else Path('.')))
+from agents.doordash_agent import get_task_description_campaign_for_subtotal_combo, _get_llm, _get_browser, _kill_browser
+
+AGENT_LOGIN_TIMEOUT = 180
+AGENT_CAMPAIGN_TIMEOUT = 360
+AGENT_RESET_TIMEOUT = 90
+
+async def _main():
+    from browser_use import Agent
+    combos = json.loads(Path("{combos_path}").read_text())
+    email = os.environ["DOORDASH_EMAIL"]
+    password = os.environ["DOORDASH_PASSWORD"]
+    download_dir = Path("downloads/campaign_setup")
+    download_dir.mkdir(parents=True, exist_ok=True)
+
+    llm = _get_llm()
+    browser = _get_browser(download_dir, keep_alive=True)
+
+    # Step 1: Login first
+    login_task = (
+        f"Go to https://merchant-portal.doordash.com/merchant/login\\n"
+        f"Enter email: {{email}}, click 'Continue to Log In'.\\n"
+        f"On the next screen, enter password: {{password}}, click 'Log In'.\\n"
+        f"Wait for the dashboard to load. Use done action to finish."
+    )
+    print("Logging in to DoorDash Merchant Portal...")
+    try:
+        login_agent = Agent(task=login_task, llm=llm, browser=browser)
+        await asyncio.wait_for(login_agent.run(), timeout=AGENT_LOGIN_TIMEOUT)
+        print("Login successful")
+    except Exception as e:
+        print(f"Login failed: {{e}}")
+        await _kill_browser(browser)
+        raise SystemExit(f"Login failed: {{e}}")
+
+    # Step 2: Run each campaign
+    for i, combo in enumerate(combos):
+        cname = combo.get('campaign_name', '')
+        print(f"Creating offer {{i+1}}/{{len(combos)}}: {{cname}}")
+
+        # Navigate to marketing page before each campaign
+        nav_task = (
+            "Go to https://merchant-portal.doordash.com/merchant/marketing "
+            "WAIT UNTIL the page has fully loaded. "
+            "If any modal or popup is visible, close it. "
+            "Confirm you see the Marketing page. Use done action to finish."
+        )
+        try:
+            nav_agent = Agent(task=nav_task, llm=llm, browser=browser)
+            await asyncio.wait_for(nav_agent.run(), timeout=AGENT_RESET_TIMEOUT)
+        except Exception:
+            pass
+
+        task = get_task_description_campaign_for_subtotal_combo(combo)
+        try:
+            campaign_agent = Agent(task=task, llm=llm, browser=browser)
+            await asyncio.wait_for(campaign_agent.run(), timeout=AGENT_CAMPAIGN_TIMEOUT)
+            print(f"{{cname}} — done")
+        except Exception as e:
+            print(f"{{cname}} — failed: {{e}}")
+
+    await _kill_browser(browser)
+
+asyncio.run(_main())
+"""
+    try:
+        subprocess.run(
+            [sys.executable, "-c", script],
+            cwd=str(reporting_root),
+            env=env,
+            check=True,
+        )
+        return {"status": "success", "campaigns_created": len(combos)}
+    except subprocess.CalledProcessError as e:
+        return {"status": "failed", "message": f"Offers browser run failed (exit {e.returncode})."}
+    finally:
+        combos_path.unlink(missing_ok=True)
+
+
+def _run_ads_from_file(campaign_file: Path, email: str, password: str) -> dict[str, Any]:
+    """Parse ads rows from the campaign plan file and run sponsored listing automation."""
+    import pandas as pd
+
+    suffix = campaign_file.suffix.lower()
+    ads_df = None
+
+    if suffix in (".xlsx", ".xls"):
+        try:
+            xl = pd.ExcelFile(campaign_file)
+            ads_sheet = next((s for s in xl.sheet_names if s.strip().lower() == "ads"), None)
+            if ads_sheet:
+                ads_df = pd.read_excel(xl, sheet_name=ads_sheet)
+        except Exception:
+            pass
+    elif suffix == ".csv":
+        try:
+            df = pd.read_csv(campaign_file)
+            df.columns = df.columns.astype(str).str.strip()
+            if any("bid" in c.lower() or "budget" in c.lower() for c in df.columns):
+                ads_df = df
+        except Exception:
+            pass
+
+    if ads_df is None or ads_df.empty:
+        return {"status": "skipped", "message": "No Ads sheet found in the uploaded file."}
+
+    import tempfile
+    ads_csv = Path(tempfile.mktemp(suffix=".csv", prefix="ads_"))
+    ads_df.to_csv(ads_csv, index=False)
+
+    import subprocess
+    import sys
+    import os
+
+    _ROOT = Path(__file__).resolve().parents[2]
+    reporting_root = _ROOT / "agents" / "resgro-browser-automation"
+    env = os.environ.copy()
+    env["DOORDASH_EMAIL"] = email
+    env["DOORDASH_PASSWORD"] = password
+    env["ADS_SHEET_PATH"] = str(ads_csv)
+
+    script = """
+import asyncio, os, csv
+from pathlib import Path
+from agents.doordash_agent import _get_llm, _get_browser, _kill_browser
+
+AGENT_LOGIN_TIMEOUT = 180
+AGENT_CAMPAIGN_TIMEOUT = 360
+
+def _get_sponsored_listing_task(store_id, slots, bid_strategy, budget, campaign_name):
+    return f\"\"\"
+You are automating the DoorDash Merchant Portal to create a Sponsored Listing campaign. You are already logged in.
+
+HARD RULES:
+- Do NOT go to the login page.
+
+STEP 1 — Navigate to Sponsored Listings:
+- In the LEFT SIDEBAR, click "Marketing".
+- Click "Sponsored Listings" or "Create sponsored listing".
+
+STEP 2 — Configure the campaign:
+- Store: search and select store {store_id}
+- Slots: {slots}
+- Bid strategy: {bid_strategy}
+- Budget: ${budget}
+- Campaign name: {campaign_name}
+
+STEP 3 — Create the campaign:
+- Click "Create" or "Launch". Wait for confirmation.
+
+DONE: Use the done action. Summarize what was created.
+\"\"\"
+
+async def _main():
+    from browser_use import Agent
+    sheet = Path(os.environ["ADS_SHEET_PATH"])
+    email = os.environ["DOORDASH_EMAIL"]
+    password = os.environ["DOORDASH_PASSWORD"]
+    download_dir = Path("downloads/campaign_setup")
+    download_dir.mkdir(parents=True, exist_ok=True)
+
+    rows = []
+    with open(sheet, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for r in reader:
+            rows.append(r)
+
+    if not rows:
+        print("No ads rows found")
+        return
+
+    llm = _get_llm()
+    browser = _get_browser(download_dir, keep_alive=True)
+
+    # Login first
+    login_task = (
+        f"Go to https://merchant-portal.doordash.com/merchant/login\\n"
+        f"Enter email: {email}, click 'Continue to Log In'.\\n"
+        f"On the next screen, enter password: {password}, click 'Log In'.\\n"
+        f"Wait for the dashboard to load. Use done action to finish."
+    )
+    print("Logging in to DoorDash Merchant Portal...")
+    try:
+        login_agent = Agent(task=login_task, llm=llm, browser=browser)
+        await asyncio.wait_for(login_agent.run(), timeout=AGENT_LOGIN_TIMEOUT)
+        print("Login successful")
+    except Exception as e:
+        print(f"Login failed: {e}")
+        await _kill_browser(browser)
+        raise SystemExit(f"Login failed: {e}")
+
+    for i, row in enumerate(rows):
+        store_id = row.get("Merchant store ID") or row.get("Store ID") or ""
+        slots = row.get("Slots") or ""
+        bid = row.get("Bid strategy") or "Automatic"
+        budget = row.get("Budget") or "10"
+        name = row.get("Campaign Name") or row.get("Campaign name") or f"Ads-{store_id}"
+        print(f"Creating ad {i+1}/{len(rows)}: {name}")
+
+        task = _get_sponsored_listing_task(store_id, slots, bid, budget, name)
+        try:
+            ad_agent = Agent(task=task, llm=llm, browser=browser)
+            await asyncio.wait_for(ad_agent.run(), timeout=AGENT_CAMPAIGN_TIMEOUT)
+            print(f"Ad {name} — done")
+        except Exception as e:
+            print(f"Ad {name} — failed: {e}")
+
+    await _kill_browser(browser)
+
+asyncio.run(_main())
+"""
+    try:
+        subprocess.run(
+            [sys.executable, "-c", script],
+            cwd=str(reporting_root),
+            env=env,
+            check=True,
+        )
+        return {"status": "success", "rows": len(ads_df)}
+    except subprocess.CalledProcessError as e:
+        return {"status": "failed", "message": f"Ads browser run failed (exit {e.returncode})."}
+    finally:
+        ads_csv.unlink(missing_ok=True)
 
 
 def _run_offers(session_id: str, operator_id: str, email: str, password: str) -> dict[str, Any]:
@@ -391,6 +775,10 @@ def _summarize_step(step: str, result: dict[str, Any]) -> str:
     elif step == "marketingreco":
         n = len(result.get("recommended_campaigns", []))
         return f"{status}: {n} campaigns recommended"
+    elif step == "campaign_setup":
+        offers = result.get("offers", {}).get("status", "skipped")
+        ads = result.get("ads", {}).get("status", "skipped")
+        return f"{status}: offers={offers}, ads={ads}"
     elif step in ("offers", "ads"):
         return f"{status}"
     elif step == "campaign_review":
