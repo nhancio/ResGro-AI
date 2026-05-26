@@ -398,7 +398,8 @@ export default function App() {
               window.location.href = `${getAppOrigin()}/#/chat`;
             }
           } else {
-            window.location.href = `${getSiteOrigin()}/#/pricing`;
+            window.location.hash = "#/pricing";
+            setCurrentPage("pricing");
           }
         }}
       />
@@ -411,7 +412,7 @@ export default function App() {
         <div className="flex min-h-screen items-center justify-center bg-[#FFF7F2] px-4">
           <p className="text-center text-sm text-gray-600">
             Complete checkout first, then return here to create your login.{" "}
-            <a className="font-medium text-[#FF6B35]" href={`${getSiteOrigin()}/#/pricing`}>
+            <a className="font-medium text-[#FF6B35]" href="#/pricing">
               View pricing
             </a>
           </p>
