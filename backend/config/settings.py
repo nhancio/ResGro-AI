@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 from dotenv import load_dotenv
 
@@ -72,14 +72,17 @@ if database_url:
     if database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
     parsed = urlparse(database_url)
+    qs = parse_qs(parsed.query)
+    # Cloud SQL Unix socket: ?host=/cloudsql/PROJECT:REGION:INSTANCE
+    host = qs.get("host", [None])[0] or parsed.hostname or "localhost"
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
             "NAME": (parsed.path or "/resgro").lstrip("/"),
             "USER": parsed.username or "",
             "PASSWORD": parsed.password or "",
-            "HOST": parsed.hostname or "localhost",
-            "PORT": str(parsed.port or 5432),
+            "HOST": host,
+            "PORT": str(parsed.port or 5432) if not host.startswith("/") else "",
         }
     }
 else:
