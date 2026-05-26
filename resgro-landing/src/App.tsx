@@ -43,6 +43,7 @@ function readPortalPageFromHash(): Page {
   const hash = window.location.hash;
   if (hash === "#/complete-signup") return "complete-signup";
   if (hash === "#/get-started" || hash === "#/login") return "get-started";
+  if (hash === "#/pricing") return "pricing";
   if (hash === "#/demo") return "chat";
   if (hash === "#/old-portal") return "old-portal";
   if (hash === "#/profile") return "chat";
@@ -55,6 +56,7 @@ function isPortalHashRoute(hash: string): boolean {
   return (
     hash === "#/app" ||
     hash === "#/chat" ||
+    hash === "#/pricing" ||
     hash === "#/get-started" ||
     hash === "#/login" ||
     hash === "#/profile" ||
@@ -113,17 +115,6 @@ function readInitialPage(portalHost: boolean): Page {
     return readPortalPageFromHash();
   }
   return "home";
-}
-
-function RedirectToPayment() {
-  useEffect(() => {
-    window.location.href = `${getSiteOrigin()}/#/pricing`;
-  }, []);
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-[#FFF7F2] px-4 font-sans">
-      <p className="text-center text-sm text-gray-600">Redirecting to payment...</p>
-    </div>
-  );
 }
 
 function redirectLegacyAdminHash(hash: string, email: string | undefined): boolean {
@@ -279,6 +270,8 @@ export default function App() {
 
         if (hash === "#/chat" || hash === "#/app") {
           setCurrentPage("chat");
+        } else if (hash === "#/pricing") {
+          setCurrentPage("pricing");
         } else if (hash === "#/demo") {
           const demoUser = getDemoUser();
           if (demoUser) {
@@ -457,7 +450,25 @@ export default function App() {
     }
 
 if (!effectiveIsActive || !effectiveSubscription) {
-      return <RedirectToPayment />;
+      return (
+        <>
+          <Pricing
+            isSubscribed={false}
+            activePlan={null}
+            onLogout={() => {
+              logout();
+              logoutSubscription();
+              window.location.hash = "#/get-started";
+              setCurrentPage("get-started");
+            }}
+          />
+          {checkoutNotice ? (
+            <div className="fixed bottom-5 left-1/2 z-[120] w-[min(92vw,640px)] -translate-x-1/2 rounded-2xl border border-[#FF6B35]/25 bg-white px-5 py-4 text-sm text-gray-700 shadow-xl">
+              {checkoutNotice}
+            </div>
+          ) : null}
+        </>
+      );
     }
 
     if (currentPage === "old-portal") {
