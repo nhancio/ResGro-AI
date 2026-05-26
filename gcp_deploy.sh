@@ -1,30 +1,34 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────────
-# ResGro-AI — Single deploy script for all services
+# ResGro-AI — Deploy ALL services to GCP Cloud Run
 #
-#   ./deploy.sh                    # GCP: backend → api → agents
-#   ./deploy.sh backend            # Django only → Cloud Run
-#   ./deploy.sh api                # Node API only → Cloud Run
-#   ./deploy.sh agents             # Python agents API only → Cloud Run
-#   ./deploy.sh gcp [all|backend|api|agents] [--cloudbuild|--docker]
-#   ./deploy.sh netlify [prod|draft]   # Frontend → resgro.ai / app.resgro.ai
-#   ./deploy.sh vercel  [prod|preview] # Optional alternate static host
-#   ./deploy.sh all                    # GCP backends + Netlify frontend
+# Same protocol as deploy.sh, but frontend goes to Cloud Run
+# instead of Netlify/Vercel.
+#
+#   ./gcp_deploy.sh                    # All 4 services → Cloud Run
+#   ./gcp_deploy.sh backend            # Django → Cloud Run
+#   ./gcp_deploy.sh api                # Node API → Cloud Run
+#   ./gcp_deploy.sh agents             # Agents API → Cloud Run
+#   ./gcp_deploy.sh ui                 # Frontend (React+nginx) → Cloud Run
+#   ./gcp_deploy.sh all                # All 4 services → Cloud Run
+#   ./gcp_deploy.sh urls               # Print current service URLs
+#
+# Options:
+#   --docker       Force local Docker build
+#   --cloudbuild   Force Cloud Build (GCP-hosted)
 #
 # Prerequisites:
-#   GCP:     gcloud CLI (logged in), billing enabled
-#   Netlify: npm, netlify-cli
-#   Vercel:  npm, vercel CLI
+#   gcloud CLI (logged in), billing enabled
 #   cp .env.example .env — fill in keys
 # ─────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
-SITE_DIR="$ROOT_DIR/resgro-landing"
-NETLIFY_FN_ROOT="$ROOT_DIR/apis/netlify"
 ENV_FILE="${ENV_FILE:-$ROOT_DIR/.env}"
 
 header() { echo ""; echo "=== $1 ==="; }
+
+# ── Git protocol (same as deploy.sh) ────────────────────────────────
 
 push_to_main() {
   if ! command -v git >/dev/null 2>&1; then return 0; fi
@@ -37,10 +41,9 @@ push_to_main() {
     return 0
   fi
 
-  if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
-    header "Auto-committing changes before deploy"
-    git add -A
-    git commit -m "pre-deploy: $(date +%Y-%m-%d\ %H:%M:%S)"
+  if ! git diff --quiet || ! git diff --cached --quiet; then
+    echo "Error: you have uncommitted changes. Commit first, then deploy."
+    exit 1
   fi
 
   if git rev-parse --verify origin/main >/dev/null 2>&1; then
@@ -189,15 +192,16 @@ service_url() {
 host_from_url() { printf '%s' "$1" | sed -E 's|https?://||; s|/.*||'; }
 
 patch_django_admin_hosts() {
-  local region project backend_url api_url
+  local region project backend_url api_url ui_url
   region="${GCP_REGION:-us-west2}"
   project="$(gcp_project)"
   backend_url="$(service_url resgro-backend)"
   api_url="$(service_url resgro-api)"
+  ui_url="$(service_url resgro-ui)"
   [ -z "$backend_url" ] && return 0
 
   local -a hosts=(".run.app") csrf=()
-  for url in "$backend_url" "$api_url"; do
+  for url in "$backend_url" "$api_url" "$ui_url"; do
     [ -z "$url" ] && continue
     hosts+=("$(host_from_url "$url")")
     csrf+=("$url")
@@ -238,7 +242,7 @@ write_run_env_file() {
   done
 }
 
-# ── GCP deploy targets ──────────────────────────────────────────────
+# ── Deploy targets (backend, api, agents — identical to deploy.sh) ──
 
 deploy_backend() {
   header "Build & deploy resgro-backend (Django users DB)"
@@ -255,17 +259,10 @@ deploy_backend() {
   write_run_env_file "$backend_env"
   if [ -s "$backend_env" ]; then gcloud_env=(--env-vars-file "$backend_env"); fi
 
-  local -a sql_args=()
-  if grep -q '^DATABASE_URL=.*cloudsql' "$ENV_FILE" 2>/dev/null; then
-    local instance
-    instance="$(grep '^DATABASE_URL=' "$ENV_FILE" | sed -E 's|.*host=/cloudsql/([^&"]+).*|\1|')"
-    [ -n "$instance" ] && sql_args=(--add-cloudsql-instances "$instance")
-  fi
-
   gcloud run deploy resgro-backend \
     --image "$tag" --region "$region" --project "$project" \
     --platform managed --allow-unauthenticated --port 8080 --memory 512Mi \
-    "${gcloud_env[@]}" "${sql_args[@]}"
+    "${gcloud_env[@]}"
 
   local backend_url
   backend_url="$(service_url resgro-backend)"
@@ -347,204 +344,172 @@ deploy_agents() {
   patch_django_admin_hosts
 }
 
-deploy_gcp() {
-  local target="${1:-all}"
-  require_cmd gcloud
-  load_env
+# ── Frontend → Cloud Run (replaces Netlify/Vercel from deploy.sh) ──
 
-  local project
+deploy_ui() {
+  header "Build & deploy resgro-ui (React + nginx → Cloud Run)"
+  local prefix tag region project
+  prefix="$(image_prefix)"
+  tag="${prefix}/resgro-ui:$(date +%Y%m%d%H%M%S)"
+  region="${GCP_REGION:-us-west2}"
   project="$(gcp_project)"
-  if [ -z "$project" ]; then
-    echo "Error: Set GCP_PROJECT_ID in .env or run: gcloud config set project YOUR_PROJECT"
-    exit 1
+
+  # ── Resolve backend URL (runtime env for nginx /admin proxy) ──
+  local backend_url=""
+  if [ -f "$ROOT_DIR/.tmp.resgro-backend-url" ]; then
+    backend_url="$(cat "$ROOT_DIR/.tmp.resgro-backend-url")"
   fi
-  echo "GCP project: $project  region: ${GCP_REGION:-us-west2}"
-
-  ensure_gcp_apis
-  ensure_artifact_repo
-  resolve_build_method
-
-  case "$target" in
-    backend) deploy_backend ;;
-    api)     deploy_api ;;
-    agents)  deploy_agents ;;
-    all)
-      deploy_backend
-      deploy_api
-      deploy_agents
-      print_urls
-      ;;
-    *) echo "Unknown GCP target: $target"; exit 1 ;;
-  esac
-  echo ""; echo "Done."
-}
-
-# ── Frontend deploy targets ─────────────────────────────────────────
-
-deploy_netlify() {
-  local netlify_mode="${1:-prod}"
-  require_cmd netlify
-  require_cmd npm
-  load_env
-
-  if [ ! -f "$SITE_DIR/netlify.toml" ]; then
-    echo "Error: Missing $SITE_DIR/netlify.toml"; exit 1
+  if [ -z "$backend_url" ]; then
+    backend_url="$(service_url resgro-backend)"
+  fi
+  if [ -z "$backend_url" ]; then
+    echo "Warning: resgro-backend URL unknown — nginx /admin/ proxy will be disabled"
   fi
 
-  header "Install dependencies (landing app)"
-  cd "$SITE_DIR"
-  npm install
-
-  header "Install dependencies (Netlify functions)"
-  cd "$NETLIFY_FN_ROOT"
-  npm install
-
-  header "Production build (vite)"
-  cd "$SITE_DIR"
-  export VITE_API_BASE_URL="${VITE_API_BASE_URL:-https://resgro-api-432223990540.us-west2.run.app}"
-  export VITE_AGENTS_API_URL="${VITE_AGENTS_API_URL:-https://resgro-agents-api-432223990540.us-west2.run.app}"
-  export VITE_SITE_URL="${VITE_SITE_URL:-https://resgro.ai}"
-  export VITE_APP_URL="${VITE_APP_URL:-https://app.resgro.ai}"
-  if [ -n "${RESGRO_TUNNEL_AGENTS_URL:-}" ]; then
-    export VITE_AGENTS_API_URL="${RESGRO_TUNNEL_AGENTS_URL%/}"
-    echo "Using temporary local Agents API bridge: $VITE_AGENTS_API_URL"
-  fi
-  npm run build
-
-  if [ ! -d "$SITE_DIR/dist" ]; then
-    echo "Error: Build did not produce dist/"; exit 1
-  fi
-
-  case "$netlify_mode" in
-    draft)
-      header "Netlify draft deploy"
-      netlify deploy --dir dist
-      ;;
-    prod|production)
-      header "Netlify production deploy"
-      netlify deploy --prod --dir dist
-      ;;
-    *)
-      echo "Usage: ./deploy.sh netlify [prod|draft]"; exit 1
-      ;;
-  esac
-  echo ""; echo "Done."
-}
-
-deploy_vercel() {
-  local vercel_mode="${1:-prod}"
-  require_cmd vercel
-  require_cmd npm
-  load_env
-
-  if [ ! -f "$SITE_DIR/vercel.json" ]; then
-    echo "Error: Missing $SITE_DIR/vercel.json"; exit 1
-  fi
-
-  header "Install dependencies (landing app)"
-  cd "$SITE_DIR"
-  npm install
-
-  export VITE_AGENTS_API_URL="${VITE_AGENTS_API_URL:-https://resgro-agents-api-432223990540.us-west2.run.app}"
-  export VITE_API_BASE_URL="${VITE_API_BASE_URL:-}"
-  export VITE_SITE_URL="${VITE_SITE_URL:-}"
-  export VITE_APP_URL="${VITE_APP_URL:-}"
-  export VITE_STRIPE_PUBLISHABLE_KEY="${VITE_STRIPE_PUBLISHABLE_KEY:-}"
-  export VITE_EMAILJS_PUBLIC_KEY="${VITE_EMAILJS_PUBLIC_KEY:-}"
-  export VITE_EMAILJS_SERVICE_ID="${VITE_EMAILJS_SERVICE_ID:-}"
-  export VITE_EMAILJS_TEMPLATE_ID="${VITE_EMAILJS_TEMPLATE_ID:-}"
-  export VITE_ADMIN_EMAILS="${VITE_ADMIN_EMAILS:-}"
-  if [ -n "${RESGRO_TUNNEL_AGENTS_URL:-}" ]; then
-    export VITE_AGENTS_API_URL="${RESGRO_TUNNEL_AGENTS_URL%/}"
-    echo "Using temporary local Agents API bridge: $VITE_AGENTS_API_URL"
-  fi
-
-  case "$vercel_mode" in
-    draft|preview)
-      header "Vercel preview deploy"
-      vercel deploy
-      ;;
-    prod|production)
-      header "Vercel production deploy"
-      vercel deploy --prod
-      ;;
-    *)
-      echo "Usage: ./deploy.sh vercel [prod|preview]"; exit 1
-      ;;
-  esac
-  echo ""; echo "Done."
-}
-
-# ── Status ───────────────────────────────────────────────────────────
-
-print_urls() {
-  local backend_url api_url agents_url
-  backend_url="$(service_url resgro-backend)"
+  # ── Resolve API & Agents URLs (build-time VITE_* args) ──
+  local api_url agents_url
   api_url="$(service_url resgro-api)"
   agents_url="$(service_url resgro-agents-api)"
 
-  header "Deployment URLs"
-  echo "  Frontend (Netlify):  ${VITE_SITE_URL:-https://resgro.ai}"
-  echo "  Portal  (Netlify):   ${VITE_APP_URL:-https://app.resgro.ai}"
-  echo "  Django backend:      ${backend_url:-—}"
-  echo "  Stripe/auth API:     ${api_url:-—}"
-  echo "  Agents API:          ${agents_url:-—}"
+  api_url="${api_url:-${VITE_API_BASE_URL:-}}"
+  agents_url="${agents_url:-${VITE_AGENTS_API_URL:-}}"
+
+  if [ -z "$api_url" ]; then
+    echo "Error: Cannot determine resgro-api URL. Deploy api first or set VITE_API_BASE_URL in .env"
+    exit 1
+  fi
+  if [ -z "$agents_url" ]; then
+    echo "Error: Cannot determine resgro-agents-api URL. Deploy agents first or set VITE_AGENTS_API_URL in .env"
+    exit 1
+  fi
+
+  echo "  VITE_API_BASE_URL   = $api_url"
+  echo "  VITE_AGENTS_API_URL = $agents_url"
+  echo "  DJANGO_BACKEND_URL  = ${backend_url:-<unset>}"
+
+  # ── Build args (baked into Vite at compile time) ──
+  local -a build_args=(
+    "VITE_API_BASE_URL=${api_url}"
+    "VITE_AGENTS_API_URL=${agents_url}"
+    "VITE_FORCE_APP_HOST=true"
+    "VITE_SITE_URL=${VITE_SITE_URL:-https://resgro.ai}"
+    "VITE_APP_URL=${VITE_APP_URL:-https://app.resgro.ai}"
+  )
+  [ -n "${VITE_STRIPE_PUBLISHABLE_KEY:-}" ] && build_args+=("VITE_STRIPE_PUBLISHABLE_KEY=${VITE_STRIPE_PUBLISHABLE_KEY}")
+  [ -n "${VITE_EMAILJS_PUBLIC_KEY:-}" ]     && build_args+=("VITE_EMAILJS_PUBLIC_KEY=${VITE_EMAILJS_PUBLIC_KEY}")
+  [ -n "${VITE_EMAILJS_SERVICE_ID:-}" ]     && build_args+=("VITE_EMAILJS_SERVICE_ID=${VITE_EMAILJS_SERVICE_ID}")
+  [ -n "${VITE_EMAILJS_TEMPLATE_ID:-}" ]    && build_args+=("VITE_EMAILJS_TEMPLATE_ID=${VITE_EMAILJS_TEMPLATE_ID}")
+  [ -n "${VITE_ADMIN_EMAILS:-}" ]           && build_args+=("VITE_ADMIN_EMAILS=${VITE_ADMIN_EMAILS}")
+
+  build_and_push "resgro-landing/Dockerfile" "$ROOT_DIR" "$tag" "${build_args[@]}"
+
+  # ── Runtime env vars (nginx envsubst at container start) ──
+  local -a env_pairs=()
+  [ -n "$backend_url" ] && env_pairs+=("DJANGO_BACKEND_URL=${backend_url}")
+
+  local -a env_args=()
+  if [ "${#env_pairs[@]}" -gt 0 ]; then
+    local IFS=,
+    env_args=(--set-env-vars "${env_pairs[*]}")
+  fi
+
+  gcloud run deploy resgro-ui \
+    --image "$tag" --region "$region" --project "$project" \
+    --platform managed --allow-unauthenticated --port 8080 --memory 256Mi \
+    "${env_args[@]}"
+
+  local ui_url
+  ui_url="$(service_url resgro-ui)"
+  echo "resgro-ui → $ui_url"
+  patch_django_admin_hosts
 }
 
-# ── Main ─────────────────────────────────────────────────────────────
+# ── Status ──────────────────────────────────────────────────────────
+
+print_urls() {
+  local backend_url api_url agents_url ui_url
+  backend_url="$(service_url resgro-backend)"
+  api_url="$(service_url resgro-api)"
+  agents_url="$(service_url resgro-agents-api)"
+  ui_url="$(service_url resgro-ui)"
+
+  header "Deployment URLs"
+  echo "  Frontend (Cloud Run):  ${ui_url:-—}"
+  echo "  Django backend:        ${backend_url:-—}"
+  echo "  Stripe/auth API:       ${api_url:-—}"
+  echo "  Agents API:            ${agents_url:-—}"
+}
+
+# ── Main ────────────────────────────────────────────────────────────
 
 print_usage() {
   echo "Usage:"
-  echo "  ./deploy.sh                         # GCP backends (backend + api + agents)"
-  echo "  ./deploy.sh backend                 # Django → Cloud Run"
-  echo "  ./deploy.sh api                     # Node API → Cloud Run"
-  echo "  ./deploy.sh agents                  # Agents API → Cloud Run"
-  echo "  ./deploy.sh gcp [all|backend|api|agents] [--cloudbuild|--docker]"
-  echo "  ./deploy.sh netlify [prod|draft]    # Frontend → resgro.ai / app.resgro.ai"
-  echo "  ./deploy.sh vercel [prod|preview]   # Optional alternate static host"
-  echo "  ./deploy.sh all                     # Everything (GCP + Netlify)"
+  echo "  ./gcp_deploy.sh                     # All 4 services → Cloud Run"
+  echo "  ./gcp_deploy.sh all                  # All 4 services → Cloud Run"
+  echo "  ./gcp_deploy.sh backend              # Django → Cloud Run"
+  echo "  ./gcp_deploy.sh api                  # Node API → Cloud Run"
+  echo "  ./gcp_deploy.sh agents               # Agents API → Cloud Run"
+  echo "  ./gcp_deploy.sh ui                   # Frontend → Cloud Run"
+  echo "  ./gcp_deploy.sh urls                 # Print current service URLs"
+  echo ""
+  echo "Options:"
+  echo "  --docker       Force local Docker build"
+  echo "  --cloudbuild   Force Cloud Build"
+  echo "  --help         Show this message"
 }
-
-GCP_TARGET="all"
 
 push_to_main
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --cloudbuild|-c) DEPLOY_METHOD="cloudbuild" ;;
-    --docker|-d)     DEPLOY_METHOD="docker" ;;
+    --cloudbuild|-c) DEPLOY_METHOD="cloudbuild"; shift ;;
+    --docker|-d)     DEPLOY_METHOD="docker"; shift ;;
     --help|-h)       print_usage; exit 0 ;;
-    gcp)
-      shift
-      GCP_TARGET="${1:-all}"
-      deploy_gcp "$GCP_TARGET"
-      exit 0
-      ;;
-    backend|api|agents)
-      deploy_gcp "$1"
-      exit 0
-      ;;
-    netlify)
-      deploy_netlify "${2:-prod}"
-      exit 0
-      ;;
-    vercel)
-      deploy_vercel "${2:-prod}"
-      exit 0
-      ;;
-    all)
-      deploy_gcp all
-      deploy_netlify prod
-      exit 0
-      ;;
-    *)
-      echo "Unknown command: $1"
-      print_usage
-      exit 1
-      ;;
+    *)               break ;;
   esac
-  shift
 done
 
-# No arguments → deploy GCP backends only
-deploy_gcp all
+TARGET="${1:-all}"
+
+require_cmd gcloud
+load_env
+
+project="$(gcp_project)"
+if [ -z "$project" ]; then
+  echo "Error: Set GCP_PROJECT_ID in .env or run: gcloud config set project YOUR_PROJECT"
+  exit 1
+fi
+echo "GCP project: $project  region: ${GCP_REGION:-us-west2}"
+
+case "$TARGET" in
+  urls)
+    print_urls
+    exit 0
+    ;;
+esac
+
+ensure_gcp_apis
+ensure_artifact_repo
+resolve_build_method
+
+case "$TARGET" in
+  backend) deploy_backend ;;
+  api)     deploy_api ;;
+  agents)  deploy_agents ;;
+  ui)      deploy_ui ;;
+  all)
+    deploy_backend
+    deploy_api
+    deploy_agents
+    deploy_ui
+    print_urls
+    ;;
+  *)
+    echo "Unknown target: $TARGET"
+    print_usage
+    exit 1
+    ;;
+esac
+
+echo ""
+echo "Done."

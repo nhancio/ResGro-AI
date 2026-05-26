@@ -6,8 +6,10 @@
 #   apis/             — resgro-api (apis/http/Dockerfile)
 #   agents/           — resgro-agents-api + UI agent panel (minus heavy subtrees below)
 #   api/, orchestrator/, contracts/, shared/, data/ — resgro-agents-api (root Dockerfile)
-#   resgro-landing/   — Netlify frontend only (exclude from GCP upload)
-resgro-landing/
+#   resgro-landing/   — needed for resgro-ui Cloud Build; exclude only heavy subtrees
+resgro-landing/node_modules/
+resgro-landing/.netlify/
+resgro-landing/.vercel/
 #   requirements.txt  — root agents Dockerfile
 
 # Not used by any Cloud Run Dockerfile COPY
@@ -43,7 +45,6 @@ logs/
 
 # Node (keep package manifests; ignore installed deps)
 **/node_modules/
-resgro-landing/dist/
 .netlify/
 .vercel/
 
