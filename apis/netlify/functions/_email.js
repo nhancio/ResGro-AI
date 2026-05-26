@@ -14,9 +14,10 @@ function hasSmtp() {
 function emailjsConfig() {
   const serviceId = process.env.EMAILJS_SERVICE_ID || process.env.VITE_EMAILJS_SERVICE_ID;
   const templateId = process.env.EMAILJS_TEMPLATE_ID || process.env.VITE_EMAILJS_TEMPLATE_ID;
+  const resetTemplateId = process.env.EMAILJS_RESET_TEMPLATE_ID || "template_epacpjs";
   const userId = process.env.EMAILJS_PUBLIC_KEY || process.env.VITE_EMAILJS_PUBLIC_KEY;
   const privateKey = process.env.EMAILJS_PRIVATE_KEY || "";
-  return { serviceId, templateId, userId, privateKey };
+  return { serviceId, templateId, resetTemplateId, userId, privateKey };
 }
 
 function hasEmailJS() {
@@ -33,7 +34,7 @@ function isEmailConfigured() {
   return hasEmailJS() || hasSmtp();
 }
 
-async function sendViaEmailJS({ templateParams }) {
+async function sendViaEmailJS({ templateParams, templateIdOverride }) {
   const { serviceId, templateId, userId, privateKey } = emailjsConfig();
   if (!serviceId || !templateId || !userId) {
     throw new Error("EmailJS is not configured.");
@@ -41,7 +42,7 @@ async function sendViaEmailJS({ templateParams }) {
 
   const payload = {
     service_id: serviceId,
-    template_id: templateId,
+    template_id: templateIdOverride || templateId,
     user_id: userId,
     template_params: templateParams,
   };
@@ -127,6 +128,7 @@ async function sendPasswordResetEmail(opts) {
   `;
 
   if (hasEmailJS()) {
+    const { resetTemplateId } = emailjsConfig();
     await sendViaEmailJS({
       templateParams: {
         ...emailjsCommonParams({ to, subject, text, html }),
@@ -134,6 +136,7 @@ async function sendPasswordResetEmail(opts) {
         reset_code: shortCode,
         app_origin: appOrigin || "",
       },
+      templateIdOverride: resetTemplateId,
     });
     return;
   }
@@ -172,11 +175,13 @@ async function sendPasswordChangedEmail(opts) {
   `;
 
   if (hasEmailJS()) {
+    const { resetTemplateId } = emailjsConfig();
     await sendViaEmailJS({
       templateParams: {
         ...emailjsCommonParams({ to, subject, text, html }),
         to_name: name || "User",
       },
+      templateIdOverride: resetTemplateId,
     });
     return;
   }

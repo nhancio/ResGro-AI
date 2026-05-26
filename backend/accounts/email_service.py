@@ -15,6 +15,7 @@ def _emailjs_config():
     return {
         "service_id": os.environ.get("EMAILJS_SERVICE_ID") or os.environ.get("VITE_EMAILJS_SERVICE_ID"),
         "template_id": os.environ.get("EMAILJS_TEMPLATE_ID") or os.environ.get("VITE_EMAILJS_TEMPLATE_ID"),
+        "reset_template_id": os.environ.get("EMAILJS_RESET_TEMPLATE_ID", "template_epacpjs"),
         "user_id": os.environ.get("EMAILJS_PUBLIC_KEY") or os.environ.get("VITE_EMAILJS_PUBLIC_KEY"),
         "private_key": os.environ.get("EMAILJS_PRIVATE_KEY", ""),
     }
@@ -37,11 +38,11 @@ def mail_from() -> str:
     return os.environ.get("MAIL_FROM", "noreply@resgro.ai")
 
 
-def _send_emailjs(template_params: dict) -> None:
+def _send_emailjs(template_params: dict, *, template_id: str = "") -> None:
     cfg = _emailjs_config()
     payload = {
         "service_id": cfg["service_id"],
-        "template_id": cfg["template_id"],
+        "template_id": template_id or cfg["template_id"],
         "user_id": cfg["user_id"],
         "template_params": template_params,
     }
@@ -92,9 +93,9 @@ def _send_smtp(*, to: str, subject: str, text: str, html_body: str) -> None:
     server.quit()
 
 
-def _dispatch(*, to: str, subject: str, text: str, html_body: str, template_params: dict) -> None:
+def _dispatch(*, to: str, subject: str, text: str, html_body: str, template_params: dict, template_id: str = "") -> None:
     if has_emailjs():
-        _send_emailjs(template_params)
+        _send_emailjs(template_params, template_id=template_id)
         return
     if has_smtp():
         _send_smtp(to=to, subject=subject, text=text, html_body=html_body)
@@ -137,6 +138,7 @@ def send_password_reset_email(*, to: str, name: str, short_code: str, app_origin
             "reset_code": short_code,
             "app_origin": app_origin,
         },
+        template_id=_emailjs_config()["reset_template_id"],
     )
 
 
@@ -171,4 +173,5 @@ def send_password_changed_email(*, to: str, name: str = "", app_origin: str = ""
             **_emailjs_common_params(to=to, subject=subject, text=text, html_body=html_body),
             "to_name": name or "User",
         },
+        template_id=_emailjs_config()["reset_template_id"],
     )
