@@ -23,7 +23,6 @@ class Command(BaseCommand):
         user, created = WorkspaceUser.objects.update_or_create(
             email=DEMO_EMAIL,
             defaults={
-                "id": DEMO_USER_ID,
                 "password_hash": password_hash,
                 "stripe_customer_id": DEMO_STRIPE_CUSTOMER,
                 "business_name": "Demo Restaurant Group",
@@ -32,10 +31,10 @@ class Command(BaseCommand):
                 "region": "AU",
                 "can_manage_users": True,
             },
+            create_defaults={
+                "id": DEMO_USER_ID,
+            },
         )
-        if user.id != DEMO_USER_ID:
-            user.id = DEMO_USER_ID
-            user.save(update_fields=["id"])
 
         period_end = dj_tz.now() + timedelta(days=30)
         Subscription.objects.update_or_create(
