@@ -15,7 +15,8 @@ function emailjsConfig() {
   const serviceId = process.env.EMAILJS_SERVICE_ID || process.env.VITE_EMAILJS_SERVICE_ID;
   const templateId = process.env.EMAILJS_TEMPLATE_ID || process.env.VITE_EMAILJS_TEMPLATE_ID;
   const userId = process.env.EMAILJS_PUBLIC_KEY || process.env.VITE_EMAILJS_PUBLIC_KEY;
-  return { serviceId, templateId, userId };
+  const privateKey = process.env.EMAILJS_PRIVATE_KEY || "";
+  return { serviceId, templateId, userId, privateKey };
 }
 
 function hasEmailJS() {
@@ -33,7 +34,7 @@ function isEmailConfigured() {
 }
 
 async function sendViaEmailJS({ templateParams }) {
-  const { serviceId, templateId, userId } = emailjsConfig();
+  const { serviceId, templateId, userId, privateKey } = emailjsConfig();
   if (!serviceId || !templateId || !userId) {
     throw new Error("EmailJS is not configured.");
   }
@@ -44,6 +45,9 @@ async function sendViaEmailJS({ templateParams }) {
     user_id: userId,
     template_params: templateParams,
   };
+  if (privateKey) {
+    payload.accessToken = privateKey;
+  }
 
   const resp = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
     method: "POST",

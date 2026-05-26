@@ -16,6 +16,7 @@ def _emailjs_config():
         "service_id": os.environ.get("EMAILJS_SERVICE_ID") or os.environ.get("VITE_EMAILJS_SERVICE_ID"),
         "template_id": os.environ.get("EMAILJS_TEMPLATE_ID") or os.environ.get("VITE_EMAILJS_TEMPLATE_ID"),
         "user_id": os.environ.get("EMAILJS_PUBLIC_KEY") or os.environ.get("VITE_EMAILJS_PUBLIC_KEY"),
+        "private_key": os.environ.get("EMAILJS_PRIVATE_KEY", ""),
     }
 
 
@@ -38,14 +39,17 @@ def mail_from() -> str:
 
 def _send_emailjs(template_params: dict) -> None:
     cfg = _emailjs_config()
+    payload = {
+        "service_id": cfg["service_id"],
+        "template_id": cfg["template_id"],
+        "user_id": cfg["user_id"],
+        "template_params": template_params,
+    }
+    if cfg["private_key"]:
+        payload["accessToken"] = cfg["private_key"]
     resp = requests.post(
         "https://api.emailjs.com/api/v1.0/email/send",
-        json={
-            "service_id": cfg["service_id"],
-            "template_id": cfg["template_id"],
-            "user_id": cfg["user_id"],
-            "template_params": template_params,
-        },
+        json=payload,
         timeout=30,
     )
     if not resp.ok:
