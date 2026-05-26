@@ -18,6 +18,16 @@ def to_iso(unix_seconds: int | None) -> str | None:
     return datetime.fromtimestamp(unix_seconds, tz=timezone.utc).isoformat()
 
 
+def subscription_period_end(sub_d: dict) -> int | None:
+    period_end = sub_d.get("current_period_end")
+    if period_end:
+        return period_end
+    items = (sub_d.get("items") or {}).get("data") or []
+    if items:
+        return (items[0] or {}).get("current_period_end")
+    return sub_d.get("billing_cycle_anchor")
+
+
 def infer_plan_name(sub) -> str:
     meta = sub.get("metadata") if isinstance(sub, dict) else (sub.metadata or {})
     if meta.get("plan"):
@@ -64,7 +74,7 @@ def subscription_payload(customer, sub) -> dict | None:
             "planName": infer_plan_name(sub_d),
             "trialStart": to_iso(sub_d.get("trial_start")),
             "trialEnd": to_iso(sub_d.get("trial_end")),
-            "currentPeriodEnd": to_iso(sub_d.get("current_period_end")),
+            "currentPeriodEnd": to_iso(subscription_period_end(sub_d)),
             "plan": {
                 "amount": (price.get("unit_amount") or 0) / 100,
                 "currency": price.get("currency") or "aud",
@@ -113,7 +123,7 @@ def verify_checkout_session(session_id: str) -> dict:
             "planName": plan_name,
             "trialStart": to_iso(sub_d.get("trial_start")) if sub_d else None,
             "trialEnd": to_iso(sub_d.get("trial_end")) if sub_d else None,
-            "currentPeriodEnd": to_iso(sub_d.get("current_period_end")) if sub_d else None,
+            "currentPeriodEnd": to_iso(subscription_period_end(sub_d)) if sub_d else None,
             "plan": {
                 "amount": ((sub_d.get("items") or {}).get("data") or [{}])[0].get("price", {}).get("unit_amount", 0) / 100
                 if sub_d

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "../ui/button";
-import { CheckCircle, XCircle, Loader2, ArrowRight } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, ArrowLeft, ArrowRight } from "lucide-react";
 import { useSubscription } from "../../hooks/useSubscription";
 import { syncUserToLocal } from "../../hooks/usePortalAuth";
 import type { WorkspaceUser } from "../../lib/userDirectory";
@@ -67,6 +67,14 @@ export function PaymentResult({ sessionId, loginWithUserId, onComplete }: Paymen
               Refresh page
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
+            <Button
+              onClick={() => onComplete({ success: false })}
+              variant="outline"
+              className="w-full min-h-[48px] h-12 text-base rounded-full"
+            >
+              <ArrowLeft className="mr-2 w-5 h-5" />
+              Back to plans
+            </Button>
             <a href="mailto:contact@resgro.ai" className="text-sm text-gray-500 hover:text-[#FF6B35] transition-colors">
               Contact Support
             </a>
@@ -89,7 +97,11 @@ export function PaymentResult({ sessionId, loginWithUserId, onComplete }: Paymen
           </p>
           <div className="flex flex-col gap-3">
             <Button onClick={() => onComplete({ success: false })} variant="cta" className="w-full min-h-[48px] h-12 text-base rounded-full">
-              Try Again
+              <ArrowLeft className="mr-2 w-5 h-5" />
+              Back to plans
+            </Button>
+            <Button onClick={() => window.location.reload()} variant="outline" className="w-full min-h-[48px] h-12 text-base rounded-full">
+              Check payment again
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
             <a href="mailto:contact@resgro.ai" className="text-sm text-gray-500 hover:text-[#FF6B35] transition-colors">

@@ -32,6 +32,7 @@ export type WorkspaceUser = {
   /** "salt:hex-digest" (PBKDF2) or legacy plain SHA-256 hex */
   passwordHash: string;
   stripeCustomerId: string | null;
+  paymentStatus?: "pending" | "trialing" | "active" | "past_due" | "unpaid" | "cancelled";
   canManageUsers: boolean;
   metadata: WorkspaceUserMetadata;
   createdAt: string;

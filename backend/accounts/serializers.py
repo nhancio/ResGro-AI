@@ -7,6 +7,7 @@ def user_to_api(user: WorkspaceUser) -> dict:
         "id": user.id,
         "email": user.email,
         "stripeCustomerId": user.stripe_customer_id,
+        "paymentStatus": user.payment_status,
         "canManageUsers": user.can_manage_users,
         "metadata": {
             "businessName": user.business_name,

@@ -19,6 +19,61 @@ def _ts(unix: int | None) -> datetime | None:
     return datetime.fromtimestamp(unix, tz=timezone.utc)
 
 
+def _stripe_dict(obj) -> dict:
+    if obj is None:
+        return {}
+    if isinstance(obj, dict):
+        return obj
+    if hasattr(obj, "to_dict_recursive"):
+        return obj.to_dict_recursive()
+    if hasattr(obj, "_to_dict_recursive"):
+        return obj._to_dict_recursive()
+    if hasattr(obj, "to_dict"):
+        return obj.to_dict()
+    return dict(obj)
+
+
+def _subscription_period_end(sub_d: dict) -> int | None:
+    period_end = sub_d.get("current_period_end")
+    if period_end:
+        return period_end
+    items = (sub_d.get("items") or {}).get("data") or []
+    if items:
+        return (items[0] or {}).get("current_period_end")
+    return sub_d.get("billing_cycle_anchor")
+
+
+def _payment_status_from_subscription_status(status: str | None) -> str:
+    if status in {"trialing", "active", "past_due"}:
+        return status
+    if status in {"canceled", "cancelled", "incomplete_expired"}:
+        return "cancelled"
+    if status == "unpaid":
+        return "unpaid"
+    return "pending"
+
+
+def _payment_status_for_subscriptions(subscriptions: list[dict]) -> str:
+    if not subscriptions:
+        return "pending"
+    statuses = [sub.get("status") for sub in subscriptions]
+    for status in ("active", "trialing", "past_due"):
+        if status in statuses:
+            return status
+    if "unpaid" in statuses:
+        return "unpaid"
+    if any(status in {"canceled", "cancelled", "incomplete_expired"} for status in statuses):
+        return "cancelled"
+    return _payment_status_from_subscription_status(statuses[0])
+
+
+def _set_user_payment_status(user: WorkspaceUser, payment_status: str) -> None:
+    if user.payment_status == payment_status:
+        return
+    user.payment_status = payment_status
+    user.save(update_fields=["payment_status", "updated_at"])
+
+
 def _plan_name(sub) -> str:
     meta = sub.get("metadata") or {}
     if meta.get("plan"):
@@ -90,11 +145,14 @@ def upsert_user_from_stripe_customer(customer: dict | stripe.Customer) -> Worksp
 
 def sync_subscriptions_for_user(user: WorkspaceUser) -> None:
     if not user.stripe_customer_id:
+        _set_user_payment_status(user, "pending")
         return
     subs = stripe.Subscription.list(customer=user.stripe_customer_id, status="all", limit=20)
     seen = set()
+    synced_subscriptions = []
     for i, sub in enumerate(subs.data):
-        sub_d = sub.to_dict()
+        sub_d = _stripe_dict(sub)
+        synced_subscriptions.append(sub_d)
         seen.add(sub.id)
         item = (sub_d.get("items") or {}).get("data") or []
         price = item[0].get("price") if item else {}
@@ -107,7 +165,7 @@ def sync_subscriptions_for_user(user: WorkspaceUser) -> None:
                 "plan_name": _plan_name(sub_d),
                 "trial_start": _ts(sub.trial_start),
                 "trial_end": _ts(sub.trial_end),
-                "current_period_end": _ts(sub.current_period_end),
+                "current_period_end": _ts(_subscription_period_end(sub_d)),
                 "canceled_at": _ts(sub.canceled_at),
                 "amount": Decimal((price.get("unit_amount") or 0) / 100),
                 "currency": price.get("currency") or "aud",
@@ -116,6 +174,7 @@ def sync_subscriptions_for_user(user: WorkspaceUser) -> None:
             },
         )
     Subscription.objects.filter(user=user).exclude(stripe_subscription_id__in=seen).delete()
+    _set_user_payment_status(user, _payment_status_for_subscriptions(synced_subscriptions))
 
 
 def sync_invoices_for_user(user: WorkspaceUser, limit: int = 24) -> None:

@@ -5,7 +5,12 @@ import {
   setSessionUserId,
 } from "../lib/userDirectory";
 import type { WorkspaceUser } from "../lib/userDirectory";
-import { getStoredSubscription, storeSubscription, RESGRO_SUBSCRIPTION_REFRESH } from "./useSubscription";
+import {
+  clearSubscription,
+  getStoredSubscription,
+  storeSubscription,
+  RESGRO_SUBSCRIPTION_REFRESH,
+} from "./useSubscription";
 import { apiLogin, AuthApiError, type PortalAccess } from "../config/authApi";
 
 export type LoginResult =
@@ -34,8 +39,10 @@ export function usePortalAuth() {
 
       if (response.subscription) {
         storeSubscription(response.subscription);
-        window.dispatchEvent(new Event(RESGRO_SUBSCRIPTION_REFRESH));
+      } else {
+        clearSubscription();
       }
+      window.dispatchEvent(new Event(RESGRO_SUBSCRIPTION_REFRESH));
 
       setSessionTick((t) => t + 1);
       return { success: true, user: response.user, access: response.access };

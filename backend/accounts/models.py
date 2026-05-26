@@ -21,6 +21,19 @@ class WorkspaceUser(models.Model):
         default="active",
         db_index=True,
     )
+    payment_status = models.CharField(
+        max_length=32,
+        choices=[
+            ("pending", "Pending"),
+            ("trialing", "Trialing"),
+            ("active", "Active"),
+            ("past_due", "Past Due"),
+            ("unpaid", "Unpaid"),
+            ("cancelled", "Cancelled"),
+        ],
+        default="pending",
+        db_index=True,
+    )
     suspended_at = models.DateTimeField(null=True, blank=True)
     suspended_reason = models.TextField(blank=True)
 
@@ -107,7 +120,7 @@ class UserActivity(models.Model):
     class Meta:
         ordering = ["-created_at"]
         indexes = [
-            models.Index(fields=["user", "activity_type"]),
+            models.Index(fields=["user", "activity_type"], name="accounts_us_user_id_b3e5f7_idx"),
         ]
 
     def __str__(self):
