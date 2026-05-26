@@ -12,10 +12,11 @@ export function isAdminEmail(email: string | undefined | null): boolean {
   return ADMIN_EMAILS.includes((email || "").toLowerCase());
 }
 
-/** Django admin UI (proxied at /admin/ on UI and API hosts in production). */
+const DJANGO_BACKEND_URL = "https://resgro-backend-432223990540.us-west2.run.app";
+
 export function getDjangoAdminUrl(): string {
-  if (typeof window !== "undefined") {
-    return `${window.location.origin}/admin/`;
+  if (import.meta.env.DEV) {
+    return "http://localhost:8080/admin/";
   }
-  return "/admin/";
+  return `${DJANGO_BACKEND_URL}/admin/`;
 }

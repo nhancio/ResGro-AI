@@ -62,6 +62,18 @@
   force = true
 
 [[redirects]]
+  from = "/admin"
+  to = "https://resgro-backend-432223990540.us-west2.run.app/admin/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/admin/*"
+  to = "https://resgro-backend-432223990540.us-west2.run.app/admin/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
