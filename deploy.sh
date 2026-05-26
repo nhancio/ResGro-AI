@@ -26,6 +26,34 @@ ENV_FILE="${ENV_FILE:-$ROOT_DIR/.env}"
 
 header() { echo ""; echo "=== $1 ==="; }
 
+push_to_main() {
+  if ! command -v git >/dev/null 2>&1; then return 0; fi
+  if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then return 0; fi
+
+  local branch
+  branch="$(git rev-parse --abbrev-ref HEAD)"
+  if [ "$branch" != "main" ]; then
+    echo "Warning: on branch '$branch', not main — skipping git push."
+    return 0
+  fi
+
+  if ! git diff --quiet || ! git diff --cached --quiet; then
+    echo "Error: you have uncommitted changes. Commit first, then deploy."
+    exit 1
+  fi
+
+  if git rev-parse --verify origin/main >/dev/null 2>&1; then
+    local ahead
+    ahead="$(git rev-list origin/main..HEAD --count 2>/dev/null || echo 0)"
+    if [ "$ahead" -gt 0 ]; then
+      header "Pushing $ahead commit(s) to origin/main"
+      git push origin main
+    else
+      echo "origin/main is up to date."
+    fi
+  fi
+}
+
 load_env() {
   if [ -f "$ENV_FILE" ]; then
     set -a
@@ -470,6 +498,8 @@ print_usage() {
 }
 
 GCP_TARGET="all"
+
+push_to_main
 
 while [ $# -gt 0 ]; do
   case "$1" in
