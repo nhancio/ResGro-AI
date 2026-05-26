@@ -450,7 +450,7 @@ export default function App() {
       );
     }
 
-if (!effectiveIsActive || !effectiveSubscription) {
+if (!isDemoSession && !hasMatchingActiveSubscription(sessionResolved)) {
       return (
         <>
           <Pricing
