@@ -54,7 +54,11 @@ export const AGENT_STEP_TEMPLATES: Record<string, AgentStepTemplate[]> = {
     { id: "summarize", label: "Creating AI summary" },
   ],
   boss: [
-    { id: "upload", label: "Uploading data files" },
+    {
+      id: "data",
+      label: "Data Download",
+      description: "Pulling data from DoorDash portal",
+    },
     {
       id: "deepdive",
       label: "DeepDive Analysis",
@@ -69,16 +73,6 @@ export const AGENT_STEP_TEMPLATES: Record<string, AgentStepTemplate[]> = {
       id: "campaign_setup",
       label: "Campaign Setup",
       description: "Creating offers & ads in portal",
-    },
-    {
-      id: "review",
-      label: "Campaign Review",
-      description: "Comparing performance metrics",
-    },
-    {
-      id: "report",
-      label: "Monthly Report",
-      description: "Generating KPI report",
     },
   ],
 };

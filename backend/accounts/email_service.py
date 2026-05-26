@@ -52,6 +52,23 @@ def _send_emailjs(template_params: dict) -> None:
         raise RuntimeError(f"EmailJS failed ({resp.status_code}): {resp.text}")
 
 
+def _emailjs_common_params(*, to: str, subject: str, text: str, html_body: str) -> dict:
+    # The shared EmailJS template in this repo was authored for the contact form,
+    # so we keep the same variable set populated for password-reset emails too.
+    return {
+        "to_email": to,
+        "to_name": to,
+        "from_name": "ResGro",
+        "from_email": mail_from(),
+        "reply_to": mail_from(),
+        "subject": subject,
+        "message": text,
+        "html_message": html_body,
+        "mobile": "Not provided",
+        "restaurant": "Not provided",
+    }
+
+
 def _send_smtp(*, to: str, subject: str, text: str, html_body: str) -> None:
     port = int(os.environ.get("SMTP_PORT", "587"))
     secure = os.environ.get("SMTP_SECURE", "").lower() == "true" or port == 465
@@ -111,16 +128,10 @@ def send_password_reset_email(*, to: str, name: str, short_code: str, app_origin
         text=text,
         html_body=html_body,
         template_params={
-            "to_email": to,
+            **_emailjs_common_params(to=to, subject=subject, text=text, html_body=html_body),
             "to_name": name or "User",
-            "subject": subject,
-            "message": text,
-            "html_message": html_body,
             "reset_code": short_code,
             "app_origin": app_origin,
-            "from_name": "ResGro",
-            "from_email": mail_from(),
-            "reply_to": mail_from(),
         },
     )
 
@@ -153,13 +164,7 @@ def send_password_changed_email(*, to: str, name: str = "", app_origin: str = ""
         text=text,
         html_body=html_body,
         template_params={
-            "to_email": to,
+            **_emailjs_common_params(to=to, subject=subject, text=text, html_body=html_body),
             "to_name": name or "User",
-            "subject": subject,
-            "message": text,
-            "html_message": html_body,
-            "from_name": "ResGro",
-            "from_email": mail_from(),
-            "reply_to": mail_from(),
         },
     )

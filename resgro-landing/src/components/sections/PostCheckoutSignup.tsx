@@ -19,7 +19,6 @@ export function PostCheckoutSignup({ subscription, onComplete }: PostCheckoutSig
   const [password, setPassword] = useState("");
   const [businessName, setBusinessName] = useState(subscription.customer.name || "");
   const [restaurantCount, setRestaurantCount] = useState("1");
-  const [dateOfBirth, setDateOfBirth] = useState("");
   const [region, setRegion] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -40,11 +39,6 @@ export function PostCheckoutSignup({ subscription, onComplete }: PostCheckoutSig
       setError("Enter how many restaurant locations you operate (1 or more).");
       return;
     }
-    if (!dateOfBirth) {
-      setError("Date of birth is required.");
-      return;
-    }
-
     setSubmitting(true);
     try {
       const response = await apiSignup({
@@ -53,7 +47,6 @@ export function PostCheckoutSignup({ subscription, onComplete }: PostCheckoutSig
         stripeCustomerId,
         businessName: businessName.trim(),
         restaurantCount: n,
-        dateOfBirth,
         region: region.trim() || undefined,
       });
       syncUserToLocal(response.user);
@@ -124,12 +117,6 @@ export function PostCheckoutSignup({ subscription, onComplete }: PostCheckoutSig
               onChange={(e) => setRestaurantCount(e.target.value)}
               required
             />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-black" htmlFor="signup-dob">
-              Date of birth
-            </label>
-            <Input id="signup-dob" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} required />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-black" htmlFor="signup-region">

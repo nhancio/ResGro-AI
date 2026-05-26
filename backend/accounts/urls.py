@@ -21,4 +21,7 @@ urlpatterns = [
     path("admin/users/<str:user_id>/suspend", views.admin_suspend_user),
     path("admin/users/<str:user_id>/activate", views.admin_activate_user),
     path("admin/subscriptions/<str:subscription_id>/cancel", views.admin_cancel_subscription),
+    # Activity tracking
+    path("activity", views.log_activity),
+    path("activity/list", views.list_activity),
 ]

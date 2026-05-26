@@ -9,6 +9,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Ensure playwright CLI is available, then install Chromium + system deps
+RUN pip install --no-cache-dir playwright && playwright install --with-deps chromium
+
 COPY agents/ agents/
 COPY api/ api/
 COPY orchestrator/ orchestrator/

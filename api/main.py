@@ -1079,6 +1079,26 @@ async def session_run_campaign_setup(
 
 # ── Boss Agent endpoint ──────────────────────────────────────────────────────
 
+@app.post("/api/run/boss")
+async def run_boss_full(
+    doordash_email: str = Form(""),
+    doordash_password: str = Form(""),
+    date_range: str = Form(""),
+):
+    """Run Boss Agent full pipeline: Data Agent → DeepDive → Marketing Reco → Campaign Setup."""
+    if not doordash_email or not doordash_password:
+        raise HTTPException(400, "DoorDash email and password are required")
+    try:
+        result = boss_agent_run(
+            doordash_email=doordash_email.strip(),
+            doordash_password=doordash_password,
+            date_range=date_range.strip(),
+        )
+        return JSONResponse(result)
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
 @app.post("/api/sessions/{session_id}/run/boss")
 async def session_run_boss(
     session_id: str,
@@ -1089,7 +1109,7 @@ async def session_run_boss(
     pre_range: str = Form(""),
     post_range: str = Form(""),
 ):
-    """Run the Boss Agent — full pipeline or selected steps against a session."""
+    """Run the Boss Agent against an existing session."""
     try:
         get_session(session_id)
     except FileNotFoundError:

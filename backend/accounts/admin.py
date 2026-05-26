@@ -3,7 +3,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.utils import timezone
 
-from .models import Invoice, Subscription, WorkspaceUser
+from .models import Invoice, Subscription, UserActivity, WorkspaceUser
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -60,3 +60,12 @@ class SubscriptionAdmin(admin.ModelAdmin):
 class InvoiceAdmin(admin.ModelAdmin):
     list_display = ("user", "status", "amount_due", "period_end")
     list_filter = ("status",)
+
+
+@admin.register(UserActivity)
+class UserActivityAdmin(admin.ModelAdmin):
+    list_display = ("user", "activity_type", "chat_id", "session_id", "run_id", "agent_name", "status", "created_at")
+    list_filter = ("activity_type", "status", "agent_name")
+    search_fields = ("user__email", "chat_id", "session_id", "run_id", "agent_name")
+    readonly_fields = ("created_at",)
+    raw_id_fields = ("user",)

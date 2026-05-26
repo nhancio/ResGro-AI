@@ -27,7 +27,6 @@ export function PreCheckoutAuth({ onBack, loginWithUserId, onSuccess, serverLogi
   const [password, setPassword] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [restaurantCount, setRestaurantCount] = useState("1");
-  const [dateOfBirth, setDateOfBirth] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -46,10 +45,6 @@ export function PreCheckoutAuth({ onBack, loginWithUserId, onSuccess, serverLogi
       }
       if (password.length < 8) {
         setError("Password must be at least 8 characters.");
-        return;
-      }
-      if (!dateOfBirth) {
-        setError("Date of birth is required.");
         return;
       }
       if (!termsAccepted) {
@@ -82,7 +77,6 @@ export function PreCheckoutAuth({ onBack, loginWithUserId, onSuccess, serverLogi
         password,
         businessName: businessName.trim(),
         restaurantCount: count,
-        dateOfBirth,
       });
       syncUserToLocal(response.user);
       loginWithUserId(response.user.id);
@@ -227,19 +221,6 @@ export function PreCheckoutAuth({ onBack, loginWithUserId, onSuccess, serverLogi
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <label htmlFor="auth-dob" className="text-sm font-medium text-gray-200">
-                        Date of birth
-                      </label>
-                      <Input
-                        id="auth-dob"
-                        type="date"
-                        value={dateOfBirth}
-                        onChange={(event) => setDateOfBirth(event.target.value)}
-                        className="h-12 rounded-xl border-[#333338] bg-[#242428] text-white placeholder:text-gray-500 focus-visible:border-[#FF6B35]/60 focus-visible:ring-[#FF6B35]/20"
-                        required
-                      />
-                    </div>
                     <label className="flex items-start gap-2 text-sm leading-6 text-gray-400">
                       <input
                         type="checkbox"

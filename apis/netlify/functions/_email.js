@@ -57,6 +57,21 @@ async function sendViaEmailJS({ templateParams }) {
   }
 }
 
+function emailjsCommonParams({ to, subject, text, html }) {
+  return {
+    to_email: to,
+    to_name: to,
+    from_name: "ResGro",
+    from_email: mailFrom(),
+    reply_to: mailFrom(),
+    subject,
+    message: text,
+    html_message: html,
+    mobile: "Not provided",
+    restaurant: "Not provided",
+  };
+}
+
 async function sendViaSmtp({ to, subject, text, html }) {
   const port = Number(process.env.SMTP_PORT || "587");
   const secure = process.env.SMTP_SECURE === "true" || port === 465;
@@ -110,16 +125,10 @@ async function sendPasswordResetEmail(opts) {
   if (hasEmailJS()) {
     await sendViaEmailJS({
       templateParams: {
-        to_email: to,
+        ...emailjsCommonParams({ to, subject, text, html }),
         to_name: name || "User",
-        subject,
-        message: text,
-        html_message: html,
         reset_code: shortCode,
         app_origin: appOrigin || "",
-        from_name: "ResGro",
-        from_email: mailFrom(),
-        reply_to: mailFrom(),
       },
     });
     return;
@@ -161,14 +170,8 @@ async function sendPasswordChangedEmail(opts) {
   if (hasEmailJS()) {
     await sendViaEmailJS({
       templateParams: {
-        to_email: to,
+        ...emailjsCommonParams({ to, subject, text, html }),
         to_name: name || "User",
-        subject,
-        message: text,
-        html_message: html,
-        from_name: "ResGro",
-        from_email: mailFrom(),
-        reply_to: mailFrom(),
       },
     });
     return;

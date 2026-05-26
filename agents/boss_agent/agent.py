@@ -29,10 +29,6 @@ PipelineStep = Literal[
     "deepdive",
     "marketingreco",
     "campaign_setup",
-    "offers",
-    "ads",
-    "campaign_review",
-    "monthly_reporter",
 ]
 
 FULL_PIPELINE: list[PipelineStep] = [
@@ -40,56 +36,93 @@ FULL_PIPELINE: list[PipelineStep] = [
     "deepdive",
     "marketingreco",
     "campaign_setup",
-    "campaign_review",
-    "monthly_reporter",
 ]
 
 
 def run(
     *,
-    session_id: str,
+    session_id: str | None = None,
     steps: list[PipelineStep] | None = None,
     skip_steps: list[PipelineStep] | None = None,
     doordash_email: str = "",
     doordash_password: str = "",
+    date_range: str = "",
     pre_range: str = "",
     post_range: str = "",
 ) -> dict[str, Any]:
     """
-    Run the full (or partial) pipeline against a data session.
+    Run the full (or partial) pipeline.
 
-    Args:
-        session_id: The data session to use (must exist with status=ready).
-        steps: If provided, only run these steps. Otherwise run all.
-        skip_steps: Steps to skip from the full pipeline.
-        doordash_email/password: Required for offers/ads browser automation.
-        pre_range/post_range: Required for monthly_reporter (MM/DD/YYYY-MM/DD/YYYY).
+    If no session_id is provided, the data agent runs first in autopilot mode
+    to download data from DoorDash and create a session.
+
+    Pipeline: Data Agent → DeepDive → Marketing Reco → Campaign Setup
     """
-    meta = get_session(session_id)
-    operator_id = meta["operator_id"]
-
-    if meta["status"] != "ready":
-        return {
-            "session_id": session_id,
-            "status": "error",
-            "message": f"Session is not ready (status: {meta['status']}). Upload data first.",
-        }
-
-    pipeline = steps or FULL_PIPELINE
+    pipeline = steps or list(FULL_PIPELINE)
     skip = set(skip_steps or [])
     pipeline = [s for s in pipeline if s not in skip]
 
-    if "data" in pipeline:
-        pipeline.remove("data")
-
     results: dict[str, Any] = {
         "session_id": session_id,
-        "operator_id": operator_id,
+        "operator_id": None,
         "status": "running",
         "steps_completed": [],
         "steps_failed": [],
         "step_results": {},
     }
+
+    # Step 1: Data Agent — download data if no session exists
+    if "data" in pipeline:
+        pipeline.remove("data")
+        if not session_id:
+            try:
+                data_result = _run_data_agent(
+                    doordash_email=doordash_email,
+                    doordash_password=doordash_password,
+                    date_range=date_range,
+                )
+                if data_result.get("status") not in ("ready",):
+                    results["steps_failed"].append("data")
+                    results["step_results"]["data"] = {
+                        "status": "failed",
+                        "error": data_result.get("message", "Data download failed"),
+                    }
+                    results["status"] = "partial"
+                    return results
+
+                session_id = data_result["session_id"]
+                results["session_id"] = session_id
+                results["steps_completed"].append("data")
+                results["step_results"]["data"] = {
+                    "status": "success",
+                    "summary": f"Data downloaded: {len(data_result.get('datasets', []))} dataset(s)",
+                }
+            except Exception as e:
+                results["steps_failed"].append("data")
+                results["step_results"]["data"] = {
+                    "status": "failed",
+                    "error": str(e),
+                }
+                results["status"] = "partial"
+                return results
+
+    if not session_id:
+        return {
+            **results,
+            "status": "error",
+            "message": "No session_id and data step was skipped.",
+        }
+
+    meta = get_session(session_id)
+    operator_id = meta["operator_id"]
+    results["operator_id"] = operator_id
+
+    if meta["status"] != "ready":
+        return {
+            "session_id": session_id,
+            "status": "error",
+            "message": f"Session is not ready (status: {meta['status']}). Data download may have failed.",
+        }
 
     for step in pipeline:
         try:
@@ -126,6 +159,23 @@ def run(
     return results
 
 
+def _run_data_agent(
+    *,
+    doordash_email: str,
+    doordash_password: str,
+    date_range: str = "",
+) -> dict[str, Any]:
+    from agents.data_agent.agent import run_autopilot
+
+    return run_autopilot(
+        operator_id="chat-upload",
+        operator_name="Boss Pipeline",
+        doordash_email=doordash_email,
+        doordash_password=doordash_password,
+        date_range=date_range,
+    )
+
+
 def _run_step(
     step: PipelineStep,
     *,
@@ -142,14 +192,6 @@ def _run_step(
         return _run_marketingreco(session_id, operator_id)
     elif step == "campaign_setup":
         return _run_campaign_setup(session_id, operator_id, doordash_email, doordash_password)
-    elif step == "offers":
-        return _run_offers(session_id, operator_id, doordash_email, doordash_password)
-    elif step == "ads":
-        return _run_ads(session_id, operator_id, doordash_email, doordash_password)
-    elif step == "campaign_review":
-        return _run_campaign_review(session_id, operator_id)
-    elif step == "monthly_reporter":
-        return _run_monthly_reporter(session_id, operator_id, pre_range, post_range)
     else:
         raise ValueError(f"Unknown step: {step}")
 
@@ -235,40 +277,144 @@ def _run_marketingreco(session_id: str, operator_id: str) -> dict[str, Any]:
 
 def _run_campaign_setup(session_id: str, operator_id: str, email: str, password: str) -> dict[str, Any]:
     """
-    Read the uploaded campaign plan (Offers sheet + Ads sheet) from the session
-    data directory and execute campaigns via browser automation.
+    Create promotions via browser automation.
+
+    Boss pipeline path: reads campaign_plan from marketingreco artifact.
+    Self-serve path: reads uploaded campaign plan file from data dir.
     """
     if not email or not password:
         return {"status": "skipped", "message": "DoorDash credentials required for campaign setup."}
 
-    data_dir = get_session_data_dir(session_id)
+    combos: list[dict] = []
 
-    campaign_file = _find_campaign_plan_file(data_dir)
-    if not campaign_file:
-        return {"status": "skipped", "message": "No campaign plan file found in session. Upload a campaign plan CSV/Excel first."}
+    # Path 1: read from marketingreco artifact (boss pipeline handoff)
+    mrk_artifact = get_agent_artifact(session_id, "marketingreco", "result.json")
+    if mrk_artifact:
+        mrk_result = json.loads(mrk_artifact.read_text(encoding="utf-8"))
+        for cp in mrk_result.get("campaign_plan", []):
+            store_id = str(cp.get("store_id", "")).strip()
+            if not store_id:
+                continue
+            combos.append({
+                "store_id": store_id,
+                "min_subtotal": cp.get("min_subtotal", 10),
+                "slot_tags": cp.get("slots", []),
+                "campaign_name": cp.get("campaign_name", f"Resgro-{store_id}"),
+            })
 
-    offers_result = _run_offers_from_file(campaign_file, email, password)
-    ads_result = _run_ads_from_file(campaign_file, email, password)
+    # Path 2: fall back to uploaded campaign plan file (self-serve)
+    if not combos:
+        data_dir = get_session_data_dir(session_id)
+        campaign_file = _find_campaign_plan_file(data_dir)
+        if campaign_file:
+            result = _run_offers_from_file(campaign_file, email, password)
+            run_id = str(uuid.uuid4())
+            record_agent_run(session_id, "campaign_setup", run_id, {
+                "status": result.get("status", "unknown"),
+            })
+            return {**result, "run_id": run_id}
 
-    overall = "success"
-    if offers_result.get("status") == "failed" or ads_result.get("status") == "failed":
-        overall = "partial"
-    if offers_result.get("status") in ("skipped", "failed") and ads_result.get("status") in ("skipped", "failed"):
-        overall = "skipped" if offers_result.get("status") == "skipped" and ads_result.get("status") == "skipped" else "failed"
+    if not combos:
+        return {"status": "skipped", "message": "No promotion combos to create."}
 
-    run_id = str(uuid.uuid4())
-    record_agent_run(session_id, "campaign_setup", run_id, {
-        "status": overall,
-        "offers_status": offers_result.get("status"),
-        "ads_status": ads_result.get("status"),
-    })
+    import subprocess
+    import sys
+    import os
+    import tempfile
 
-    return {
-        "status": overall,
-        "run_id": run_id,
-        "offers": offers_result,
-        "ads": ads_result,
-    }
+    _ROOT = Path(__file__).resolve().parents[2]
+    reporting_root = _ROOT / "agents" / "resgro-browser-automation"
+
+    combos_path = Path(tempfile.mktemp(suffix=".json", prefix="offers_combos_"))
+    combos_path.write_text(json.dumps(combos, indent=2), encoding="utf-8")
+
+    env = os.environ.copy()
+    env["DOORDASH_EMAIL"] = email
+    env["DOORDASH_PASSWORD"] = password
+
+    script = f"""
+import asyncio, json, os, sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent if '__file__' in dir() else Path('.')))
+from agents.doordash_agent import get_task_description_campaign_for_subtotal_combo, _get_llm, _get_browser, _kill_browser
+
+AGENT_LOGIN_TIMEOUT = 180
+AGENT_CAMPAIGN_TIMEOUT = 360
+AGENT_RESET_TIMEOUT = 90
+
+async def _main():
+    from browser_use import Agent
+    combos = json.loads(Path("{combos_path}").read_text())
+    email = os.environ["DOORDASH_EMAIL"]
+    password = os.environ["DOORDASH_PASSWORD"]
+    download_dir = Path("downloads/campaign_setup")
+    download_dir.mkdir(parents=True, exist_ok=True)
+
+    llm = _get_llm()
+    browser = _get_browser(download_dir, keep_alive=True)
+
+    login_task = (
+        f"Go to https://merchant-portal.doordash.com/merchant/login\\n"
+        f"Enter email: {{email}}, click 'Continue to Log In'.\\n"
+        f"On the next screen, enter password: {{password}}, click 'Log In'.\\n"
+        f"Wait for the dashboard to load. Use done action to finish."
+    )
+    print("Logging in to DoorDash Merchant Portal...")
+    try:
+        login_agent = Agent(task=login_task, llm=llm, browser=browser)
+        await asyncio.wait_for(login_agent.run(), timeout=AGENT_LOGIN_TIMEOUT)
+        print("Login successful")
+    except Exception as e:
+        print(f"Login failed: {{e}}")
+        await _kill_browser(browser)
+        raise SystemExit(f"Login failed: {{e}}")
+
+    for i, combo in enumerate(combos):
+        cname = combo.get('campaign_name', '')
+        print(f"Creating promotion {{i+1}}/{{len(combos)}}: {{cname}}")
+
+        nav_task = (
+            "Go to https://merchant-portal.doordash.com/merchant/marketing "
+            "WAIT UNTIL the page has fully loaded. "
+            "If any modal or popup is visible, close it. "
+            "Confirm you see the Marketing page. Use done action to finish."
+        )
+        try:
+            nav_agent = Agent(task=nav_task, llm=llm, browser=browser)
+            await asyncio.wait_for(nav_agent.run(), timeout=AGENT_RESET_TIMEOUT)
+        except Exception:
+            pass
+
+        task = get_task_description_campaign_for_subtotal_combo(combo)
+        try:
+            campaign_agent = Agent(task=task, llm=llm, browser=browser)
+            await asyncio.wait_for(campaign_agent.run(), timeout=AGENT_CAMPAIGN_TIMEOUT)
+            print(f"{{cname}} — done")
+        except Exception as e:
+            print(f"{{cname}} — failed: {{e}}")
+
+    await _kill_browser(browser)
+
+asyncio.run(_main())
+"""
+    try:
+        subprocess.run(
+            [sys.executable, "-c", script],
+            cwd=str(reporting_root),
+            env=env,
+            check=True,
+        )
+        run_id = str(uuid.uuid4())
+        record_agent_run(session_id, "campaign_setup", run_id, {
+            "status": "success",
+            "promotions_created": len(combos),
+        })
+        return {"status": "success", "run_id": run_id, "promotions_created": len(combos)}
+    except subprocess.CalledProcessError as e:
+        return {"status": "failed", "message": f"Campaign browser run failed (exit {e.returncode})."}
+    finally:
+        combos_path.unlink(missing_ok=True)
 
 
 def _find_campaign_plan_file(data_dir: Path) -> Path | None:
@@ -619,26 +765,125 @@ def _run_offers(session_id: str, operator_id: str, email: str, password: str) ->
     if not email or not password:
         return {"status": "skipped", "message": "DoorDash credentials required for offers automation."}
 
+    mrk_artifact = get_agent_artifact(session_id, "marketingreco", "result.json")
+    if not mrk_artifact:
+        return {"status": "skipped", "message": "No marketing reco result available for offers."}
+
+    mrk_result = json.loads(mrk_artifact.read_text(encoding="utf-8"))
+    campaign_plan = mrk_result.get("campaign_plan", [])
+    if not campaign_plan:
+        return {"status": "skipped", "message": "No campaign plan in marketing reco result."}
+
+    combos = []
+    for cp in campaign_plan:
+        store_id = str(cp.get("store_id", "")).strip()
+        if not store_id:
+            continue
+        combos.append({
+            "store_id": store_id,
+            "min_subtotal": cp.get("min_subtotal", 10),
+            "slot_tags": cp.get("slots", []),
+            "campaign_name": cp.get("campaign_name", f"Resgro-{store_id}"),
+        })
+
+    if not combos:
+        return {"status": "skipped", "message": "No offer combos generated from campaign plan."}
+
     import subprocess
     import sys
+    import os
+    import tempfile
 
     _ROOT = Path(__file__).resolve().parents[2]
     reporting_root = _ROOT / "agents" / "resgro-browser-automation"
-    import os
+
+    combos_path = Path(tempfile.mktemp(suffix=".json", prefix="offers_combos_"))
+    combos_path.write_text(json.dumps(combos, indent=2), encoding="utf-8")
+
     env = os.environ.copy()
     env["DOORDASH_EMAIL"] = email
     env["DOORDASH_PASSWORD"] = password
 
-    subprocess.run(
-        [sys.executable, "main.py"],
-        cwd=str(reporting_root),
-        env=env,
-        check=True,
-    )
+    script = f"""
+import asyncio, json, os, sys
+from pathlib import Path
 
-    run_id = str(uuid.uuid4())
-    record_agent_run(session_id, "offers", run_id, {"status": "success"})
-    return {"status": "success", "run_id": run_id}
+sys.path.insert(0, str(Path(__file__).parent if '__file__' in dir() else Path('.')))
+from agents.doordash_agent import get_task_description_campaign_for_subtotal_combo, _get_llm, _get_browser, _kill_browser
+
+AGENT_LOGIN_TIMEOUT = 180
+AGENT_CAMPAIGN_TIMEOUT = 360
+AGENT_RESET_TIMEOUT = 90
+
+async def _main():
+    from browser_use import Agent
+    combos = json.loads(Path("{combos_path}").read_text())
+    email = os.environ["DOORDASH_EMAIL"]
+    password = os.environ["DOORDASH_PASSWORD"]
+    download_dir = Path("downloads/campaign_setup")
+    download_dir.mkdir(parents=True, exist_ok=True)
+
+    llm = _get_llm()
+    browser = _get_browser(download_dir, keep_alive=True)
+
+    login_task = (
+        f"Go to https://merchant-portal.doordash.com/merchant/login\\n"
+        f"Enter email: {{email}}, click 'Continue to Log In'.\\n"
+        f"On the next screen, enter password: {{password}}, click 'Log In'.\\n"
+        f"Wait for the dashboard to load. Use done action to finish."
+    )
+    print("Logging in to DoorDash Merchant Portal...")
+    try:
+        login_agent = Agent(task=login_task, llm=llm, browser=browser)
+        await asyncio.wait_for(login_agent.run(), timeout=AGENT_LOGIN_TIMEOUT)
+        print("Login successful")
+    except Exception as e:
+        print(f"Login failed: {{e}}")
+        await _kill_browser(browser)
+        raise SystemExit(f"Login failed: {{e}}")
+
+    for i, combo in enumerate(combos):
+        cname = combo.get('campaign_name', '')
+        print(f"Creating offer {{i+1}}/{{len(combos)}}: {{cname}}")
+
+        nav_task = (
+            "Go to https://merchant-portal.doordash.com/merchant/marketing "
+            "WAIT UNTIL the page has fully loaded. "
+            "If any modal or popup is visible, close it. "
+            "Confirm you see the Marketing page. Use done action to finish."
+        )
+        try:
+            nav_agent = Agent(task=nav_task, llm=llm, browser=browser)
+            await asyncio.wait_for(nav_agent.run(), timeout=AGENT_RESET_TIMEOUT)
+        except Exception:
+            pass
+
+        task = get_task_description_campaign_for_subtotal_combo(combo)
+        try:
+            campaign_agent = Agent(task=task, llm=llm, browser=browser)
+            await asyncio.wait_for(campaign_agent.run(), timeout=AGENT_CAMPAIGN_TIMEOUT)
+            print(f"{{cname}} — done")
+        except Exception as e:
+            print(f"{{cname}} — failed: {{e}}")
+
+    await _kill_browser(browser)
+
+asyncio.run(_main())
+"""
+    try:
+        subprocess.run(
+            [sys.executable, "-c", script],
+            cwd=str(reporting_root),
+            env=env,
+            check=True,
+        )
+        run_id = str(uuid.uuid4())
+        record_agent_run(session_id, "offers", run_id, {"status": "success"})
+        return {"status": "success", "run_id": run_id, "campaigns_created": len(combos)}
+    except subprocess.CalledProcessError as e:
+        return {"status": "failed", "message": f"Offers browser run failed (exit {e.returncode})."}
+    finally:
+        combos_path.unlink(missing_ok=True)
 
 
 def _run_ads(session_id: str, operator_id: str, email: str, password: str) -> dict[str, Any]:
@@ -650,14 +895,29 @@ def _run_ads(session_id: str, operator_id: str, email: str, password: str) -> di
         return {"status": "skipped", "message": "No marketing reco result available for ads."}
 
     mrk_result = json.loads(mrk_artifact.read_text(encoding="utf-8"))
-    ads_plan = mrk_result.get("ads_plan")
-    if not ads_plan:
-        return {"status": "skipped", "message": "No ads plan in marketing reco result."}
+    ads_table = mrk_result.get("ads_table") or mrk_result.get("ads_plan")
+    if not ads_table:
+        return {"status": "skipped", "message": "No ads table in marketing reco result."}
 
-    from agents.marketingreco.resgro_ads_excel import resgro_ads_upload_rows
-    upload_rows = resgro_ads_upload_rows(ads_plan)
+    upload_rows = []
+    if isinstance(ads_table, list):
+        for row in ads_table:
+            slots = row.get("slots", [])
+            if isinstance(slots, list):
+                slots = ",".join(str(s) for s in slots)
+            upload_rows.append({
+                "store_id": str(row.get("store_id", "")),
+                "slots": slots,
+                "bid_strategy": row.get("bid_strategy", 3),
+                "budget": row.get("budget", 10),
+                "campaign_name": row.get("campaign_name", f"Resgro-Ads-{row.get('store_id', '')}"),
+            })
+    elif isinstance(ads_table, dict):
+        from agents.marketingreco.resgro_ads_excel import resgro_ads_upload_rows
+        upload_rows = resgro_ads_upload_rows(ads_table)
+
     if not upload_rows:
-        return {"status": "skipped", "message": "No sponsored listing rows generated from ads plan."}
+        return {"status": "skipped", "message": "No sponsored listing rows generated from ads table."}
 
     import pandas as pd
     import tempfile
@@ -776,14 +1036,6 @@ def _summarize_step(step: str, result: dict[str, Any]) -> str:
         n = len(result.get("recommended_campaigns", []))
         return f"{status}: {n} campaigns recommended"
     elif step == "campaign_setup":
-        offers = result.get("offers", {}).get("status", "skipped")
-        ads = result.get("ads", {}).get("status", "skipped")
-        return f"{status}: offers={offers}, ads={ads}"
-    elif step in ("offers", "ads"):
-        return f"{status}"
-    elif step == "campaign_review":
-        n = len(result.get("campaign_reviews", []))
-        return f"{status}: {n} campaigns reviewed"
-    elif step == "monthly_reporter":
-        return f"{status}: {result.get('summary_text', '')[:100]}"
+        n = result.get("promotions_created", 0)
+        return f"{status}: {n} promotions created"
     return status

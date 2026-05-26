@@ -1,6 +1,7 @@
 # EmailJS Template – Contact Form
 
 The website sends these **exact variables** to EmailJS. Your template must use the same names (case-sensitive).
+The same template is also reused for password-reset emails, so keep the contact-form fields below in place even if the reset copy does not display them.
 
 ## Variables sent from the form
 
@@ -71,5 +72,6 @@ Reply to: {{from_email}}
 - [ ] Template uses **exactly**: `{{from_name}}`, `{{from_email}}`, `{{mobile}}`, `{{restaurant}}`, `{{message}}` (double curly braces, no spaces inside).
 - [ ] No typo in variable names (e.g. `from_name` not `fromName` or `name`).
 - [ ] Save the template in EmailJS after editing.
+- [ ] Password-reset emails still receive the same base variables, plus reset-specific fields such as `reset_code` and `app_origin`.
 
 After you update the template, submit the form again; the email should show Name, Email, Mobile, Restaurant, and Message.

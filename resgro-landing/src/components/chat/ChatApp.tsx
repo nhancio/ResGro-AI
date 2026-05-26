@@ -8,7 +8,7 @@ import {
   BarChart3,
   FileText,
   ArrowLeft,
-  Trash2,
+  Square,
   Loader2,
   Sparkles,
   Menu,
@@ -64,6 +64,7 @@ import { ProfilePanel } from "./ProfilePanel";
 import { BillingPanel } from "./BillingPanel";
 import type { SubscriptionData } from "../../hooks/useSubscription";
 import type { WorkspaceUser } from "../../lib/userDirectory";
+import { apiLogActivity } from "../../config/authApi";
 
 /* ─── Types ─────────────────────────────────────────────────────────────────── */
 
@@ -703,6 +704,8 @@ export function ChatApp({
   const [input, setInput] = useState("");
   const [selectedAgent, setSelectedAgent] = useState<AgentConfig | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingSessionId, setLoadingSessionId] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mainView, setMainView] = useState<MainView>("chat");
@@ -760,23 +763,22 @@ export function ChatApp({
       }
       setMainView("chat");
       setMobileSidebar(false);
+      if (sessionUser?.id) {
+        apiLogActivity({ userId: sessionUser.id, activityType: "chat", chatId: s.id });
+      }
       return s;
     },
-    [],
+    [sessionUser],
   );
 
-  const deleteSession = useCallback(
-    (id: string) => {
-      setSessions((prev) => {
-        const next = prev.filter((s) => s.id !== id);
-        if (activeId === id) {
-          setActiveId(next.length > 0 ? next[0].id : null);
-        }
-        return next;
-      });
-    },
-    [activeId],
-  );
+  const stopSession = useCallback(() => {
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
+    setIsLoading(false);
+    setLoadingSessionId(null);
+  }, []);
 
   /* ─── Message helpers ───────────────────────────────────────────────── */
 
@@ -829,8 +831,31 @@ export function ChatApp({
           return { ...s, messages: msgs, updatedAt: Date.now() };
         }),
       );
+      if (sessionUser?.id && options?.agentResult) {
+        const ar = options.agentResult;
+        if (ar.sessionId) {
+          apiLogActivity({
+            userId: sessionUser.id,
+            activityType: "session",
+            chatId: sid,
+            sessionId: ar.sessionId,
+            agentName: ar.type,
+          });
+        }
+        if (ar.runId) {
+          apiLogActivity({
+            userId: sessionUser.id,
+            activityType: "run",
+            chatId: sid,
+            sessionId: ar.sessionId || "",
+            runId: ar.runId,
+            agentName: ar.type,
+            status: "completed",
+          });
+        }
+      }
     },
-    [activeId],
+    [activeId, sessionUser],
   );
 
   /* ─── LLM Summary ──────────────────────────────────────────────────── */
@@ -1015,6 +1040,7 @@ export function ChatApp({
     addMessage(userMsg, sid);
     setInput("");
     setIsLoading(true);
+    setLoadingSessionId(sid);
 
     // Agent-specific file uploads
     if (selectedAgent && files.length > 0) {
@@ -1038,6 +1064,7 @@ export function ChatApp({
             sid,
           );
           setIsLoading(false);
+          setLoadingSessionId(null);
           return;
         }
       }
@@ -1073,6 +1100,7 @@ export function ChatApp({
         );
       } finally {
         setIsLoading(false);
+        setLoadingSessionId(null);
       }
       return;
     }
@@ -1160,6 +1188,7 @@ export function ChatApp({
       );
     } finally {
       setIsLoading(false);
+      setLoadingSessionId(null);
     }
   }, [
     input,
@@ -1227,8 +1256,8 @@ export function ChatApp({
         return `${m}/${d}/${y}`;
       };
       const fd = new FormData();
-      fd.append("operator_id", "chat-upload");
-      fd.append("operator_name", "Chat Upload");
+      fd.append("operator_id", sessionUser?.id || "chat-upload");
+      fd.append("operator_name", sessionUser?.email || "Chat Upload");
       fd.append("mode", "autopilot");
       fd.append("doordash_email", creds.email);
       fd.append("doordash_password", creds.password);
@@ -1381,26 +1410,19 @@ export function ChatApp({
     creds: { email: string; password: string; files: File[] },
   ) {
     let ps = createProcessState("boss");
-    if (ps) ps = advanceStep(ps, "upload");
-    updateLastAssistant("Uploading data files...", sessionId, { processState: ps });
+    if (ps) ps = advanceStep(ps, "data");
+    updateLastAssistant(
+      "Starting data download from DoorDash... This may take 5-15 minutes.",
+      sessionId,
+      { processState: ps },
+    );
     try {
-      const dataSid = await uploadFilesToSession(creds.files, {
-        onProgress: (msg) => updateLastAssistant(msg, sessionId, { processState: ps }),
-      });
-
-      if (ps) ps = advanceStep(ps, "deepdive");
-      updateLastAssistant(
-        "Starting full pipeline... This may take 30-60 minutes.",
-        sessionId,
-        { processState: ps },
-      );
-
       const fd = new FormData();
       fd.append("doordash_email", creds.email);
       fd.append("doordash_password", creds.password);
 
       const resp = await fetchAgentsApi(
-        `/api/sessions/${encodeURIComponent(dataSid)}/run/boss`,
+        "/api/run/boss",
         { method: "POST", body: fd, timeoutKind: "agent_run" },
       );
       if (!resp.ok) {
@@ -1418,11 +1440,10 @@ export function ChatApp({
 
       if (ps) {
         const stepMap: Record<string, string> = {
+          data: "data",
           deepdive: "deepdive",
           marketingreco: "marketingreco",
           campaign_setup: "campaign_setup",
-          campaign_review: "review",
-          monthly_reporter: "report",
         };
         for (const done of stepsCompleted) {
           const mapped = stepMap[done];
@@ -1447,7 +1468,7 @@ export function ChatApp({
         agentResult: {
           type: "boss",
           runId: result.run_id,
-          sessionId: dataSid,
+          sessionId: result.session_id,
           bossSteps: result.step_results,
           aiSummary: aiSummary || undefined,
         },
@@ -1863,15 +1884,18 @@ export function ChatApp({
                   <span className="flex-1 text-sm truncate">
                     {session.title}
                   </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteSession(session.id);
-                    }}
-                    className="opacity-0 group-hover:opacity-100 hover:text-red-400 transition-opacity p-1"
-                  >
-                    <Trash2 size={12} />
-                  </button>
+                  {isLoading && loadingSessionId === session.id && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        stopSession();
+                      }}
+                      className="text-red-400 hover:text-red-300 transition-colors p-1"
+                      title="Stop agent"
+                    >
+                      <Square size={12} fill="currentColor" />
+                    </button>
+                  )}
                 </div>
               ))}
               {sessions.length === 0 && (
@@ -2113,6 +2137,7 @@ export function ChatApp({
                     );
                     setSelectedAgent(null);
                     setIsLoading(true);
+                    setLoadingSessionId(sid);
                     addMessage(
                       {
                         id: uid(),
@@ -2124,8 +2149,10 @@ export function ChatApp({
                       },
                       sid,
                     );
-                    runDataAgentAutopilot(sid, creds).finally(() =>
-                      setIsLoading(false),
+                    runDataAgentAutopilot(sid, creds).finally(() => {
+                      setIsLoading(false);
+                      setLoadingSessionId(null);
+                    }
                     );
                   }}
                 />
@@ -2146,15 +2173,18 @@ export function ChatApp({
                       {
                         id: uid(),
                         role: "user",
-                        content: `Run **${agentName}** for **${creds.email}** with ${fileNames.join(", ")}`,
+                        content: agentId === "boss"
+                          ? `Run **${agentName}** for **${creds.email}**`
+                          : `Run **${agentName}** for **${creds.email}** with ${fileNames.join(", ")}`,
                         timestamp: Date.now(),
                         agent: agentId,
-                        files: fileNames,
+                        files: fileNames.length > 0 ? fileNames : undefined,
                       },
                       sid,
                     );
                     setSelectedAgent(null);
                     setIsLoading(true);
+                    setLoadingSessionId(sid);
                     addMessage(
                       {
                         id: uid(),
@@ -2169,7 +2199,10 @@ export function ChatApp({
                     const handler = agentId === "boss"
                       ? runBossAgentWithFiles(sid, creds)
                       : runCampaignSetupWithFiles(sid, creds);
-                    handler.finally(() => setIsLoading(false));
+                    handler.finally(() => {
+                      setIsLoading(false);
+                      setLoadingSessionId(null);
+                    });
                   }}
                 />
               ) : awaitingAgentUpload ? (
@@ -2579,7 +2612,7 @@ function CampaignCredentialForm({
     ? "from-red-600 to-amber-500"
     : "from-orange-400 to-emerald-700";
 
-  const canSubmit = email.trim() && password && uploadFiles.length > 0;
+  const canSubmit = email.trim() && password && (isBoss || uploadFiles.length > 0);
 
   return (
     <div className="flex flex-col items-center justify-center h-full px-6 max-w-lg mx-auto">
@@ -2643,6 +2676,7 @@ function CampaignCredentialForm({
             </div>
           </div>
 
+          {!isBoss && (
           <div>
             <label className="block text-xs font-medium text-gray-400 mb-1.5">
               Campaign Input File
@@ -2667,9 +2701,7 @@ function CampaignCredentialForm({
               <Upload size={16} />
               {uploadFiles.length > 0
                 ? `${uploadFiles.length} file${uploadFiles.length > 1 ? "s" : ""} selected`
-                : isBoss
-                  ? "Upload DoorDash data (CSV / ZIP)"
-                  : "Upload campaign plan (CSV / Excel)"}
+                : "Upload campaign plan (CSV / Excel)"}
             </button>
             {uploadFiles.length > 0 && (
               <div className="mt-2 space-y-1">
@@ -2697,6 +2729,7 @@ function CampaignCredentialForm({
               </div>
             )}
           </div>
+          )}
         </div>
 
         <button

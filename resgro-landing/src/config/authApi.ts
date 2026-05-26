@@ -64,7 +64,6 @@ export async function apiSignup(params: {
   password: string;
   businessName: string;
   restaurantCount: number;
-  dateOfBirth: string;
   region?: string;
   stripeCustomerId?: string;
 }): Promise<LoginResponse> {
@@ -91,4 +90,21 @@ export async function apiResetPassword(
   appOrigin?: string,
 ): Promise<{ success: boolean; message: string }> {
   return post("reset-password", { email, code, newPassword, appOrigin });
+}
+
+export async function apiLogActivity(params: {
+  userId: string;
+  activityType: "chat" | "session" | "run";
+  chatId?: string;
+  sessionId?: string;
+  runId?: string;
+  agentName?: string;
+  status?: string;
+  meta?: Record<string, unknown>;
+}): Promise<void> {
+  try {
+    await post("activity", params);
+  } catch {
+    // fire-and-forget — don't break the UI if activity logging fails
+  }
 }

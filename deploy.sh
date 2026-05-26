@@ -369,6 +369,10 @@ deploy_netlify() {
   export VITE_AGENTS_API_URL="${VITE_AGENTS_API_URL:-https://resgro-agents-api-432223990540.us-west2.run.app}"
   export VITE_SITE_URL="${VITE_SITE_URL:-https://resgro.ai}"
   export VITE_APP_URL="${VITE_APP_URL:-https://app.resgro.ai}"
+  if [ -n "${RESGRO_TUNNEL_AGENTS_URL:-}" ]; then
+    export VITE_AGENTS_API_URL="${RESGRO_TUNNEL_AGENTS_URL%/}"
+    echo "Using temporary local Agents API bridge: $VITE_AGENTS_API_URL"
+  fi
   npm run build
 
   if [ ! -d "$SITE_DIR/dist" ]; then
@@ -414,6 +418,10 @@ deploy_vercel() {
   export VITE_EMAILJS_SERVICE_ID="${VITE_EMAILJS_SERVICE_ID:-}"
   export VITE_EMAILJS_TEMPLATE_ID="${VITE_EMAILJS_TEMPLATE_ID:-}"
   export VITE_ADMIN_EMAILS="${VITE_ADMIN_EMAILS:-}"
+  if [ -n "${RESGRO_TUNNEL_AGENTS_URL:-}" ]; then
+    export VITE_AGENTS_API_URL="${RESGRO_TUNNEL_AGENTS_URL%/}"
+    echo "Using temporary local Agents API bridge: $VITE_AGENTS_API_URL"
+  fi
 
   case "$vercel_mode" in
     draft|preview)

@@ -10,7 +10,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from .auth_helpers import login_payload
-from .models import Subscription, WorkspaceUser
+from .models import Subscription, UserActivity, WorkspaceUser
 from .passwords import hash_password, new_user_id, verify_password
 from .serializers import subscription_to_api, user_to_api
 from .stripe_sync import handle_webhook_event, sync_customer_id, sync_user_full
@@ -83,9 +83,9 @@ def signup(request):
             {"code": "validation_error", "error": "Valid email and password (min 8 chars) required."},
             status=400,
         )
-    if not business_name or not date_of_birth:
+    if not business_name:
         return Response(
-            {"code": "validation_error", "error": "Business name and date of birth are required."},
+            {"code": "validation_error", "error": "Business name is required."},
             status=400,
         )
 
@@ -252,3 +252,76 @@ def admin_cancel_subscription(request, subscription_id):
     sub.canceled_at = dj_tz.now()
     sub.save(update_fields=["status", "canceled_at"])
     return Response({"ok": True, "subscription_id": subscription_id, "status": "canceled"})
+
+
+# ── User Activity tracking ──────────────────────────────────────────────────
+
+@api_view(["POST"])
+def log_activity(request):
+    user_id = (request.data.get("userId") or "").strip()
+    activity_type = (request.data.get("activityType") or "").strip()
+    if not user_id or activity_type not in ("chat", "session", "run"):
+        return Response({"error": "userId and valid activityType required."}, status=400)
+
+    try:
+        user = WorkspaceUser.objects.get(id=user_id)
+    except WorkspaceUser.DoesNotExist:
+        return Response({"error": "User not found."}, status=404)
+
+    activity = UserActivity.objects.create(
+        user=user,
+        activity_type=activity_type,
+        chat_id=(request.data.get("chatId") or "").strip(),
+        session_id=(request.data.get("sessionId") or "").strip(),
+        run_id=(request.data.get("runId") or "").strip(),
+        agent_name=(request.data.get("agentName") or "").strip(),
+        status=(request.data.get("status") or "active").strip(),
+        meta=request.data.get("meta") or {},
+    )
+    return Response({
+        "id": activity.id,
+        "activityType": activity.activity_type,
+        "chatId": activity.chat_id,
+        "sessionId": activity.session_id,
+        "runId": activity.run_id,
+        "agentName": activity.agent_name,
+        "status": activity.status,
+        "createdAt": activity.created_at.isoformat(),
+    }, status=201)
+
+
+@api_view(["GET"])
+def list_activity(request):
+    user_id = request.query_params.get("userId", "").strip()
+    if not user_id:
+        return Response({"error": "userId query param required."}, status=400)
+
+    try:
+        user = WorkspaceUser.objects.get(id=user_id)
+    except WorkspaceUser.DoesNotExist:
+        return Response({"error": "User not found."}, status=404)
+
+    activity_type = request.query_params.get("type", "").strip()
+    qs = UserActivity.objects.filter(user=user)
+    if activity_type:
+        qs = qs.filter(activity_type=activity_type)
+
+    limit = min(int(request.query_params.get("limit", "100")), 500)
+    activities = qs[:limit]
+
+    return Response({
+        "activities": [
+            {
+                "id": a.id,
+                "activityType": a.activity_type,
+                "chatId": a.chat_id,
+                "sessionId": a.session_id,
+                "runId": a.run_id,
+                "agentName": a.agent_name,
+                "status": a.status,
+                "meta": a.meta,
+                "createdAt": a.created_at.isoformat(),
+            }
+            for a in activities
+        ]
+    })

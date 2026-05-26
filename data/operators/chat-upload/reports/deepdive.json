@@ -1,24 +1,126 @@
 {
   "operator_id": "chat-upload",
-  "analysis_date": "2026-05-25T02:57:38+00:00",
+  "analysis_date": "2026-05-25T08:28:34+00:00",
   "order_breakdown": {
-    "organic": 5081,
-    "ads_only": 0,
-    "promo_only": 0,
+    "organic": 13893,
+    "ads_only": 3766,
+    "promo_only": 7254,
     "combo": 0,
     "cancelled_refund": 0
   },
   "revenue_metrics": {
-    "total_net_revenue": 69622.16,
-    "avg_order_value": 21.74,
+    "total_net_revenue": 205782.21,
+    "avg_order_value": 21.14,
     "aov_by_day_part": {}
   },
   "top_items": [],
-  "promo_performance": [],
-  "ads_performance": [],
+  "promo_performance": [
+    {
+      "Campaign name": "Buy 1, get 1 free promotion 10/11/2025",
+      "orders": 2828,
+      "sales": 74137.91,
+      "spend": 25859.89,
+      "new_customers": 143,
+      "roas": 2.87
+    },
+    {
+      "Campaign name": "TODC - All Customer Disc",
+      "orders": 1003,
+      "sales": 37913.61,
+      "spend": 5053.58,
+      "new_customers": 33,
+      "roas": 7.5
+    },
+    {
+      "Campaign name": "DD_NATL_5 off 25_4.7-4.30.26",
+      "orders": 738,
+      "sales": 21337.54,
+      "spend": 3690.0,
+      "new_customers": 3,
+      "roas": 5.78
+    },
+    {
+      "Campaign name": "DD_NAT'L_All_5 off 20_3.9-3.31.26_W2",
+      "orders": 644,
+      "sales": 17231.72,
+      "spend": 3220.0,
+      "new_customers": 2,
+      "roas": 5.35
+    },
+    {
+      "Campaign name": "mcd-freeitem-020926-022826-allcx",
+      "orders": 293,
+      "sales": 8394.39,
+      "spend": 1873.87,
+      "new_customers": 11,
+      "roas": 4.48
+    },
+    {
+      "Campaign name": "mcd | allcx | sxgy | 03/09/26 - 03/15/26 | Ad Ops | 5off20",
+      "orders": 289,
+      "sales": 6979.17,
+      "spend": 1445.0,
+      "new_customers": 8,
+      "roas": 4.83
+    },
+    {
+      "Campaign name": "mcd | allcx | sxgy | 04/01/26 - 04/06/26 | Ad Ops",
+      "orders": 257,
+      "sales": 6307.56,
+      "spend": 1285.0,
+      "new_customers": 2,
+      "roas": 4.91
+    },
+    {
+      "Campaign name": "mcd-bogonuggs-010426-020826-allcx",
+      "orders": 222,
+      "sales": 5663.41,
+      "spend": 1499.1799999999998,
+      "new_customers": 10,
+      "roas": 3.78
+    },
+    {
+      "Campaign name": "TODC - New Customer",
+      "orders": 271,
+      "sales": 5294.13,
+      "spend": 1127.59,
+      "new_customers": 270,
+      "roas": 4.7
+    },
+    {
+      "Campaign name": "mcd-freeitem15sando-020926-022826-allcx",
+      "orders": 124,
+      "sales": 3307.35,
+      "spend": 659.1600000000001,
+      "new_customers": 11,
+      "roas": 5.02
+    }
+  ],
+  "ads_performance": [
+    {
+      "segment": "Corporate",
+      "orders": 117,
+      "sales": 2475.5,
+      "spend": 351.0,
+      "impressions": 8657,
+      "clicks": 542,
+      "roas": 7.05,
+      "ctr": 6.26
+    },
+    {
+      "segment": "Resgro",
+      "orders": 3649,
+      "sales": 77813.38,
+      "spend": 10954.57,
+      "impressions": 79791,
+      "clicks": 8637,
+      "roas": 7.1,
+      "ctr": 10.82
+    }
+  ],
   "anomalies": [
     "Cancellation rate: 0%",
     "Error rate: 0%"
   ],
-  "recommendations_seed": "Net payout ratio is 63.0% — every $1 in sales yields $0.63 net."
+  "recommendations_seed": "Net payout ratio is 67.0% — every $1 in sales yields $0.67 net. Combined marketing ROAS is 4.7x — $60,123 spend drove $282,745 in sales."
 }

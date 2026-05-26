@@ -82,3 +82,33 @@ class Invoice(models.Model):
 
     class Meta:
         ordering = ["-period_end"]
+
+
+class UserActivity(models.Model):
+    """Tracks chats, data sessions, and agent runs associated with a user."""
+
+    ACTIVITY_TYPES = [
+        ("chat", "Chat"),
+        ("session", "Data Session"),
+        ("run", "Agent Run"),
+    ]
+
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(WorkspaceUser, on_delete=models.CASCADE, related_name="activities")
+    activity_type = models.CharField(max_length=16, choices=ACTIVITY_TYPES, db_index=True)
+    chat_id = models.CharField(max_length=128, blank=True, db_index=True)
+    session_id = models.CharField(max_length=128, blank=True, db_index=True)
+    run_id = models.CharField(max_length=128, blank=True, db_index=True)
+    agent_name = models.CharField(max_length=64, blank=True)
+    status = models.CharField(max_length=32, default="active")
+    meta = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "activity_type"]),
+        ]
+
+    def __str__(self):
+        return f"{self.activity_type}:{self.chat_id or self.session_id or self.run_id} ({self.user.email})"
