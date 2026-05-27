@@ -68,7 +68,12 @@ TEMPLATES = [
 ]
 
 database_url = os.environ.get("DATABASE_URL", "").strip()
-if database_url:
+use_database_url = bool(database_url) and (
+    ON_CLOUD_RUN
+    or not DEBUG
+    or os.environ.get("DJANGO_USE_DATABASE_URL", "").lower() in ("1", "true", "yes")
+)
+if use_database_url:
     if database_url.startswith("postgres://"):
         database_url = database_url.replace("postgres://", "postgresql://", 1)
     parsed = urlparse(database_url)
@@ -132,6 +137,7 @@ REST_FRAMEWORK = {
 
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+STRIPE_WEBHOOK_SECRET_THIN = os.environ.get("STRIPE_WEBHOOK_SECRET_THIN", "")
 STRIPE_SELFSERVE_PRICE_ID = os.environ.get("STRIPE_SELFSERVE_PRICE_ID", "")
 STRIPE_AUTONOMY_PRICE_ID = os.environ.get("STRIPE_AUTONOMY_PRICE_ID", "")
 APP_ORIGIN = os.environ.get("APP_ORIGIN", "https://app.resgro.ai")

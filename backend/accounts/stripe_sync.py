@@ -182,20 +182,24 @@ def sync_invoices_for_user(user: WorkspaceUser, limit: int = 24) -> None:
         return
     invs = stripe.Invoice.list(customer=user.stripe_customer_id, limit=limit)
     for inv in invs.data:
+        inv_d = _stripe_dict(inv)
+        sub_id = inv_d.get("subscription") or ""
+        if isinstance(sub_id, dict):
+            sub_id = sub_id.get("id", "")
         Invoice.objects.update_or_create(
             stripe_invoice_id=inv.id,
             defaults={
                 "user": user,
-                "stripe_subscription_id": inv.subscription or "",
-                "status": inv.status or "",
-                "amount_due": Decimal((inv.amount_due or 0) / 100),
-                "amount_paid": Decimal((inv.amount_paid or 0) / 100),
-                "currency": inv.currency or "aud",
-                "hosted_invoice_url": inv.hosted_invoice_url or "",
-                "invoice_pdf": inv.invoice_pdf or "",
-                "period_start": _ts(inv.period_start),
-                "period_end": _ts(inv.period_end),
-                "paid_at": _ts(inv.status_transitions.paid_at if inv.status_transitions else None),
+                "stripe_subscription_id": sub_id,
+                "status": inv_d.get("status") or "",
+                "amount_due": Decimal((inv_d.get("amount_due") or 0) / 100),
+                "amount_paid": Decimal((inv_d.get("amount_paid") or 0) / 100),
+                "currency": inv_d.get("currency") or "aud",
+                "hosted_invoice_url": inv_d.get("hosted_invoice_url") or "",
+                "invoice_pdf": inv_d.get("invoice_pdf") or "",
+                "period_start": _ts(inv_d.get("period_start")),
+                "period_end": _ts(inv_d.get("period_end")),
+                "paid_at": _ts((inv_d.get("status_transitions") or {}).get("paid_at")),
             },
         )
 
@@ -237,16 +241,22 @@ def handle_webhook_event(event: dict) -> None:
     etype = event.get("type", "")
     obj = (event.get("data") or {}).get("object") or {}
 
-    if etype.startswith("customer."):
-        user = upsert_user_from_stripe_customer(obj)
-        if user:
-            sync_subscriptions_for_user(user)
+    if etype == "checkout.session.completed":
+        cid = obj.get("customer")
+        if cid:
+            sync_customer_id(cid)
         return
 
     if etype.startswith("customer.subscription."):
         cid = obj.get("customer")
         if cid:
             sync_customer_id(cid)
+        return
+
+    if etype.startswith("customer."):
+        user = upsert_user_from_stripe_customer(obj)
+        if user:
+            sync_subscriptions_for_user(user)
         return
 
     if etype.startswith("invoice."):
@@ -256,8 +266,3 @@ def handle_webhook_event(event: dict) -> None:
             if user:
                 sync_invoices_for_user(user)
         return
-
-    if etype == "checkout.session.completed":
-        cid = obj.get("customer")
-        if cid:
-            sync_customer_id(cid)

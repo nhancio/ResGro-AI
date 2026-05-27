@@ -12,7 +12,7 @@ import json
 
 from .analyzer import analyze, analyze_rows, build_slot_tables
 from .data_loader import load_ssm_zips, load_files, build_upload_audit
-from .reporter import generate_report, as_json_dict, write_report
+from .reporter import generate_report, as_json_dict, write_report, _sanitize_value
 from shared.config.settings import data_root
 from shared.models.report import DeepDiveReport, OrderBreakdown, RevenueMetrics
 from shared.utils.date_helpers import utc_now_iso
@@ -168,7 +168,7 @@ def run(
         result["store_id_mapping"] = sid_map.to_dict("records")
     result["status"] = "success"
 
-    return result
+    return _sanitize_value(result)
 
 
 if __name__ == "__main__":

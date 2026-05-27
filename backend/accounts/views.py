@@ -59,8 +59,8 @@ def login(request):
         try:
             sync_user_full(user)
             user.refresh_from_db()
-        except stripe.error.StripeError:
-            pass
+        except Exception as exc:
+            print(f"login: stripe sync failed for {user.email}: {exc}")
 
     user.last_login_at = dj_tz.now()
     user.save(update_fields=["last_login_at"])
@@ -146,15 +146,52 @@ def stripe_webhook(request):
     payload = request.body
     sig = request.META.get("HTTP_STRIPE_SIGNATURE", "")
 
-    if settings.STRIPE_WEBHOOK_SECRET:
-        try:
-            event = stripe.Webhook.construct_event(payload, sig, settings.STRIPE_WEBHOOK_SECRET)
-        except (ValueError, stripe.error.SignatureVerificationError) as exc:
-            return HttpResponse(str(exc), status=400)
+    secrets = [s for s in (settings.STRIPE_WEBHOOK_SECRET, settings.STRIPE_WEBHOOK_SECRET_THIN) if s]
+
+    event = None
+    if secrets:
+        last_err = None
+        for secret in secrets:
+            try:
+                event = stripe.Webhook.construct_event(payload, sig, secret)
+                break
+            except (ValueError, stripe.error.SignatureVerificationError) as exc:
+                last_err = exc
+        if event is None:
+            return HttpResponse(str(last_err), status=400)
     else:
         event = json.loads(payload)
 
-    handle_webhook_event(event if isinstance(event, dict) else event.to_dict())
+    event_dict = event if isinstance(event, dict) else event.to_dict()
+
+    # Thin payloads (v2 style) have "related_object" instead of "data.object".
+    # Fetch the full object from the Stripe API when needed.
+    if "related_object" in event_dict and "data" not in event_dict:
+        etype = event_dict.get("type", "")
+        related = event_dict.get("related_object") or {}
+        obj_id = related.get("id", "")
+        obj_type = related.get("type", "")
+
+        obj = None
+        try:
+            if obj_type == "customer" or etype.startswith("customer.") and not etype.startswith("customer.subscription."):
+                obj = stripe.Customer.retrieve(obj_id)
+            elif obj_type == "subscription" or etype.startswith("customer.subscription."):
+                obj = stripe.Subscription.retrieve(obj_id)
+            elif obj_type == "invoice" or etype.startswith("invoice."):
+                obj = stripe.Invoice.retrieve(obj_id)
+            elif etype == "checkout.session.completed":
+                obj = stripe.checkout.Session.retrieve(obj_id)
+        except Exception as exc:
+            print(f"webhook: failed to fetch {obj_type} {obj_id}: {exc}")
+
+        if obj:
+            obj_dict = obj.to_dict() if hasattr(obj, "to_dict") else obj
+            event_dict = {**event_dict, "data": {"object": obj_dict}}
+        else:
+            return JsonResponse({"received": True, "skipped": "could not resolve thin payload"})
+
+    handle_webhook_event(event_dict)
     return JsonResponse({"received": True})
 
 

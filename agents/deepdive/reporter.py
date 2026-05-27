@@ -41,9 +41,21 @@ def generate_report(analysis: dict[str, Any], output_dir: Path | None = None) ->
     return path
 
 
+def _sanitize_value(v: Any) -> Any:
+    """Replace NaN/Inf floats with None so JSON serialization succeeds."""
+    if isinstance(v, float) and (v != v or v == float("inf") or v == float("-inf")):
+        return None
+    if isinstance(v, dict):
+        return {k: _sanitize_value(val) for k, val in v.items()}
+    if isinstance(v, list):
+        return [_sanitize_value(item) for item in v]
+    return v
+
+
 def as_json_dict(analysis: dict[str, Any]) -> dict:
     """Return JSON-serializable dict (strips non-serializable values)."""
-    return json.loads(json.dumps(analysis, default=str))
+    sanitized = _sanitize_value(analysis)
+    return json.loads(json.dumps(sanitized, default=str))
 
 
 # Legacy compat

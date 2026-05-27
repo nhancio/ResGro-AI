@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import billing_views, views
+from . import billing_views, chat_views, views
 
 urlpatterns = [
     path("health", views.health),
@@ -24,4 +24,9 @@ urlpatterns = [
     # Activity tracking
     path("activity", views.log_activity),
     path("activity/list", views.list_activity),
+    # Chat sessions
+    path("chat-sessions/list", chat_views.list_sessions),
+    path("chat-sessions/get", chat_views.get_session),
+    path("chat-sessions/save", chat_views.save_session),
+    path("chat-sessions/delete", chat_views.delete_session),
 ]

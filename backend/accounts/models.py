@@ -125,3 +125,39 @@ class UserActivity(models.Model):
 
     def __str__(self):
         return f"{self.activity_type}:{self.chat_id or self.session_id or self.run_id} ({self.user.email})"
+
+
+class ChatSession(models.Model):
+    id = models.CharField(max_length=64, primary_key=True)
+    user = models.ForeignKey(WorkspaceUser, on_delete=models.CASCADE, related_name="chat_sessions")
+    title = models.CharField(max_length=255, default="New Chat")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at"]
+        indexes = [
+            models.Index(fields=["user", "-updated_at"], name="accounts_cs_user_updated_idx"),
+        ]
+
+    def __str__(self):
+        return f"{self.title} ({self.user.email})"
+
+
+class ChatMessage(models.Model):
+    id = models.CharField(max_length=64, primary_key=True)
+    session = models.ForeignKey(ChatSession, on_delete=models.CASCADE, related_name="messages")
+    role = models.CharField(max_length=16)
+    content = models.TextField(blank=True)
+    timestamp = models.BigIntegerField()
+    agent = models.CharField(max_length=64, blank=True)
+    files = models.JSONField(default=list, blank=True)
+    agent_result = models.JSONField(null=True, blank=True)
+    process_state = models.JSONField(null=True, blank=True)
+    ordering = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["ordering", "timestamp"]
+        indexes = [
+            models.Index(fields=["session", "ordering"], name="accounts_cm_session_ord_idx"),
+        ]

@@ -264,14 +264,18 @@ def verify_session(request):
         return Response({"error": "Missing session_id"}, status=400)
     try:
         payload = verify_checkout_session(session_id)
-        if payload.get("status") != "success":
-            return Response(payload)
+    except stripe.error.StripeError as exc:
+        return Response({"error": str(exc)}, status=400)
 
-        cid = (payload.get("customer") or {}).get("id")
-        email = ((payload.get("customer") or {}).get("email") or "").strip().lower()
-        if not cid:
-            return Response(payload)
+    if payload.get("status") != "success":
+        return Response(payload)
 
+    cid = (payload.get("customer") or {}).get("id")
+    email = ((payload.get("customer") or {}).get("email") or "").strip().lower()
+    if not cid:
+        return Response(payload)
+
+    try:
         from .stripe_sync import link_checkout_customer
 
         user = link_checkout_customer(cid, email)
@@ -282,9 +286,10 @@ def verify_session(request):
             if lp["subscription"]:
                 payload["subscription"] = lp["subscription"]["subscription"]
                 payload["customer"] = lp["subscription"]["customer"]
-        return Response(payload)
-    except stripe.error.StripeError as exc:
-        return Response({"error": str(exc)}, status=400)
+    except Exception as exc:
+        print(f"verify-session: user linking failed for {cid}: {exc}")
+
+    return Response(payload)
 
 
 @api_view(["POST"])

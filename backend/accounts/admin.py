@@ -3,7 +3,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.utils import timezone
 
-from .models import Invoice, Subscription, UserActivity, WorkspaceUser
+from .models import ChatMessage, ChatSession, Invoice, Subscription, UserActivity, WorkspaceUser
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -69,3 +69,20 @@ class UserActivityAdmin(admin.ModelAdmin):
     search_fields = ("user__email", "chat_id", "session_id", "run_id", "agent_name")
     readonly_fields = ("created_at",)
     raw_id_fields = ("user",)
+
+
+@admin.register(ChatSession)
+class ChatSessionAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "title", "updated_at", "created_at")
+    list_filter = ("user",)
+    search_fields = ("user__email", "title", "id")
+    readonly_fields = ("created_at", "updated_at")
+    raw_id_fields = ("user",)
+
+
+@admin.register(ChatMessage)
+class ChatMessageAdmin(admin.ModelAdmin):
+    list_display = ("id", "session", "role", "agent", "ordering", "timestamp")
+    list_filter = ("role", "agent")
+    search_fields = ("session__id", "content")
+    raw_id_fields = ("session",)

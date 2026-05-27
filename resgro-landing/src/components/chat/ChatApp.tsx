@@ -32,6 +32,7 @@ import {
   Megaphone,
   Settings2,
   ClipboardCheck,
+  Trash2,
 } from "lucide-react";
 import { resolveAgentsApiUrl } from "@/lib/agentsApi";
 import {
@@ -65,6 +66,12 @@ import { BillingPanel } from "./BillingPanel";
 import type { SubscriptionData } from "../../hooks/useSubscription";
 import type { WorkspaceUser } from "../../lib/userDirectory";
 import { apiLogActivity } from "../../config/authApi";
+import {
+  apiListChatSessions,
+  apiGetChatSession,
+  apiSaveChatSession,
+  apiDeleteChatSession,
+} from "../../lib/chatSessionsApi";
 
 /* ─── Types ─────────────────────────────────────────────────────────────────── */
 
@@ -134,7 +141,10 @@ type MainView = "chat" | "profile" | "billing" | "help";
 
 /* ─── Constants ────────────────────────────────────────────────────────────── */
 
-const STORAGE_KEY = "resgro-chat-sessions";
+const STORAGE_KEY_LEGACY = "resgro-chat-sessions";
+function userStorageKey(userId: string) {
+  return `resgro-chat-sessions-${userId}`;
+}
 
 const WELCOME_SUGGESTIONS = [
   { label: "Pull my data", command: "/data", icon: Database },
@@ -206,13 +216,54 @@ function titleFromMessage(text: string): string {
   return clean.length > 40 ? clean.slice(0, 40) + "…" : clean;
 }
 
-function loadSessions(): ChatSession[] {
+function loadSessionsFromLocal(userId?: string): ChatSession[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const key = userId ? userStorageKey(userId) : STORAGE_KEY_LEGACY;
+    const raw = localStorage.getItem(key);
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
   }
+}
+
+function saveSessionsToLocal(sessions: ChatSession[], userId?: string) {
+  const key = userId ? userStorageKey(userId) : STORAGE_KEY_LEGACY;
+  localStorage.setItem(key, JSON.stringify(sessions));
+}
+
+function messageToRemote(m: Message) {
+  return {
+    id: m.id,
+    role: m.role,
+    content: m.content,
+    timestamp: m.timestamp,
+    agent: m.agent || undefined,
+    files: m.files || [],
+    agentResult: m.agentResult || undefined,
+    process: m.processState || undefined,
+  };
+}
+
+function remoteToMessage(m: {
+  id: string;
+  role: string;
+  content: string;
+  timestamp: number;
+  agent?: string | null;
+  files?: string[];
+  agentResult?: unknown;
+  process?: unknown;
+}): Message {
+  return {
+    id: m.id,
+    role: m.role as Message["role"],
+    content: m.content,
+    timestamp: m.timestamp,
+    agent: m.agent || undefined,
+    files: m.files || [],
+    agentResult: m.agentResult as AgentResult | undefined,
+    processState: m.process as ProcessState | undefined,
+  };
 }
 
 /* ─── Inline Components ───────────────────────────────────────────────────── */
@@ -696,9 +747,12 @@ export function ChatApp({
   onBack,
   onLogout,
 }: ChatAppProps) {
-  const [sessions, setSessions] = useState<ChatSession[]>(loadSessions);
+  const userId = sessionUser?.id ?? null;
+  const [sessions, setSessions] = useState<ChatSession[]>(() =>
+    loadSessionsFromLocal(userId ?? undefined),
+  );
   const [activeId, setActiveId] = useState<string | null>(() => {
-    const s = loadSessions();
+    const s = loadSessionsFromLocal(userId ?? undefined);
     return s.length > 0 ? s[0].id : null;
   });
   const [input, setInput] = useState("");
@@ -724,10 +778,119 @@ export function ChatApp({
   const awaitingAgentUpload =
     !!selectedAgent && !messages.some((m) => m.role === "user");
 
-  // Persist sessions
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savingSessionRef = useRef<string | null>(null);
+
+  // Persist sessions to localStorage (immediate, local cache)
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
-  }, [sessions]);
+    saveSessionsToLocal(sessions, userId ?? undefined);
+  }, [sessions, userId]);
+
+  // Debounced save to backend
+  const scheduleSave = useCallback(
+    (session: ChatSession) => {
+      if (!userId) return;
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      savingSessionRef.current = session.id;
+      saveTimerRef.current = setTimeout(() => {
+        apiSaveChatSession(userId, {
+          id: session.id,
+          title: session.title,
+          messages: session.messages.map(messageToRemote),
+        }).catch(() => {});
+        savingSessionRef.current = null;
+      }, 2000);
+    },
+    [userId],
+  );
+
+  // Flush pending save immediately (for unmount / session switch)
+  const flushSave = useCallback(() => {
+    if (!userId || !savingSessionRef.current) return;
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
+    const session = sessions.find((s) => s.id === savingSessionRef.current);
+    if (session) {
+      apiSaveChatSession(userId, {
+        id: session.id,
+        title: session.title,
+        messages: session.messages.map(messageToRemote),
+      }).catch(() => {});
+    }
+    savingSessionRef.current = null;
+  }, [userId, sessions]);
+
+  // Load sessions from backend on mount / user change
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+
+    // Migrate legacy localStorage sessions
+    const legacy = loadSessionsFromLocal();
+    if (legacy.length > 0 && !localStorage.getItem(`resgro-chat-migrated-${userId}`)) {
+      for (const s of legacy) {
+        apiSaveChatSession(userId, {
+          id: s.id,
+          title: s.title,
+          messages: s.messages.map(messageToRemote),
+        }).catch(() => {});
+      }
+      localStorage.setItem(`resgro-chat-migrated-${userId}`, "1");
+      localStorage.removeItem(STORAGE_KEY_LEGACY);
+    }
+
+    apiListChatSessions(userId)
+      .then(async (summaries) => {
+        if (cancelled) return;
+        if (summaries.length === 0) {
+          // No remote sessions — keep local cache as-is
+          return;
+        }
+        // Load full data for each session
+        const loaded: ChatSession[] = [];
+        for (const s of summaries) {
+          try {
+            const full = await apiGetChatSession(userId, s.id);
+            loaded.push({
+              id: full.id,
+              title: full.title,
+              messages: full.messages.map(remoteToMessage),
+              createdAt: full.createdAt,
+              updatedAt: full.updatedAt,
+            });
+          } catch {
+            loaded.push({
+              id: s.id,
+              title: s.title,
+              messages: [],
+              createdAt: s.createdAt,
+              updatedAt: s.updatedAt,
+            });
+          }
+        }
+        if (!cancelled && loaded.length > 0) {
+          setSessions(loaded);
+          setActiveId((prev) =>
+            loaded.some((s) => s.id === prev) ? prev : loaded[0].id,
+          );
+        }
+      })
+      .catch(() => {});
+
+    return () => { cancelled = true; };
+  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Save on beforeunload
+  useEffect(() => {
+    const handler = () => flushSave();
+    window.addEventListener("beforeunload", handler);
+    return () => {
+      window.removeEventListener("beforeunload", handler);
+      flushSave();
+    };
+  }, [flushSave]);
 
   // Auto-scroll
   useEffect(() => {
@@ -763,12 +926,17 @@ export function ChatApp({
       }
       setMainView("chat");
       setMobileSidebar(false);
-      if (sessionUser?.id) {
-        apiLogActivity({ userId: sessionUser.id, activityType: "chat", chatId: s.id });
+      if (userId) {
+        apiLogActivity({ userId, activityType: "chat", chatId: s.id });
+        apiSaveChatSession(userId, {
+          id: s.id,
+          title: s.title,
+          messages: [],
+        }).catch(() => {});
       }
       return s;
     },
-    [sessionUser],
+    [userId],
   );
 
   const stopSession = useCallback(() => {
@@ -780,14 +948,30 @@ export function ChatApp({
     setLoadingSessionId(null);
   }, []);
 
+  const deleteSession = useCallback(
+    (sessionId: string) => {
+      setSessions((prev) => {
+        const remaining = prev.filter((s) => s.id !== sessionId);
+        if (activeId === sessionId) {
+          setActiveId(remaining.length > 0 ? remaining[0].id : null);
+        }
+        return remaining;
+      });
+      if (userId) {
+        apiDeleteChatSession(userId, sessionId).catch(() => {});
+      }
+    },
+    [activeId, userId],
+  );
+
   /* ─── Message helpers ───────────────────────────────────────────────── */
 
   const addMessage = useCallback(
     (msg: Message, sessionId?: string) => {
       const sid = sessionId ?? activeId;
       if (!sid) return;
-      setSessions((prev) =>
-        prev.map((s) => {
+      setSessions((prev) => {
+        const next = prev.map((s) => {
           if (s.id !== sid) return s;
           const updated: ChatSession = {
             ...s,
@@ -797,11 +981,13 @@ export function ChatApp({
           if (msg.role === "user" && s.messages.length === 0) {
             updated.title = titleFromMessage(msg.content);
           }
+          scheduleSave(updated);
           return updated;
-        }),
-      );
+        });
+        return next;
+      });
     },
-    [activeId],
+    [activeId, scheduleSave],
   );
 
   const updateLastAssistant = useCallback(
@@ -828,7 +1014,9 @@ export function ChatApp({
               break;
             }
           }
-          return { ...s, messages: msgs, updatedAt: Date.now() };
+          const updated = { ...s, messages: msgs, updatedAt: Date.now() };
+          scheduleSave(updated);
+          return updated;
         }),
       );
       if (sessionUser?.id && options?.agentResult) {
@@ -855,7 +1043,7 @@ export function ChatApp({
         }
       }
     },
-    [activeId, sessionUser],
+    [activeId, sessionUser, scheduleSave],
   );
 
   /* ─── LLM Summary ──────────────────────────────────────────────────── */
@@ -1884,7 +2072,7 @@ export function ChatApp({
                   <span className="flex-1 text-sm truncate">
                     {session.title}
                   </span>
-                  {isLoading && loadingSessionId === session.id && (
+                  {isLoading && loadingSessionId === session.id ? (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1894,6 +2082,17 @@ export function ChatApp({
                       title="Stop agent"
                     >
                       <Square size={12} fill="currentColor" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteSession(session.id);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 transition-all p-1"
+                      title="Delete chat"
+                    >
+                      <Trash2 size={13} />
                     </button>
                   )}
                 </div>
