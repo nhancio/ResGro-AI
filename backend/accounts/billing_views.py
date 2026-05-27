@@ -9,7 +9,7 @@ from rest_framework.response import Response
 
 from .email_service import is_email_configured, send_password_changed_email, send_password_reset_email
 from .models import Subscription, WorkspaceUser
-from .passwords import hash_password
+from .passwords import hash_password, verify_password
 from .stripe_billing import (
     ACTIVE_STATUSES,
     infer_plan_name,
@@ -110,9 +110,20 @@ def reset_password(request):
     if user.reset_expiry and user.reset_expiry < dj_tz.now():
         return Response({"error": "Reset link has expired. Please request a new one."}, status=400)
 
+    recent_hashes = [user.password_hash] + (user.password_history or [])[:2]
+    for old_hash in recent_hashes:
+        if old_hash and verify_password(new_password, old_hash):
+            return Response(
+                {"error": "New password must be different from your last 3 passwords."},
+                status=400,
+            )
+
+    old_hash = user.password_hash
     password_hash = hash_password(new_password)
+    history = [old_hash] + (user.password_history or []) if old_hash else (user.password_history or [])
     user.password_hash = password_hash
-    user.save(update_fields=["password_hash", "updated_at"])
+    user.password_history = history[:3]
+    user.save(update_fields=["password_hash", "password_history", "updated_at"])
     clear_reset_token(user)
 
     try:

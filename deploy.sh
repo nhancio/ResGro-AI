@@ -2,14 +2,13 @@
 # ─────────────────────────────────────────────────────────────────────
 # ResGro-AI — Single deploy script for all services
 #
-#   ./deploy.sh                    # GCP: backend → api → agents
+#   ./deploy.sh                    # Everything: GCP + Netlify
 #   ./deploy.sh backend            # Django only → Cloud Run
 #   ./deploy.sh api                # Node API only → Cloud Run
 #   ./deploy.sh agents             # Python agents API only → Cloud Run
 #   ./deploy.sh gcp [all|backend|api|agents] [--cloudbuild|--docker]
 #   ./deploy.sh netlify [prod|draft]   # Frontend → resgro.ai / app.resgro.ai
 #   ./deploy.sh vercel  [prod|preview] # Optional alternate static host
-#   ./deploy.sh all                    # GCP backends + Netlify frontend
 #
 # Prerequisites:
 #   GCP:     gcloud CLI (logged in), billing enabled
@@ -495,14 +494,13 @@ print_urls() {
 
 print_usage() {
   echo "Usage:"
-  echo "  ./deploy.sh                         # GCP backends (backend + api + agents)"
+  echo "  ./deploy.sh                         # Everything (GCP + Netlify)"
   echo "  ./deploy.sh backend                 # Django → Cloud Run"
   echo "  ./deploy.sh api                     # Node API → Cloud Run"
   echo "  ./deploy.sh agents                  # Agents API → Cloud Run"
   echo "  ./deploy.sh gcp [all|backend|api|agents] [--cloudbuild|--docker]"
   echo "  ./deploy.sh netlify [prod|draft]    # Frontend → resgro.ai / app.resgro.ai"
   echo "  ./deploy.sh vercel [prod|preview]   # Optional alternate static host"
-  echo "  ./deploy.sh all                     # Everything (GCP + Netlify)"
 }
 
 GCP_TARGET="all"
@@ -532,11 +530,6 @@ while [ $# -gt 0 ]; do
       deploy_vercel "${2:-prod}"
       exit 0
       ;;
-    all)
-      deploy_gcp all
-      deploy_netlify prod
-      exit 0
-      ;;
     *)
       echo "Unknown command: $1"
       print_usage
@@ -546,5 +539,6 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-# No arguments → deploy GCP backends only
+# No arguments → deploy everything (GCP + Netlify)
 deploy_gcp all
+deploy_netlify prod

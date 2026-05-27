@@ -7,6 +7,7 @@ class WorkspaceUser(models.Model):
     id = models.CharField(max_length=32, primary_key=True)
     email = models.EmailField(unique=True, db_index=True)
     password_hash = models.CharField(max_length=256, blank=True)
+    password_history = models.JSONField(default=list, blank=True)
     stripe_customer_id = models.CharField(max_length=64, unique=True, null=True, blank=True, db_index=True)
 
     business_name = models.CharField(max_length=255, blank=True)
