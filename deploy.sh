@@ -266,6 +266,9 @@ deploy_backend() {
     --platform managed --allow-unauthenticated --port 8080 --memory 512Mi \
     "${gcloud_env[@]}" "${sql_args[@]}"
 
+  gcloud run services update-traffic resgro-backend \
+    --to-latest --region "$region" --project "$project" --quiet
+
   local backend_url
   backend_url="$(service_url resgro-backend)"
   echo "resgro-backend → $backend_url"
@@ -300,6 +303,9 @@ deploy_api() {
     --platform managed --allow-unauthenticated --port 8080 --memory 512Mi \
     "${gcloud_env[@]}"
 
+  gcloud run services update-traffic resgro-api \
+    --to-latest --region "$region" --project "$project" --quiet
+
   local api_url
   api_url="$(service_url resgro-api)"
   echo "resgro-api → $api_url (proxies accounts → ${django_url})"
@@ -333,6 +339,9 @@ deploy_agents() {
     --platform managed --allow-unauthenticated --port 8080 \
     --memory 8Gi --timeout 3600 --cpu 4 \
     "${env_args[@]}"
+
+  gcloud run services update-traffic resgro-agents-api \
+    --to-latest --region "$region" --project "$project" --quiet
 
   local agents_url
   agents_url="$(service_url resgro-agents-api)"
