@@ -22,7 +22,6 @@ const DEMO_PASSWORD_HASH = "a1b2c3d4e5f6a7b8:pbkdf2$will-be-set-on-first-run";
 export type WorkspaceUserMetadata = {
   businessName: string;
   restaurantCount: number;
-  dateOfBirth: string;
   region?: string;
 };
 
@@ -128,7 +127,6 @@ function ensureDemoUserRecord(users: WorkspaceUser[]): WorkspaceUser[] {
     metadata: {
       businessName: "Demo Restaurant Group",
       restaurantCount: 3,
-      dateOfBirth: "1990-01-01",
       region: "AU",
     },
     createdAt: new Date().toISOString(),
@@ -284,25 +282,4 @@ export async function verifyCredentials(email: string, password: string): Promis
   }
 
   return user;
-}
-
-export async function resetPasswordByEmail(
-  email: string,
-  newPassword: string,
-  dateOfBirth: string,
-): Promise<{ success: boolean; message: string }> {
-  const user = findUserByEmail(email);
-  if (!user) return { success: false, message: "No account found for that email." };
-
-  if (user.metadata.dateOfBirth !== dateOfBirth) {
-    return { success: false, message: "Date of birth does not match our records." };
-  }
-
-  const nextHash = await hashPassword(newPassword);
-  const users = readUsersRaw();
-  const idx = users.findIndex((u) => u.id === user.id);
-  if (idx < 0) return { success: false, message: "Account not found." };
-  users[idx] = { ...users[idx], passwordHash: nextHash };
-  writeUsers(users);
-  return { success: true, message: "Password updated. You can now log in with your new password." };
 }

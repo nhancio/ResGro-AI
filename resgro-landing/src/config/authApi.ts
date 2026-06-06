@@ -75,7 +75,6 @@ export async function apiUpdateProfile(params: {
   businessName?: string;
   restaurantCount?: number;
   region?: string;
-  dateOfBirth?: string;
 }): Promise<{ user: WorkspaceUser }> {
   return post<{ user: WorkspaceUser }>("update-profile", params);
 }

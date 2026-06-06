@@ -88,6 +88,23 @@ def _plan_name(sub) -> str:
     return "self-serve"
 
 
+def push_user_metadata_to_stripe(user: WorkspaceUser) -> None:
+    """Mirror user-entered profile fields into Stripe customer metadata so syncs round-trip."""
+    if not user.stripe_customer_id:
+        return
+    stripe.Customer.modify(
+        user.stripe_customer_id,
+        metadata={
+            "resgro_user_id": user.id,
+            "resgro_email": user.email,
+            "resgro_business_name": user.business_name,
+            "resgro_restaurant_count": str(user.restaurant_count),
+            "resgro_region": user.region,
+            "resgro_can_manage_users": "true" if user.can_manage_users else "false",
+        },
+    )
+
+
 def upsert_user_from_stripe_customer(customer: dict | stripe.Customer) -> WorkspaceUser | None:
     if isinstance(customer, stripe.Customer):
         customer = customer.to_dict()
@@ -109,13 +126,19 @@ def upsert_user_from_stripe_customer(customer: dict | stripe.Customer) -> Worksp
 
     defaults = {
         "stripe_customer_id": customer["id"],
-        "business_name": meta.get("resgro_business_name") or customer.get("name") or "",
-        "restaurant_count": int(meta.get("resgro_restaurant_count") or 1),
-        "date_of_birth": meta.get("resgro_date_of_birth") or "",
-        "region": meta.get("resgro_region") or "",
-        "can_manage_users": meta.get("resgro_can_manage_users", "true") == "true",
         "stripe_synced_at": dj_tz.now(),
     }
+    # Profile fields are user-entered at signup/profile edit. Only sync them from
+    # explicit resgro_* metadata (which we write ourselves) — never from the Stripe
+    # billing name or fallback defaults, so syncs can't clobber user-filled details.
+    if meta.get("resgro_business_name"):
+        defaults["business_name"] = meta["resgro_business_name"]
+    if meta.get("resgro_restaurant_count"):
+        defaults["restaurant_count"] = int(meta["resgro_restaurant_count"])
+    if meta.get("resgro_region"):
+        defaults["region"] = meta["resgro_region"]
+    if "resgro_can_manage_users" in meta:
+        defaults["can_manage_users"] = meta["resgro_can_manage_users"] == "true"
 
     if existing:
         if email and not existing.email.endswith("@stripe.local"):
@@ -232,9 +255,13 @@ def link_checkout_customer(stripe_customer_id: str, email: str = "") -> Workspac
             user.stripe_customer_id = stripe_customer_id
             user.save(update_fields=["stripe_customer_id", "updated_at"])
     synced = sync_customer_id(stripe_customer_id)
-    if synced:
-        return synced
-    return user
+    final = synced or user
+    if final and final.business_name:
+        try:
+            push_user_metadata_to_stripe(final)
+        except stripe.error.StripeError:
+            pass
+    return final
 
 
 def handle_webhook_event(event: dict) -> None:
@@ -244,7 +271,14 @@ def handle_webhook_event(event: dict) -> None:
     if etype == "checkout.session.completed":
         cid = obj.get("customer")
         if cid:
-            sync_customer_id(cid)
+            user = sync_customer_id(cid)
+            # Mirror the user-entered profile into customer metadata once the
+            # customer is linked, so future syncs read back user-filled values.
+            if user and user.business_name:
+                try:
+                    push_user_metadata_to_stripe(user)
+                except stripe.error.StripeError:
+                    pass
         return
 
     if etype.startswith("customer.subscription."):

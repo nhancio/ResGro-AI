@@ -80,7 +80,6 @@ export function ProfilePanel({ subscription, sessionUser }: ProfilePanelProps) {
   const [businessName, setBusinessName] = useState(user.metadata.businessName || "");
   const [restaurantCount, setRestaurantCount] = useState(user.metadata.restaurantCount || 1);
   const [region, setRegion] = useState(user.metadata.region || "");
-  const [dateOfBirth, setDateOfBirth] = useState(user.metadata.dateOfBirth || "");
 
   const displayBusinessName =
     user.metadata.businessName?.trim() || subscription.customer.name || "Restaurant Account";
@@ -91,7 +90,6 @@ export function ProfilePanel({ subscription, sessionUser }: ProfilePanelProps) {
     setBusinessName(user.metadata.businessName || "");
     setRestaurantCount(user.metadata.restaurantCount || 1);
     setRegion(user.metadata.region || "");
-    setDateOfBirth(user.metadata.dateOfBirth || "");
     setError(null);
     setSaved(false);
     setEditing(true);
@@ -110,7 +108,6 @@ export function ProfilePanel({ subscription, sessionUser }: ProfilePanelProps) {
         businessName: businessName.trim(),
         restaurantCount: Math.max(1, Number(restaurantCount) || 1),
         region: region.trim(),
-        dateOfBirth: dateOfBirth.trim(),
       });
       const merged: WorkspaceUser = {
         ...user,
@@ -224,14 +221,6 @@ export function ProfilePanel({ subscription, sessionUser }: ProfilePanelProps) {
                   placeholder="e.g. AU, US"
                 />
               </EditRow>
-              <EditRow icon={Calendar} label="Date of Birth">
-                <input
-                  type="date"
-                  value={dateOfBirth}
-                  onChange={(e) => setDateOfBirth(e.target.value)}
-                  className={inputCls}
-                />
-              </EditRow>
             </>
           ) : (
             <>
@@ -243,9 +232,6 @@ export function ProfilePanel({ subscription, sessionUser }: ProfilePanelProps) {
               />
               {user.metadata.region && (
                 <InfoRow icon={MapPin} label="Region" value={user.metadata.region} />
-              )}
-              {user.metadata.dateOfBirth && (
-                <InfoRow icon={Calendar} label="Date of Birth" value={user.metadata.dateOfBirth} />
               )}
               {user.createdAt && (
                 <InfoRow icon={Calendar} label="Member since" value={formatDate(user.createdAt)} />

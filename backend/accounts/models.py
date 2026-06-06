@@ -12,7 +12,6 @@ class WorkspaceUser(models.Model):
 
     business_name = models.CharField(max_length=255, blank=True)
     restaurant_count = models.PositiveIntegerField(default=1)
-    date_of_birth = models.CharField(max_length=32, blank=True)
     region = models.CharField(max_length=64, blank=True)
     can_manage_users = models.BooleanField(default=True)
 

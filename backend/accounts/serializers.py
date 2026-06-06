@@ -12,7 +12,6 @@ def user_to_api(user: WorkspaceUser) -> dict:
         "metadata": {
             "businessName": user.business_name,
             "restaurantCount": user.restaurant_count,
-            "dateOfBirth": user.date_of_birth,
             "region": user.region,
         },
         "createdAt": user.created_at.isoformat(),

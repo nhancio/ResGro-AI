@@ -22,7 +22,6 @@ function customerToUser(customer) {
     metadata: {
       businessName: m.resgro_business_name || customer.name || "",
       restaurantCount: Number(m.resgro_restaurant_count) || 1,
-      dateOfBirth: m.resgro_date_of_birth || "",
       region: m.resgro_region || "",
     },
     createdAt: m.resgro_created_at || "",

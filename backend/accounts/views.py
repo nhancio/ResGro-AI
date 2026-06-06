@@ -13,7 +13,12 @@ from .auth_helpers import login_payload
 from .models import Subscription, UserActivity, WorkspaceUser
 from .passwords import hash_password, new_user_id, verify_password
 from .serializers import subscription_to_api, user_to_api
-from .stripe_sync import handle_webhook_event, sync_customer_id, sync_user_full
+from .stripe_sync import (
+    handle_webhook_event,
+    push_user_metadata_to_stripe,
+    sync_customer_id,
+    sync_user_full,
+)
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -74,7 +79,6 @@ def signup(request):
     password = request.data.get("password") or ""
     business_name = (request.data.get("businessName") or "").strip()
     restaurant_count = int(request.data.get("restaurantCount") or 1)
-    date_of_birth = request.data.get("dateOfBirth") or ""
     region = request.data.get("region") or ""
     stripe_customer_id = (request.data.get("stripeCustomerId") or "").strip() or None
 
@@ -108,13 +112,15 @@ def signup(request):
         stripe_customer_id=stripe_customer_id,
         business_name=business_name,
         restaurant_count=restaurant_count,
-        date_of_birth=date_of_birth,
         region=region,
         can_manage_users=True,
     )
 
     if stripe_customer_id:
         try:
+            # Push user-entered details to Stripe metadata BEFORE syncing, so the
+            # sync reads back the values the user filled in (not Stripe's billing name).
+            push_user_metadata_to_stripe(user)
             sync_user_full(user)
             user.refresh_from_db()
         except stripe.error.StripeError:
@@ -160,14 +166,17 @@ def update_profile(request):
         user.region = (request.data.get("region") or "").strip()
         fields.append("region")
 
-    if "dateOfBirth" in request.data:
-        user.date_of_birth = (request.data.get("dateOfBirth") or "").strip()
-        fields.append("date_of_birth")
-
     if not fields:
         return Response({"code": "validation_error", "error": "No editable fields provided."}, status=400)
 
     user.save(update_fields=fields + ["updated_at"])
+
+    if user.stripe_customer_id:
+        try:
+            push_user_metadata_to_stripe(user)
+        except stripe.error.StripeError as exc:
+            print(f"update_profile: stripe metadata push failed for {user.email}: {exc}")
+
     return Response({"user": user_to_api(user)})
 
 

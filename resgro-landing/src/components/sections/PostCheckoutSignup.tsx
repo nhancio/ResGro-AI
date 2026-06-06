@@ -17,7 +17,9 @@ export function PostCheckoutSignup({ subscription, onComplete }: PostCheckoutSig
 
   const [email, setEmail] = useState(defaultEmail);
   const [password, setPassword] = useState("");
-  const [businessName, setBusinessName] = useState(subscription.customer.name || "");
+  // Intentionally NOT pre-filled from subscription.customer.name — that's the
+  // Stripe billing (personal) name, not the business name. User must type it.
+  const [businessName, setBusinessName] = useState("");
   const [restaurantCount, setRestaurantCount] = useState("1");
   const [region, setRegion] = useState("");
   const [error, setError] = useState<string | null>(null);

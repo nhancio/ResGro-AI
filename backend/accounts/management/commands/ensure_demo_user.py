@@ -27,7 +27,6 @@ class Command(BaseCommand):
                 "stripe_customer_id": DEMO_STRIPE_CUSTOMER,
                 "business_name": "Demo Restaurant Group",
                 "restaurant_count": 1,
-                "date_of_birth": "1990-01-01",
                 "region": "AU",
                 "can_manage_users": True,
             },

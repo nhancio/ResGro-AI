@@ -38,7 +38,6 @@ export function UserManagementSection({ actor }: UserManagementSectionProps) {
   const [newPassword, setNewPassword] = useState("");
   const [newBusiness, setNewBusiness] = useState("");
   const [newCount, setNewCount] = useState("1");
-  const [newDob, setNewDob] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -46,7 +45,6 @@ export function UserManagementSection({ actor }: UserManagementSectionProps) {
   const [editPassword, setEditPassword] = useState("");
   const [editBusiness, setEditBusiness] = useState("");
   const [editCount, setEditCount] = useState("");
-  const [editDob, setEditDob] = useState("");
   const [editRegion, setEditRegion] = useState("");
   const [editAdmin, setEditAdmin] = useState(false);
 
@@ -64,10 +62,6 @@ export function UserManagementSection({ actor }: UserManagementSectionProps) {
       setFormError("Business name and a valid location count are required.");
       return;
     }
-    if (!newDob) {
-      setFormError("Date of birth is required.");
-      return;
-    }
     setBusy(true);
     try {
       await createWorkspaceUser({
@@ -78,14 +72,12 @@ export function UserManagementSection({ actor }: UserManagementSectionProps) {
         metadata: {
           businessName: newBusiness.trim(),
           restaurantCount: n,
-          dateOfBirth: newDob,
         },
       });
       setNewEmail("");
       setNewPassword("");
       setNewBusiness("");
       setNewCount("1");
-      setNewDob("");
       setCreating(false);
       bump();
     } catch (err) {
@@ -100,7 +92,6 @@ export function UserManagementSection({ actor }: UserManagementSectionProps) {
     setEditPassword("");
     setEditBusiness(u.metadata.businessName);
     setEditCount(String(u.metadata.restaurantCount));
-    setEditDob(u.metadata.dateOfBirth || "");
     setEditRegion(u.metadata.region || "");
     setEditAdmin(u.canManageUsers);
   };
@@ -122,7 +113,6 @@ export function UserManagementSection({ actor }: UserManagementSectionProps) {
         metadata: {
           businessName: editBusiness.trim(),
           restaurantCount: n,
-          dateOfBirth: editDob,
           region: editRegion.trim() || undefined,
         },
       });
@@ -197,10 +187,6 @@ export function UserManagementSection({ actor }: UserManagementSectionProps) {
             <div className="space-y-2">
               <label className="text-sm font-medium text-black">Locations</label>
               <Input type="number" min={1} value={newCount} onChange={(e) => setNewCount(e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-black">Date of birth</label>
-              <Input type="date" value={newDob} onChange={(e) => setNewDob(e.target.value)} required />
             </div>
           </div>
           {formError && <p className="text-sm text-red-600">{formError}</p>}
@@ -280,10 +266,6 @@ export function UserManagementSection({ actor }: UserManagementSectionProps) {
               <div className="space-y-2">
                 <label className="text-sm font-medium text-black">Locations</label>
                 <Input type="number" min={1} value={editCount} onChange={(e) => setEditCount(e.target.value)} required />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-black">Date of birth</label>
-                <Input type="date" value={editDob} onChange={(e) => setEditDob(e.target.value)} required />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-black">Region</label>

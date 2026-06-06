@@ -15,7 +15,7 @@ function generateSalt() {
 }
 
 exports.handler = wrapHandler(async (body, event, headers) => {
-  const { email, password, stripeCustomerId, businessName, restaurantCount, dateOfBirth, region } = body;
+  const { email, password, stripeCustomerId, businessName, restaurantCount, region } = body;
 
   if (!email || !password || password.length < 8) {
     return respond(400, { error: "Valid email and password (min 8 chars) required." }, headers);
@@ -23,8 +23,8 @@ exports.handler = wrapHandler(async (body, event, headers) => {
   if (!stripeCustomerId) {
     return respond(400, { error: "Stripe customer ID is required." }, headers);
   }
-  if (!businessName || !dateOfBirth) {
-    return respond(400, { error: "Business name and date of birth are required." }, headers);
+  if (!businessName) {
+    return respond(400, { error: "Business name is required." }, headers);
   }
 
   const stripe = getStripe();
@@ -67,7 +67,6 @@ exports.handler = wrapHandler(async (body, event, headers) => {
       resgro_password_hash: passwordHash,
       resgro_business_name: businessName.trim(),
       resgro_restaurant_count: String(restaurantCount || 1),
-      resgro_date_of_birth: dateOfBirth,
       resgro_region: region || "",
       resgro_can_manage_users: "true",
       resgro_created_at: new Date().toISOString(),
@@ -83,7 +82,6 @@ exports.handler = wrapHandler(async (body, event, headers) => {
       metadata: {
         businessName: businessName.trim(),
         restaurantCount: Number(restaurantCount) || 1,
-        dateOfBirth,
         region: region || "",
       },
       createdAt: new Date().toISOString(),

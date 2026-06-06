@@ -811,7 +811,6 @@ function ProfileSection({
             {sessionUser ? (
               <>
                 <ProfileRow label="Locations (signup)" value={String(sessionUser.metadata.restaurantCount)} />
-                <ProfileRow label="Date of birth (signup)" value={sessionUser.metadata.dateOfBirth} />
                 {sessionUser.metadata.region ? (
                   <ProfileRow label="Region (signup)" value={sessionUser.metadata.region} />
                 ) : null}
