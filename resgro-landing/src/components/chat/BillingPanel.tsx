@@ -180,8 +180,9 @@ export function BillingPanel({ subscription, sessionUser }: BillingPanelProps) {
                         <p className="text-[10px] text-gray-500">{formatDate(inv.date)}</p>
                       )}
                     </div>
+                    {/* Backend already returns amounts in dollars */}
                     <span className="text-sm font-medium text-white">
-                      ${(inv.amount / 100).toFixed(2)}
+                      ${inv.amount.toFixed(2)}
                     </span>
                     {inv.hostedInvoiceUrl && (
                       <a

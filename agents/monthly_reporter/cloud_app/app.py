@@ -30,19 +30,22 @@ _init_ok = False
 try:
     # ── Resgro Brand CSS ──
     st.markdown("""<style>
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap');
 /* ─── Reset & Chrome ─── */
 #MainMenu, footer {visibility: hidden;}
 header {visibility: visible !important;}
 
 /* ─── Typography ─── */
 html, body, .stApp, .stMarkdown, p, label {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+    font-family: "Google Sans", -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+    font-optical-sizing: auto;
+    font-variation-settings: "GRAD" 0;
 }
 div:not([data-testid="stIconMaterial"]):not(.material-symbols-rounded) {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: "Google Sans", -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 span:not(.material-symbols-rounded):not([class*="icon"]):not([data-testid="stIconMaterial"]) {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: "Google Sans", -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 h1, h2, h3, h4 { font-weight: 700 !important; letter-spacing: -0.02em; }
 

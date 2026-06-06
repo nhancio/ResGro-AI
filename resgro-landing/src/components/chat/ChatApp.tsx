@@ -41,6 +41,7 @@ import {
   runMonthlyReporterWithFiles,
   runSessionAgent,
   uploadFilesToSession,
+  createDataSession,
   TIMEOUT_AGENT_RUN_MS,
 } from "@/lib/agentWorkflow";
 import { assertDirectUploadSizeWithinLimit, shouldUseGcsUpload } from "@/lib/gcsUpload";
@@ -668,10 +669,9 @@ function AgentResultCard({
         </>
       )}
 
-      {/* Monthly Reporter Tables — tabbed */}
-      {result.type === "monthly_reporter" && result.tables && (
-        <TabbedTables tables={result.tables} />
-      )}
+      {/* Monthly Reporter / Generic Analysis Tables — tabbed */}
+      {(result.type === "monthly_reporter" || result.type === "data_upload") &&
+        result.tables && <TabbedTables tables={result.tables} />}
 
       {/* Boss Pipeline Steps */}
       {result.type === "boss" && result.bossSteps && (
@@ -947,6 +947,9 @@ export function ChatApp({
     setIsLoading(false);
     setLoadingSessionId(null);
   }, []);
+
+  /** Chat pending delete confirmation ("Are you sure?" popup). */
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const deleteSession = useCallback(
     (sessionId: string) => {
@@ -1398,12 +1401,32 @@ export function ChatApp({
     if (ps) ps = advanceStep(ps, "upload");
     updateLastAssistant("Uploading and processing your data...", sessionId, { processState: ps });
     try {
-      const dataSid = await uploadFilesToSession(uploadFiles, {
+      const uploadResult = await createDataSession(uploadFiles, {
         onProgress: (msg) => updateLastAssistant(msg, sessionId, { processState: ps }),
       });
+      const dataSid = String(uploadResult.session_id || uploadResult.id || "");
+      if (!dataSid) throw new Error("No session ID returned from upload");
 
       if (ps) ps = advanceStep(ps, "validate");
       updateLastAssistant("Validating datasets...", sessionId, { processState: ps });
+
+      // Unrecognized files → show the generic basic analysis instead.
+      if (uploadResult.status === "generic_analysis") {
+        if (ps) ps = completeAll(ps);
+        updateLastAssistant(
+          String(uploadResult.summary || "Basic analysis of your uploaded file(s) is ready."),
+          sessionId,
+          {
+            agentResult: {
+              type: "data_upload",
+              sessionId: dataSid,
+              tables: uploadResult.tables as Record<string, PreviewTableData> | undefined,
+            },
+            processState: ps,
+          },
+        );
+        return;
+      }
 
       const rawOutput = `Data uploaded successfully. Session ID: ${dataSid}. Datasets validated and ready for analysis.`;
       const aiSummary = await summarizeWithLLM(rawOutput);
@@ -1795,6 +1818,24 @@ export function ChatApp({
         agentType === "campaign_review" ? "campaign-review" : agentType;
       const data = await runSessionAgent(dataSid, agentSlug);
 
+      // Unrecognized files → backend returned a generic basic analysis.
+      if (data.status === "generic_analysis") {
+        if (ps) ps = completeAll(ps);
+        updateLastAssistant(
+          String(data.summary || "Basic analysis of your uploaded file(s) is ready."),
+          sessionId,
+          {
+            agentResult: {
+              type: "data_upload",
+              sessionId: dataSid,
+              tables: data.tables as Record<string, PreviewTableData> | undefined,
+            },
+            processState: ps,
+          },
+        );
+        return;
+      }
+
       if (agentType === "deepdive") {
         if (ps) ps = advanceStep(ps, "analyze");
         updateLastAssistant("Running analysis...", sessionId, { processState: ps });
@@ -2087,7 +2128,7 @@ export function ChatApp({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        deleteSession(session.id);
+                        setConfirmDeleteId(session.id);
                       }}
                       className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 transition-all p-1"
                       title="Delete chat"
@@ -2619,6 +2660,52 @@ export function ChatApp({
           </>
         )}
       </main>
+
+      {/* Delete chat confirmation popup */}
+      {confirmDeleteId && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 px-4"
+          onClick={() => setConfirmDeleteId(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-[#2a2a2e] bg-[#1e1e22] p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-red-500/15 flex items-center justify-center shrink-0">
+                <Trash2 size={18} className="text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-white">Delete chat?</h3>
+                <p className="text-xs text-gray-400 mt-0.5 truncate max-w-[220px]">
+                  {sessions.find((s) => s.id === confirmDeleteId)?.title || "This chat"}
+                </p>
+              </div>
+            </div>
+            <p className="text-xs text-gray-400 mb-5">
+              Are you sure? This chat and all its messages will be permanently
+              deleted. This cannot be undone.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-[#2a2a2e] text-sm font-medium text-gray-300 hover:bg-[#242428] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  deleteSession(confirmDeleteId);
+                  setConfirmDeleteId(null);
+                }}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-sm font-medium text-white transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

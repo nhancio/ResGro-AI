@@ -325,6 +325,7 @@ deploy_agents() {
   local env_pairs=()
   [ -n "${ANTHROPIC_API_KEY:-}" ] && env_pairs+=("ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}")
   [ -n "${GEMINI_API_KEY:-}" ]    && env_pairs+=("GEMINI_API_KEY=${GEMINI_API_KEY}")
+  [ -n "${GEMINI_MODEL:-}" ]      && env_pairs+=("GEMINI_MODEL=${GEMINI_MODEL}")
   [ -n "${GCS_UPLOAD_BUCKET:-}" ] && env_pairs+=("GCS_UPLOAD_BUCKET=${GCS_UPLOAD_BUCKET}")
   [ -n "${GCS_SIGNING_SERVICE_ACCOUNT:-}" ] && env_pairs+=("GCS_SIGNING_SERVICE_ACCOUNT=${GCS_SIGNING_SERVICE_ACCOUNT}")
 

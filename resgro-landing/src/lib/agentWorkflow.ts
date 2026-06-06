@@ -92,6 +92,23 @@ export async function uploadFilesToSession(
     onProgress?: (message: string) => void;
   } = {},
 ): Promise<string> {
+  const result = await createDataSession(files, options);
+  const sid = result.session_id || result.id;
+  if (!sid) throw new Error("No session ID returned from upload");
+  return String(sid);
+}
+
+/** Same as uploadFilesToSession but returns the full session-creation result
+ *  (including generic-analysis fallback payloads for unrecognized files). */
+export async function createDataSession(
+  files: File[],
+  options: {
+    operatorId?: string;
+    operatorName?: string;
+    dateRange?: string;
+    onProgress?: (message: string) => void;
+  } = {},
+): Promise<Record<string, any>> {
   const operatorId = options.operatorId ?? "chat-upload";
   const operatorName = options.operatorName ?? "Chat Upload";
   const onProgress = options.onProgress;
@@ -120,10 +137,7 @@ export async function uploadFilesToSession(
         ),
       );
     }
-    const result = await resp.json();
-    const sid = result.session_id || result.id;
-    if (!sid) throw new Error("No session ID returned from upload");
-    return String(sid);
+    return (await resp.json()) as Record<string, any>;
   }
 
   const fd = new FormData();
@@ -148,10 +162,7 @@ export async function uploadFilesToSession(
       ),
     );
   }
-  const result = await resp.json();
-  const sid = result.session_id || result.id;
-  if (!sid) throw new Error("No session ID returned from upload");
-  return String(sid);
+  return (await resp.json()) as Record<string, any>;
 }
 
 export async function runSessionAgent(

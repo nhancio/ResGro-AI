@@ -70,6 +70,16 @@ export async function apiSignup(params: {
   return post<LoginResponse>("signup", params);
 }
 
+export async function apiUpdateProfile(params: {
+  userId: string;
+  businessName?: string;
+  restaurantCount?: number;
+  region?: string;
+  dateOfBirth?: string;
+}): Promise<{ user: WorkspaceUser }> {
+  return post<{ user: WorkspaceUser }>("update-profile", params);
+}
+
 export async function apiForgotPassword(email: string): Promise<{
   success: boolean;
   message: string;

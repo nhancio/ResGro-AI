@@ -127,6 +127,51 @@ def signup(request):
 
 
 @api_view(["POST"])
+def update_profile(request):
+    """Update editable profile fields for a workspace user."""
+    user_id = (request.data.get("userId") or "").strip()
+    if not user_id:
+        return Response({"code": "validation_error", "error": "userId is required."}, status=400)
+
+    user = WorkspaceUser.objects.filter(id=user_id).first()
+    if not user:
+        return Response({"code": "not_registered", "error": "User not found."}, status=404)
+
+    fields: list[str] = []
+
+    if "businessName" in request.data:
+        business_name = (request.data.get("businessName") or "").strip()
+        if not business_name:
+            return Response({"code": "validation_error", "error": "Business name cannot be empty."}, status=400)
+        user.business_name = business_name
+        fields.append("business_name")
+
+    if "restaurantCount" in request.data:
+        try:
+            count = int(request.data.get("restaurantCount"))
+        except (TypeError, ValueError):
+            return Response({"code": "validation_error", "error": "restaurantCount must be a number."}, status=400)
+        if count < 1:
+            return Response({"code": "validation_error", "error": "restaurantCount must be at least 1."}, status=400)
+        user.restaurant_count = count
+        fields.append("restaurant_count")
+
+    if "region" in request.data:
+        user.region = (request.data.get("region") or "").strip()
+        fields.append("region")
+
+    if "dateOfBirth" in request.data:
+        user.date_of_birth = (request.data.get("dateOfBirth") or "").strip()
+        fields.append("date_of_birth")
+
+    if not fields:
+        return Response({"code": "validation_error", "error": "No editable fields provided."}, status=400)
+
+    user.save(update_fields=fields + ["updated_at"])
+    return Response({"user": user_to_api(user)})
+
+
+@api_view(["POST"])
 def sync_from_stripe(request):
     secret = request.headers.get("X-Internal-Secret") or ""
     if secret != settings.SECRET_KEY and not settings.DEBUG:

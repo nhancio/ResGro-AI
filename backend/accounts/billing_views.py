@@ -217,6 +217,21 @@ def create_billing_portal(request):
         customer=customer_id,
         return_url=request.data.get("returnUrl") or f"{settings.APP_ORIGIN}/#/app",
     )
+
+    # Store the latest subscription-management link on the user's subscriptions
+    # so it is visible in Django admin.
+    try:
+        from django.utils import timezone as dj_tz
+
+        user = WorkspaceUser.objects.filter(stripe_customer_id=customer_id).first()
+        if user:
+            user.subscriptions.update(
+                management_url=session.url,
+                management_url_created_at=dj_tz.now(),
+            )
+    except Exception as exc:
+        print(f"create-billing-portal: failed to store management link: {exc}")
+
     return Response({"url": session.url})
 
 
@@ -234,36 +249,54 @@ def get_billing_data(request):
 
     upcoming = None
     if subscription_id:
+        # stripe-python v12+ removed Invoice.upcoming (replaced by create_preview).
+        # Never let the preview lookup break the invoice history.
         try:
-            upcoming = stripe.Invoice.upcoming(customer=customer_id, subscription=subscription_id)
-        except stripe.error.StripeError:
+            if hasattr(stripe.Invoice, "upcoming"):
+                upcoming = stripe.Invoice.upcoming(customer=customer_id, subscription=subscription_id)
+            else:
+                upcoming = stripe.Invoice.create_preview(
+                    customer=customer_id, subscription=subscription_id
+                )
+        except Exception as exc:
+            print(f"get-billing-data: upcoming invoice preview failed: {exc}")
             upcoming = None
 
     invoices = []
     for inv in invoice_list.data:
-        invoices.append({
-            "id": inv.id,
-            "label": inv.description or (inv.lines.data[0].description if inv.lines.data else "Stripe invoice"),
-            "amount": (inv.amount_due or 0) / 100,
-            "status": map_invoice_status(inv.status),
-            "date": to_iso(inv.status_transitions.paid_at if inv.status_transitions else inv.created),
-            "hostedInvoiceUrl": inv.hosted_invoice_url,
-            "invoicePdf": inv.invoice_pdf,
-        })
+        try:
+            invoices.append({
+                "id": inv.id,
+                "label": inv.description or (inv.lines.data[0].description if inv.lines.data else "Stripe invoice"),
+                "amount": (inv.amount_due or 0) / 100,
+                "status": map_invoice_status(inv.status),
+                "date": to_iso(inv.status_transitions.paid_at if inv.status_transitions else inv.created),
+                "hostedInvoiceUrl": inv.hosted_invoice_url,
+                "invoicePdf": inv.invoice_pdf,
+            })
+        except Exception as exc:
+            print(f"get-billing-data: skipping invoice {getattr(inv, 'id', '?')}: {exc}")
 
     if upcoming:
-        invoices.insert(
-            0,
-            {
-                "id": getattr(upcoming, "id", None) or "upcoming",
-                "label": getattr(upcoming, "description", None) or "Upcoming charge",
-                "amount": (upcoming.amount_due or 0) / 100,
-                "status": "Upcoming",
-                "date": to_iso(upcoming.period_end or upcoming.next_payment_attempt or upcoming.created),
-                "hostedInvoiceUrl": upcoming.hosted_invoice_url,
-                "invoicePdf": upcoming.invoice_pdf,
-            },
-        )
+        try:
+            invoices.insert(
+                0,
+                {
+                    "id": getattr(upcoming, "id", None) or "upcoming",
+                    "label": getattr(upcoming, "description", None) or "Upcoming charge",
+                    "amount": (getattr(upcoming, "amount_due", 0) or 0) / 100,
+                    "status": "Upcoming",
+                    "date": to_iso(
+                        getattr(upcoming, "period_end", None)
+                        or getattr(upcoming, "next_payment_attempt", None)
+                        or getattr(upcoming, "created", None)
+                    ),
+                    "hostedInvoiceUrl": getattr(upcoming, "hosted_invoice_url", None),
+                    "invoicePdf": getattr(upcoming, "invoice_pdf", None),
+                },
+            )
+        except Exception as exc:
+            print(f"get-billing-data: skipping upcoming preview: {exc}")
 
     return Response({"invoices": invoices})
 

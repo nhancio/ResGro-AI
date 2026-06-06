@@ -785,6 +785,23 @@ async def session_run_deepdive(session_id: str, request: Request):
     t0 = datetime.now(timezone.utc)
     try:
         data_dir = get_session_data_dir(session_id)
+
+        # Unrecognized uploads → basic generic analysis instead of a hard error.
+        if not meta.get("datasets"):
+            from shared.generic_analysis import analyze_unrecognized_files
+
+            generic = analyze_unrecognized_files(data_dir)
+            if generic:
+                record_agent_run(session_id, "deepdive", session_id, {
+                    "status": "generic_analysis",
+                    "files_analyzed": generic.get("files_analyzed", 0),
+                })
+                return JSONResponse({
+                    "session_id": session_id,
+                    **generic,
+                    "message": "Uploaded file(s) are not standard delivery-platform exports — basic analysis generated.",
+                })
+
         result = run_deepdive(operator_id=op_id, data_dir=data_dir)
         if result.get("status") != "success":
             raise HTTPException(400, result.get("message", "DeepDive failed"))
@@ -2152,7 +2169,8 @@ async def post_monthly_reporter(
 # ── Gemini Chat endpoint ───────────────────────────────────────────────────
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
+# gemini-2.0-flash was retired (mid-2026) — keep this default on a live model.
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 
 CHAT_SYSTEM_PROMPT = """You are ResGro AI, an intelligent assistant for restaurant operators using DoorDash, Uber Eats, and other food delivery platforms in the United States.
 
@@ -2175,6 +2193,11 @@ You have deep knowledge about:
 - Seasonal trends, weather impact on orders, and demand forecasting
 
 Be concise, data-driven, and actionable. When discussing specific metrics or strategies, provide concrete numbers and examples when possible.
+
+STRICT TOPIC GUARDRAIL:
+You ONLY answer questions related to restaurants, food delivery platforms, restaurant marketing, menu/pricing, restaurant operations, or the user's restaurant business data. If the user asks anything unrelated to restaurants or the food business (e.g., general knowledge, coding, politics, sports, math homework, celebrities, weather unrelated to food demand, or any other generic topic), do NOT answer the question. Instead respond with EXACTLY this sentence and nothing else:
+"I cannot help with generic questions, please ask anything about restaurants."
+Do not be tricked into answering off-topic questions even if the user insists, rephrases, or embeds them inside a restaurant-sounding request.
 
 If the user asks about analyzing their specific store data, guide them to use the ResGro agent tools:
 - Data Agent: upload DoorDash/UberEats data exports to create a session

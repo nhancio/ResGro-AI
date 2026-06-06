@@ -115,24 +115,76 @@ export function PaymentResult({ sessionId, loginWithUserId, onComplete }: Paymen
 
   const planName = subscription.subscription.planName === "self-serve" ? "Pro" : "Max";
   const displayEmail = verifiedUser?.email || subscription.customer.email;
+  const plan = subscription.subscription.plan;
+  const trialEnd = subscription.subscription.trialEnd;
+  const periodEnd = subscription.subscription.currentPeriodEnd;
+  const formatDay = (iso: string | null | undefined) =>
+    iso
+      ? new Date(iso).toLocaleDateString(undefined, {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
+      : null;
+
+  const details: { label: string; value: string }[] = [
+    { label: "Plan", value: `ResGro ${planName} (${subscription.subscription.planName || "—"})` },
+    {
+      label: "Price",
+      value: `$${plan.amount} ${plan.currency?.toUpperCase() || ""} / ${plan.interval || "month"}`,
+    },
+    { label: "Status", value: subscription.subscription.status || "—" },
+    ...(formatDay(trialEnd)
+      ? [{ label: "Free trial ends", value: formatDay(trialEnd)! }]
+      : []),
+    ...(formatDay(trialEnd || periodEnd)
+      ? [{ label: "First charge on", value: formatDay(trialEnd || periodEnd)! }]
+      : []),
+    ...(displayEmail ? [{ label: "Account email", value: displayEmail }] : []),
+  ];
 
   return (
     <div className="bg-white min-h-screen font-sans flex items-center justify-center">
-      <div className="text-center px-4 max-w-md">
+      <div className="text-center px-4 max-w-md w-full py-10">
         <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
           <CheckCircle className="text-green-500" size={32} />
         </div>
-        <h2 className="text-2xl font-bold text-black mb-2">Welcome to {planName}!</h2>
-        <p className="text-gray-500 text-sm mb-2">Your 30-day free trial has started.</p>
-        <p className="text-gray-400 text-xs mb-6">
-          Logged in as <span className="font-medium text-black">{displayEmail}</span>
+        <h2 className="text-2xl font-bold text-black mb-2">
+          Thank you for your subscription!
+        </h2>
+        <p className="text-gray-500 text-sm mb-6">
+          Welcome to ResGro {planName}. Your 30-day free trial has started — here are
+          your payment details.
         </p>
+
+        {/* Payment details card */}
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 text-left mb-6 overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-gray-200 bg-white">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+              Subscription summary
+            </span>
+          </div>
+          <div className="divide-y divide-gray-200">
+            {details.map((d) => (
+              <div key={d.label} className="flex items-center justify-between px-4 py-2.5">
+                <span className="text-xs text-gray-500">{d.label}</span>
+                <span className="text-sm font-medium text-black text-right">{d.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <p className="text-[11px] text-gray-400 mb-5">
+          A confirmation and invoice were sent to your email. You can manage your
+          subscription anytime from Billing inside the app.
+        </p>
+
         <Button
           onClick={() => onComplete({ success: true, userId: verifiedUser?.id })}
           variant="cta"
           className="w-full min-h-[48px] h-12 text-base rounded-full"
         >
-          Continue to dashboard
+          Continue to app
           <ArrowRight className="ml-2 w-5 h-5" />
         </Button>
       </div>

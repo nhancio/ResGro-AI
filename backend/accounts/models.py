@@ -72,6 +72,12 @@ class Subscription(models.Model):
     is_primary = models.BooleanField(default=True)
     synced_at = models.DateTimeField(auto_now=True)
 
+    # Latest Stripe billing-portal (subscription management) link.
+    # Portal session URLs expire after a few hours — this stores the most
+    # recently generated one for reference in Django admin.
+    management_url = models.URLField(max_length=1024, blank=True)
+    management_url_created_at = models.DateTimeField(null=True, blank=True)
+
     class Meta:
         ordering = ["-synced_at"]
 

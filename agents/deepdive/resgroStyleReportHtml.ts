@@ -151,10 +151,10 @@ export function buildResgroStyleDeepDiveHtml(report: DeepDiveReport): string {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Analysis Engine — ${esc(report.operator_id)}</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Outfit', system-ui, sans-serif; background: #ffffff; color: #252525; line-height: 1.6; }
+body { font-family: "Google Sans", system-ui, sans-serif; font-optical-sizing: auto; font-variation-settings: "GRAD" 0; background: #ffffff; color: #252525; line-height: 1.6; }
 .dd-wrap { max-width: 1400px; margin: 0 auto; padding: 24px; }
 .header {
   background: linear-gradient(135deg, #04493a 0%, #046e54 40%, #049772 100%);

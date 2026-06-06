@@ -52,8 +52,20 @@ class WorkspaceUserAdmin(admin.ModelAdmin):
 
 @admin.register(Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
-    list_display = ("user", "status", "plan_name", "current_period_end")
+    list_display = ("user", "status", "plan_name", "current_period_end", "management_link")
     list_filter = ("status", "plan_name")
+    readonly_fields = ("management_link", "management_url_created_at")
+
+    @admin.display(description="Manage subscription")
+    def management_link(self, obj):
+        from django.utils.html import format_html
+
+        if not obj.management_url:
+            return "—"
+        return format_html(
+            '<a href="{}" target="_blank" rel="noopener">Open billing portal</a>',
+            obj.management_url,
+        )
 
 
 @admin.register(Invoice)

@@ -58,6 +58,23 @@ def run_manual(
         meta = ingest_csv_files(session_id, csv_pairs)
 
     if meta["status"] == "no_data":
+        # Fallback: not a recognized DoorDash/UberEats export — run a basic
+        # generic analysis (column names, summary, sample tables) instead.
+        from shared.data_session import get_session_data_dir
+        from shared.generic_analysis import analyze_unrecognized_files
+
+        generic = analyze_unrecognized_files(get_session_data_dir(session_id))
+        if generic:
+            record_agent_run(session_id, "data_agent", session_id, {
+                "status": "generic_analysis",
+                "files_analyzed": generic.get("files_analyzed", 0),
+            })
+            return {
+                "session_id": session_id,
+                "operator_id": operator_id,
+                **generic,
+                "message": "Uploaded file(s) are not standard delivery-platform exports — basic analysis generated.",
+            }
         return {
             "session_id": session_id,
             "status": "no_data",

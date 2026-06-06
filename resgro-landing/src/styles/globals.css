@@ -126,7 +126,9 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Roboto', sans-serif;
+    font-family: "Google Sans", sans-serif;
+    font-optical-sizing: auto;
+    font-variation-settings: "GRAD" 0;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
