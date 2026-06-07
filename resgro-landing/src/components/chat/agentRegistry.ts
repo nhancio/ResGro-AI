@@ -165,14 +165,14 @@ export const AGENT_REGISTRY: AgentConfig[] = [
     description:
       "Generate consolidated monthly KPI reports with revenue, orders, and campaign performance across platforms.",
     color: "from-violet-500 to-indigo-700",
-    acceptedFiles: [".csv", ".xlsx"],
+    acceptedFiles: [".csv", ".zip", ".xlsx"],
     uploadRequirements: [
-      "DoorDash financial data (dd-data.csv)",
-      "UberEats data (ue-data.csv)",
+      "DoorDash financial data (CSV or export ZIP)",
+      "UberEats data (CSV or export ZIP)",
       "Marketing campaign CSVs (optional)",
     ],
     exampleInputs: [
-      "dd-data.csv (DoorDash monthly export)",
+      "dd-data.csv or financial_*.zip (DoorDash monthly export)",
       "ue-data.csv (UberEats monthly export)",
       "MARKETING_promos.csv",
     ],

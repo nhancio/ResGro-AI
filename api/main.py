@@ -9,6 +9,7 @@ Vite proxies /api → 8000 (see dashboard/vite.config.ts).
 
 from __future__ import annotations
 
+import io
 import json
 import os
 import shutil
@@ -16,6 +17,7 @@ import subprocess
 import sys
 import tempfile
 import uuid
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
@@ -424,6 +426,82 @@ def post_session_from_gcs(req: _SessionFromGcsRequest):
         _gcs.delete_objects(gcs_paths)
 
 
+def _monthly_csv_kind(name: str, default: str = "dd") -> str:
+    """Mirror of frontend classifyMonthlyReporterFilename (agentWorkflow.ts)."""
+    n = Path(name).name.upper()
+    if "MARKETING" in n:
+        return "marketing"
+    if "FINANCIAL" in n or "DD-DATA" in n or "DOORDASH" in n or n.startswith("DD_"):
+        return "dd"
+    if "UBER" in n or "UNITED_STATES" in n or n.startswith("UE") or "UE-" in n or "UE_" in n:
+        return "ue"
+    return default
+
+
+def _zip_csv_members(filename: str, raw: bytes) -> list[tuple[str, bytes]]:
+    """Expand a .zip upload (incl. nested export zips) into CSV (basename, bytes) pairs."""
+    pairs: list[tuple[str, bytes]] = []
+    try:
+        with zipfile.ZipFile(io.BytesIO(raw)) as zf:
+            for member in zf.namelist():
+                base = Path(member).name
+                if member.endswith("/") or "__MACOSX" in member or base.startswith("."):
+                    continue
+                low = base.lower()
+                if low.endswith(".csv"):
+                    data = zf.read(member)
+                    if data:
+                        pairs.append((base, data))
+                elif low.endswith(".zip"):
+                    pairs.extend(_zip_csv_members(base, zf.read(member)))
+    except zipfile.BadZipFile as exc:
+        raise HTTPException(400, f"'{filename}' is not a valid ZIP archive.") from exc
+    return pairs
+
+
+def _ingest_monthly_upload(
+    filename: str,
+    raw: bytes,
+    work: Path,
+    mkt_pairs: list[tuple[str, bytes]],
+    slot: str = "dd",
+) -> None:
+    """Route a monthly-reporter upload into the work dir.
+
+    Plain CSVs go straight to the requested slot (dd → dd-data.csv,
+    ue → ue-data.csv, marketing → mkt_pairs). ZIP archives are expanded and
+    each CSV member is routed by filename; for dd, FINANCIAL_DETAILED_*
+    members are preferred (DoorDash export zips bundle several CSVs).
+    """
+    if not filename.lower().endswith(".zip"):
+        if slot == "marketing":
+            mkt_pairs.append((filename, raw))
+        else:
+            (work / f"{slot}-data.csv").write_bytes(raw)
+        return
+
+    members = _zip_csv_members(filename, raw)
+    if not members:
+        raise HTTPException(400, f"No CSV files found inside '{filename}'.")
+
+    buckets: dict[str, list[tuple[str, bytes]]] = {"dd": [], "ue": [], "marketing": []}
+    for name, data in members:
+        buckets[_monthly_csv_kind(name, default=slot)].append((name, data))
+
+    for kind in ("dd", "ue"):
+        candidates = buckets[kind]
+        if not candidates:
+            continue
+        target = work / f"{kind}-data.csv"
+        if target.exists():
+            continue  # slot already filled by an earlier upload
+        preferred = [c for c in candidates if "FINANCIAL_DETAILED" in c[0].upper()]
+        best = max(preferred or candidates, key=lambda c: len(c[1]))
+        target.write_bytes(best[1])
+
+    mkt_pairs.extend(buckets["marketing"])
+
+
 def _monthly_reporter_response(
     run_id: str,
     bundle: dict,
@@ -496,28 +574,40 @@ def post_monthly_reporter_from_gcs(req: _MonthlyReporterFromGcsRequest):
     gcs_paths: list[str] = []
 
     try:
+        # Download into a staging dir, then route by filename — ZIP exports
+        # (e.g. DoorDash financial_*.zip) are expanded server-side.
+        staging = work / "_uploads"
+        staging.mkdir(exist_ok=True)
+        mkt_pairs: list[tuple[str, bytes]] = []
+
         if req.dd_object:
-            p = _gcs.download_object_to_path(req.dd_object.object_path, work / "dd-data.csv")
+            p = _gcs.download_object_to_path(
+                req.dd_object.object_path, staging / Path(req.dd_object.filename).name
+            )
             gcs_paths.append(req.dd_object.object_path)
             if not p.stat().st_size:
                 raise HTTPException(400, "DoorDash file is empty.")
+            _ingest_monthly_upload(req.dd_object.filename, p.read_bytes(), work, mkt_pairs, slot="dd")
 
         if req.ue_object:
-            p = _gcs.download_object_to_path(req.ue_object.object_path, work / "ue-data.csv")
+            p = _gcs.download_object_to_path(
+                req.ue_object.object_path, staging / Path(req.ue_object.filename).name
+            )
             gcs_paths.append(req.ue_object.object_path)
             if not p.stat().st_size:
                 raise HTTPException(400, "UberEats file is empty.")
+            _ingest_monthly_upload(req.ue_object.filename, p.read_bytes(), work, mkt_pairs, slot="ue")
 
-        mkt_pairs: list[tuple[str, bytes]] = []
         for mobj in req.marketing_objects:
-            local = work / Path(mobj.filename).name
+            local = staging / Path(mobj.filename).name
             _gcs.download_object_to_path(mobj.object_path, local)
             gcs_paths.append(mobj.object_path)
             raw = local.read_bytes()
             if raw:
-                mkt_pairs.append((mobj.filename, raw))
+                _ingest_monthly_upload(mobj.filename, raw, work, mkt_pairs, slot="marketing")
         if mkt_pairs:
             write_marketing_csvs_to_work_dir(work, mkt_pairs)
+        shutil.rmtree(staging, ignore_errors=True)
 
         inputs = ReportInputs(
             pre_range=req.pre_range.strip(),
@@ -2062,23 +2152,24 @@ async def post_monthly_reporter(
 
     try:
         # Streamlit parity: financial + marketing files are optional; only Pre/Post dates are required.
+        # ZIP exports (e.g. DoorDash financial_*.zip) are expanded server-side.
+        mkt_pairs: list[tuple[str, bytes]] = []
         if dd_file and dd_file.filename:
             raw = await dd_file.read()
             if raw:
-                (work / "dd-data.csv").write_bytes(raw)
+                _ingest_monthly_upload(dd_file.filename, raw, work, mkt_pairs, slot="dd")
         if ue_file and ue_file.filename:
             raw = await ue_file.read()
             if raw:
-                (work / "ue-data.csv").write_bytes(raw)
+                _ingest_monthly_upload(ue_file.filename, raw, work, mkt_pairs, slot="ue")
 
         # Marketing CSVs — same layout as Streamlit `file_upload_screen` (marketing_data/marketing_*).
-        mkt_pairs: list[tuple[str, bytes]] = []
         if marketing_files:
             for uf in marketing_files:
                 if uf.filename:
                     raw = await uf.read()
                     if raw:
-                        mkt_pairs.append((uf.filename, raw))
+                        _ingest_monthly_upload(uf.filename, raw, work, mkt_pairs, slot="marketing")
         if mkt_pairs:
             write_marketing_csvs_to_work_dir(work, mkt_pairs)
 

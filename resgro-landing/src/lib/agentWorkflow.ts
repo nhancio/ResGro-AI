@@ -315,12 +315,7 @@ export async function runMonthlyReporterWithFiles(
   files: File[],
   onProgress?: (message: string) => void,
 ): Promise<Record<string, unknown>> {
-  if (files.some((f) => f.name.toLowerCase().endsWith(".zip"))) {
-    throw new Error(
-      "Monthly Report expects CSV files, not ZIP archives. Unzip your exports first.",
-    );
-  }
-
+  // ZIP exports are accepted — the server expands them and picks the relevant CSVs.
   if (shouldUseGcsUpload(files)) {
     onProgress?.("Uploading large files to cloud storage…");
     const { objects } = await uploadFilesViaGcs(files, onProgress);

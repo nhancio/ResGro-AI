@@ -203,7 +203,33 @@ def create_checkout(request):
         else:
             session_kwargs["customer_email"] = customer_email
 
-    session = stripe.checkout.Session.create(**session_kwargs)
+    try:
+        session = stripe.checkout.Session.create(**session_kwargs)
+    except stripe.InvalidRequestError as exc:
+        # Stored customer ID can be stale (e.g. created under test-mode keys while
+        # live keys are active, or deleted in the Stripe dashboard). Drop it and
+        # retry with a plain email so checkout still works.
+        stale_customer = session_kwargs.pop("customer", None)
+        if stale_customer and "customer" in str(exc).lower():
+            print(f"create-checkout: stale customer {stale_customer}, retrying with email: {exc}")
+            if customer_email:
+                session_kwargs["customer_email"] = customer_email
+            user = find_user_by_email(customer_email) if customer_email else None
+            if user and user.stripe_customer_id == stale_customer:
+                user.stripe_customer_id = None
+                user.save(update_fields=["stripe_customer_id"])
+            try:
+                session = stripe.checkout.Session.create(**session_kwargs)
+            except stripe.StripeError as retry_exc:
+                print(f"create-checkout: retry failed: {retry_exc}")
+                return Response({"error": "Unable to start checkout. Please try again."}, status=502)
+        else:
+            print(f"create-checkout: stripe error: {exc}")
+            return Response({"error": "Unable to start checkout. Please try again."}, status=502)
+    except stripe.StripeError as exc:
+        print(f"create-checkout: stripe error: {exc}")
+        return Response({"error": "Unable to start checkout. Please try again."}, status=502)
+
     return Response({"url": session.url})
 
 
