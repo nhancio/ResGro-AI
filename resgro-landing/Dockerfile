@@ -14,7 +14,8 @@ COPY agents ./agents
 
 ARG VITE_API_BASE_URL
 ARG VITE_AGENTS_API_URL
-ARG VITE_FORCE_APP_HOST=true
+# Leave unset so resgro.ai = landing and app.resgro.ai = portal (isPortalHost).
+ARG VITE_FORCE_APP_HOST=
 ARG VITE_SITE_URL
 ARG VITE_APP_URL
 ARG VITE_STRIPE_PUBLISHABLE_KEY

@@ -259,10 +259,20 @@ deploy_backend() {
   write_run_env_file "$backend_env"
   if [ -s "$backend_env" ]; then gcloud_env=(--env-vars-file "$backend_env"); fi
 
+  local -a sql_args=()
+  if grep -q '^DATABASE_URL=.*cloudsql' "$ENV_FILE" 2>/dev/null; then
+    local instance
+    instance="$(grep '^DATABASE_URL=' "$ENV_FILE" | sed -E 's|.*host=/cloudsql/([^&" ]+).*|\1|')"
+    [ -n "$instance" ] && sql_args=(--add-cloudsql-instances "$instance")
+  fi
+
   gcloud run deploy resgro-backend \
     --image "$tag" --region "$region" --project "$project" \
     --platform managed --allow-unauthenticated --port 8080 --memory 512Mi \
-    "${gcloud_env[@]}"
+    "${gcloud_env[@]}" "${sql_args[@]}"
+
+  gcloud run services update-traffic resgro-backend \
+    --to-latest --region "$region" --project "$project" --quiet 2>/dev/null || true
 
   local backend_url
   backend_url="$(service_url resgro-backend)"
@@ -388,10 +398,12 @@ deploy_ui() {
   echo "  DJANGO_BACKEND_URL  = ${backend_url:-<unset>}"
 
   # ── Build args (baked into Vite at compile time) ──
+  # Explicitly false — Dockerfile used to default this to true and force portal on apex.
+  # isPortalHost() uses app.* hostname so resgro.ai = landing, app.resgro.ai = portal.
   local -a build_args=(
     "VITE_API_BASE_URL=${api_url}"
     "VITE_AGENTS_API_URL=${agents_url}"
-    "VITE_FORCE_APP_HOST=true"
+    "VITE_FORCE_APP_HOST=false"
     "VITE_SITE_URL=${VITE_SITE_URL:-https://resgro.ai}"
     "VITE_APP_URL=${VITE_APP_URL:-https://app.resgro.ai}"
   )
@@ -458,7 +470,7 @@ print_usage() {
   echo "  --help         Show this message"
 }
 
-push_to_main
+# push_to_main
 
 while [ $# -gt 0 ]; do
   case "$1" in
