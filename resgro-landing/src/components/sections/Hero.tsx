@@ -71,7 +71,7 @@ export function Hero({ isSubscribed = false }: HeroProps) {
             <Button
               size="lg"
               onClick={() => {
-                window.location.hash = "#/get-started";
+                openPortal("/#/get-started");
               }}
               variant="cta"
               className="w-full sm:w-auto min-h-[48px] h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg rounded-full transition-all hover:scale-[1.02] active:scale-[0.98] touch-manipulation"

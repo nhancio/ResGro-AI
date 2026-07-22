@@ -5,6 +5,7 @@ import { Textarea } from "../ui/textarea";
 import { Mail, Globe, MapPin, Linkedin, Twitter, Instagram, Send, Loader2 } from "lucide-react";
 import { FacebookIcon } from "../icons/FacebookIcon";
 import emailjs from "@emailjs/browser";
+import { getAppOrigin, openPortal } from "../../config/app";
 
 export function CTA() {
   const [formData, setFormData] = useState({
@@ -74,7 +75,7 @@ export function CTA() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
               <Button
                 size="lg"
-                onClick={() => { window.location.hash = "#/get-started"; }}
+                onClick={() => { openPortal("/#/get-started"); }}
                 variant="cta-inverse"
                 className="w-full sm:w-auto min-h-[48px] h-12 sm:h-14 px-8 sm:px-10 text-base sm:text-lg rounded-full transition-all touch-manipulation"
               >
@@ -207,7 +208,11 @@ export function CTA() {
             <ul className="space-y-3 sm:space-y-4">
               <li>
                 <a
-                  href="#/get-started"
+                  href={`${getAppOrigin()}/#/get-started`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    openPortal("/#/get-started");
+                  }}
                   className="text-black/80 hover:text-[#FF6B35] transition-colors inline-block py-2 min-h-[44px] flex flex-col items-center md:items-start justify-center touch-manipulation"
                 >
                   Get Started
@@ -215,7 +220,11 @@ export function CTA() {
               </li>
               <li>
                 <a
-                  href="#/pricing"
+                  href={`${getAppOrigin()}/#/pricing`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    openPortal("/#/pricing");
+                  }}
                   className="text-black/80 hover:text-[#FF6B35] transition-colors inline-block py-2 min-h-[44px] flex flex-col items-center md:items-start justify-center touch-manipulation"
                 >
                   Pricing

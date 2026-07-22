@@ -158,7 +158,7 @@ export function Navbar({ isSubscribed = false }: NavbarProps) {
             <Button
               type="button"
               variant="cta"
-              onClick={() => { window.location.hash = "#/get-started"; }}
+              onClick={() => { openPortal("/#/get-started"); }}
               className="rounded-full px-5 py-2.5 min-h-[44px] text-sm lg:text-base flex-shrink-0"
             >
               Get Started
@@ -226,7 +226,7 @@ export function Navbar({ isSubscribed = false }: NavbarProps) {
                   <Button
                     type="button"
                     variant="cta"
-                    onClick={() => { setMobileMenuOpen(false); window.location.hash = "#/get-started"; }}
+                    onClick={() => { setMobileMenuOpen(false); openPortal("/#/get-started"); }}
                     className="w-full min-h-[48px] rounded-full text-base touch-manipulation"
                   >
                     Get Started

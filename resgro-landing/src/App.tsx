@@ -66,8 +66,11 @@ function isPortalHashRoute(hash: string): boolean {
 }
 
 /**
- * Keep paid users in the portal when the hash is cleared (logo click, browser back)
- * so we do not drop them onto marketing home or a state that looks like a logout.
+ * Portal shell rules:
+ * - On app.* host: always portal mode.
+ * - On marketing host (resgro.ai): only portal mode for explicit portal hashes
+ *   (e.g. legacy bookmarks like /#/get-started). Do NOT bounce a logged-in
+ *   visitor away from the landing page when the hash is empty.
  */
 function shouldUsePortalMode(
   hash: string,
@@ -75,7 +78,8 @@ function shouldUsePortalMode(
 ): boolean {
   if (opts.portalHost) return true;
   if (isPortalHashRoute(hash)) return true;
-  if (opts.hasWorkspaceSession && (hash === "" || hash === "#")) return true;
+  // Session retention only applies on the portal host (handled above).
+  void opts.hasWorkspaceSession;
   return false;
 }
 
