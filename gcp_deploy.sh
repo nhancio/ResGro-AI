@@ -112,11 +112,16 @@ image_prefix() {
 }
 
 ensure_gcp_apis() {
-  gcloud services enable \
+  # Idempotent: APIs are usually already enabled. Don't fail CI if the SA
+  # can use them but cannot enable (Consumer-only), or if already on.
+  if ! gcloud services enable \
     run.googleapis.com \
     artifactregistry.googleapis.com \
     cloudbuild.googleapis.com \
     --project="$(gcp_project)" --quiet
+  then
+    echo "Warning: could not enable APIs (may already be on). Continuing…"
+  fi
 }
 
 ensure_artifact_repo() {
