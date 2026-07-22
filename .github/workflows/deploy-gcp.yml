@@ -1,0 +1,108 @@
+# Deploy ResGro stack to GCP Cloud Run (australia-southeast1).
+#
+# Triggers:
+#   - push to main (full stack)
+#   - workflow_dispatch (choose target: all|backend|api|agents|ui)
+#
+# Required repo secrets:
+#   GCP_SA_KEY   — JSON key for github-actions@resgroai.iam.gserviceaccount.com
+#   RESGRO_ENV   — full production .env contents (same as local .env used by gcp_deploy.sh)
+#
+# Optional secrets (defaults match production):
+#   GCP_PROJECT_ID  — default resgroai
+#   GCP_REGION      — default australia-southeast1
+
+name: Deploy GCP Cloud Run
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "apis/**"
+      - "agents/**"
+      - "resgro-landing/**"
+      - "contracts/**"
+      - "shared/**"
+      - "gcp_deploy.sh"
+      - ".github/workflows/deploy-gcp.yml"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Deploy target"
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - backend
+          - api
+          - agents
+          - ui
+
+concurrency:
+  group: deploy-gcp-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy ${{ github.event.inputs.target || 'all' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    env:
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_REGION: ${{ secrets.GCP_REGION }}
+      CLOUDSDK_CORE_DISABLE_PROMPTS: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve project defaults
+        run: |
+          echo "GCP_PROJECT_ID=${GCP_PROJECT_ID:-resgroai}" >> "$GITHUB_ENV"
+          echo "GCP_REGION=${GCP_REGION:-australia-southeast1}" >> "$GITHUB_ENV"
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Write production .env
+        env:
+          RESGRO_ENV: ${{ secrets.RESGRO_ENV }}
+        run: |
+          if [ -z "${RESGRO_ENV}" ]; then
+            echo "Missing secret RESGRO_ENV (paste your production .env contents)."
+            exit 1
+          fi
+          printf '%s\n' "$RESGRO_ENV" > .env
+          # Ensure CI uses Cloud Build (no local Docker daemon required)
+          # and the Australia project/region.
+          grep -q '^GCP_PROJECT_ID=' .env || echo "GCP_PROJECT_ID=${GCP_PROJECT_ID}" >> .env
+          grep -q '^GCP_REGION=' .env || echo "GCP_REGION=${GCP_REGION}" >> .env
+          sed -i "s/^GCP_PROJECT_ID=.*/GCP_PROJECT_ID=${GCP_PROJECT_ID}/" .env
+          sed -i "s/^GCP_REGION=.*/GCP_REGION=${GCP_REGION}/" .env
+          chmod 600 .env
+
+      - name: Deploy with gcp_deploy.sh
+        run: |
+          chmod +x ./gcp_deploy.sh
+          TARGET="${{ github.event.inputs.target || 'all' }}"
+          echo "Deploying target: ${TARGET}"
+          ./gcp_deploy.sh --cloudbuild "${TARGET}"
+
+      - name: Print service URLs
+        if: success()
+        run: |
+          ./gcp_deploy.sh urls || true
+          echo "Domains: https://resgro.ai  https://app.resgro.ai"

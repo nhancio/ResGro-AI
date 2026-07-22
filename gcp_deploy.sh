@@ -106,7 +106,7 @@ gcp_project() {
 image_prefix() {
   local project region repo
   project="$(gcp_project)"
-  region="${GCP_REGION:-us-west2}"
+  region="${GCP_REGION:-australia-southeast1}"
   repo="${GCP_ARTIFACT_REPO:-resgro}"
   echo "${region}-docker.pkg.dev/${project}/${repo}"
 }
@@ -122,7 +122,7 @@ ensure_gcp_apis() {
 ensure_artifact_repo() {
   local project region repo
   project="$(gcp_project)"
-  region="${GCP_REGION:-us-west2}"
+  region="${GCP_REGION:-australia-southeast1}"
   repo="${GCP_ARTIFACT_REPO:-resgro}"
   gcloud artifacts repositories describe "$repo" \
     --location="$region" --project="$project" >/dev/null 2>&1 \
@@ -153,7 +153,7 @@ build_and_push() {
   fi
 
   local region project cfg
-  region="${GCP_REGION:-us-west2}"
+  region="${GCP_REGION:-australia-southeast1}"
   project="$(gcp_project)"
   cfg="$(mktemp "${TMPDIR:-/tmp}/resgro-cloudbuild.XXXXXX")"
   cfg="${cfg}.yaml"
@@ -184,7 +184,7 @@ build_and_push() {
 service_url() {
   local name="$1"
   gcloud run services describe "$name" \
-    --region="${GCP_REGION:-us-west2}" \
+    --region="${GCP_REGION:-australia-southeast1}" \
     --project="$(gcp_project)" \
     --format='value(status.url)' 2>/dev/null || true
 }
@@ -193,7 +193,7 @@ host_from_url() { printf '%s' "$1" | sed -E 's|https?://||; s|/.*||'; }
 
 patch_django_admin_hosts() {
   local region project backend_url api_url ui_url
-  region="${GCP_REGION:-us-west2}"
+  region="${GCP_REGION:-australia-southeast1}"
   project="$(gcp_project)"
   backend_url="$(service_url resgro-backend)"
   api_url="$(service_url resgro-api)"
@@ -249,7 +249,7 @@ deploy_backend() {
   local prefix tag region project
   prefix="$(image_prefix)"
   tag="${prefix}/resgro-backend:$(date +%Y%m%d%H%M%S)"
-  region="${GCP_REGION:-us-west2}"
+  region="${GCP_REGION:-australia-southeast1}"
   project="$(gcp_project)"
 
   build_and_push "backend/Dockerfile" "$ROOT_DIR" "$tag"
@@ -286,7 +286,7 @@ deploy_api() {
   local prefix tag region project
   prefix="$(image_prefix)"
   tag="${prefix}/resgro-api:$(date +%Y%m%d%H%M%S)"
-  region="${GCP_REGION:-us-west2}"
+  region="${GCP_REGION:-australia-southeast1}"
   project="$(gcp_project)"
 
   build_and_push "apis/http/Dockerfile" "$ROOT_DIR" "$tag"
@@ -319,7 +319,7 @@ deploy_agents() {
   local prefix tag region project
   prefix="$(image_prefix)"
   tag="${prefix}/resgro-agents-api:$(date +%Y%m%d%H%M%S)"
-  region="${GCP_REGION:-us-west2}"
+  region="${GCP_REGION:-australia-southeast1}"
   project="$(gcp_project)"
 
   build_and_push "Dockerfile" "$ROOT_DIR" "$tag"
@@ -361,7 +361,7 @@ deploy_ui() {
   local prefix tag region project
   prefix="$(image_prefix)"
   tag="${prefix}/resgro-ui:$(date +%Y%m%d%H%M%S)"
-  region="${GCP_REGION:-us-west2}"
+  region="${GCP_REGION:-australia-southeast1}"
   project="$(gcp_project)"
 
   # ── Resolve backend URL (runtime env for nginx /admin proxy) ──
@@ -491,7 +491,7 @@ if [ -z "$project" ]; then
   echo "Error: Set GCP_PROJECT_ID in .env or run: gcloud config set project YOUR_PROJECT"
   exit 1
 fi
-echo "GCP project: $project  region: ${GCP_REGION:-us-west2}"
+echo "GCP project: $project  region: ${GCP_REGION:-australia-southeast1}"
 
 case "$TARGET" in
   urls)
