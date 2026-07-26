@@ -10,6 +10,9 @@
 
 const USERS_KEY = "resgro_workspace_users";
 const SESSION_USER_ID_KEY = "resgro_session_user_id";
+const SESSION_EXPIRES_AT_KEY = "resgro_session_expires_at";
+/** Absolute session lifetime for portal login (24 hours). */
+export const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 export const DEMO_USERNAME = "demouser@resgro.ai";
 export const DEMO_PASSWORD = "demo@123";
 export const DEMO_EMAIL = "demouser@resgro.ai";
@@ -181,19 +184,35 @@ export function findUserByStripeCustomerId(customerId: string | null): Workspace
 export function getSessionUser(): WorkspaceUser | null {
   const id = localStorage.getItem(SESSION_USER_ID_KEY);
   if (!id) return null;
+  const expiresRaw = localStorage.getItem(SESSION_EXPIRES_AT_KEY);
+  if (expiresRaw) {
+    const expiresAt = Number(expiresRaw);
+    if (!Number.isFinite(expiresAt) || Date.now() > expiresAt) {
+      clearSessionUser();
+      return null;
+    }
+  }
   return readUsers().find((u) => u.id === id) ?? null;
+}
+
+export function touchSessionExpiry() {
+  if (!localStorage.getItem(SESSION_USER_ID_KEY)) return;
+  localStorage.setItem(SESSION_EXPIRES_AT_KEY, String(Date.now() + SESSION_MAX_AGE_MS));
 }
 
 export function setSessionUserId(userId: string | null) {
   if (userId) {
     localStorage.setItem(SESSION_USER_ID_KEY, userId);
+    localStorage.setItem(SESSION_EXPIRES_AT_KEY, String(Date.now() + SESSION_MAX_AGE_MS));
   } else {
     localStorage.removeItem(SESSION_USER_ID_KEY);
+    localStorage.removeItem(SESSION_EXPIRES_AT_KEY);
   }
 }
 
 export function clearSessionUser() {
   localStorage.removeItem(SESSION_USER_ID_KEY);
+  localStorage.removeItem(SESSION_EXPIRES_AT_KEY);
 }
 
 export async function createWorkspaceUser(input: {

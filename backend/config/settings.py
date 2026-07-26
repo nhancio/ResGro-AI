@@ -113,6 +113,13 @@ WHITENOISE_USE_FINDERS = DEBUG
 WHITENOISE_AUTOREFRESH = DEBUG
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Admin / Django session cookies (app portal uses localStorage separately).
+if ON_CLOUD_RUN or not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_AGE = int(os.environ.get("DJANGO_SESSION_COOKIE_AGE", str(8 * 60 * 60)))  # 8h
+
 CORS_ALLOWED_ORIGINS = [
     o.strip()
     for o in os.environ.get(

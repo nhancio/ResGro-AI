@@ -75,6 +75,7 @@ def subscription_payload(customer, sub) -> dict | None:
             "trialStart": to_iso(sub_d.get("trial_start")),
             "trialEnd": to_iso(sub_d.get("trial_end")),
             "currentPeriodEnd": to_iso(subscription_period_end(sub_d)),
+            "cancelAtPeriodEnd": bool(sub_d.get("cancel_at_period_end")),
             "plan": {
                 "amount": (price.get("unit_amount") or 0) / 100,
                 "currency": price.get("currency") or "aud",

@@ -181,7 +181,7 @@ def create_checkout(request):
             metadata["resgro_user_id"] = user.id
             session_kwargs["metadata"] = metadata
 
-            # --- Duplicate subscription guard ---
+            # --- Duplicate subscription guard (DB + live Stripe) ---
             if not force:
                 existing = Subscription.objects.filter(
                     user=user,
@@ -195,6 +195,31 @@ def create_checkout(request):
                         },
                         status=409,
                     )
+                if user.stripe_customer_id:
+                    try:
+                        live = stripe.Subscription.list(
+                            customer=user.stripe_customer_id,
+                            status="all",
+                            limit=10,
+                        )
+                        live_active = next(
+                            (
+                                s
+                                for s in live.data
+                                if s.status in ("active", "trialing", "past_due")
+                            ),
+                            None,
+                        )
+                        if live_active:
+                            return Response(
+                                {
+                                    "error": "Active subscription already exists",
+                                    "subscription_id": live_active.id,
+                                },
+                                status=409,
+                            )
+                    except stripe.StripeError as exc:
+                        print(f"create-checkout: live sub check failed: {exc}")
 
             if user.stripe_customer_id:
                 session_kwargs["customer"] = user.stripe_customer_id

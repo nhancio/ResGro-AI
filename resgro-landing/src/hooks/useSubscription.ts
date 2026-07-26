@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { getApiBaseUrl } from "../config/app";
+import { resolveWorkspaceSubscriptionFromStripe } from "../config/stripe";
 
 export const RESGRO_SUBSCRIPTION_REFRESH = "resgro-subscription-refresh";
 
@@ -18,6 +19,8 @@ export interface SubscriptionData {
     trialStart?: string | null;
     trialEnd: string | null;
     currentPeriodEnd: string | null;
+    canceledAt?: string | null;
+    cancelAtPeriodEnd?: boolean;
     planName: string | null;
     plan: {
       amount: number;
@@ -124,6 +127,26 @@ export function useSubscription() {
     setSubscription(null);
   }, []);
 
+  const refreshFromServer = useCallback(async () => {
+    const current = getStoredSubscription();
+    const customerId = current?.customer?.id;
+    if (!customerId || customerId.startsWith("cus_demo")) return current;
+    const fresh = await resolveWorkspaceSubscriptionFromStripe(customerId);
+    if (fresh) {
+      storeSubscription(fresh);
+      setSubscription(fresh);
+      window.dispatchEvent(new Event(RESGRO_SUBSCRIPTION_REFRESH));
+      return fresh;
+    }
+    // No active subscription in Stripe — clear paid cache so paywall shows.
+    if (current && ACTIVE_STATUSES.has(current.subscription.status || "")) {
+      clearSubscription();
+      setSubscription(null);
+      window.dispatchEvent(new Event(RESGRO_SUBSCRIPTION_REFRESH));
+    }
+    return null;
+  }, []);
+
   const isActive = Boolean(
     subscription && ACTIVE_STATUSES.has(subscription.subscription.status || "")
   );
@@ -139,5 +162,31 @@ export function useSubscription() {
     return () => window.removeEventListener(RESGRO_SUBSCRIPTION_REFRESH, onRefresh);
   }, []);
 
-  return { subscription, loading, error, verifySession, logout, isActive, activePlan };
+  // Re-sync entitlement on load and when returning to the tab (e.g. after Stripe portal).
+  useEffect(() => {
+    void refreshFromServer();
+    const onFocus = () => {
+      void refreshFromServer();
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") onFocus();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [refreshFromServer]);
+
+  return {
+    subscription,
+    loading,
+    error,
+    verifySession,
+    logout,
+    refreshFromServer,
+    isActive,
+    activePlan,
+  };
 }

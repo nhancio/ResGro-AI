@@ -173,7 +173,13 @@ def sync_subscriptions_for_user(user: WorkspaceUser) -> None:
     subs = stripe.Subscription.list(customer=user.stripe_customer_id, status="all", limit=20)
     seen = set()
     synced_subscriptions = []
-    for i, sub in enumerate(subs.data):
+    # Prefer marking an active subscription as primary (not list index 0).
+    active_ids = {s.id for s in subs.data if s.status in ("trialing", "active", "past_due")}
+    primary_id = next((s.id for s in subs.data if s.id in active_ids), None)
+    if primary_id is None and subs.data:
+        primary_id = subs.data[0].id
+
+    for sub in subs.data:
         sub_d = _stripe_dict(sub)
         synced_subscriptions.append(sub_d)
         seen.add(sub.id)
@@ -190,10 +196,11 @@ def sync_subscriptions_for_user(user: WorkspaceUser) -> None:
                 "trial_end": _ts(sub.trial_end),
                 "current_period_end": _ts(_subscription_period_end(sub_d)),
                 "canceled_at": _ts(sub.canceled_at),
+                "cancel_at_period_end": bool(sub_d.get("cancel_at_period_end")),
                 "amount": Decimal((price.get("unit_amount") or 0) / 100),
                 "currency": price.get("currency") or "aud",
                 "interval": (price.get("recurring") or {}).get("interval") or "month",
-                "is_primary": i == 0,
+                "is_primary": sub.id == primary_id,
             },
         )
     Subscription.objects.filter(user=user).exclude(stripe_subscription_id__in=seen).delete()

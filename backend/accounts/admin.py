@@ -52,7 +52,14 @@ class WorkspaceUserAdmin(admin.ModelAdmin):
 
 @admin.register(Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
-    list_display = ("user", "status", "plan_name", "current_period_end", "management_link")
+    list_display = (
+        "user",
+        "status",
+        "plan_name",
+        "cancel_at_period_end",
+        "current_period_end",
+        "management_link",
+    )
     list_filter = ("status", "plan_name")
     readonly_fields = ("management_link", "management_url_created_at")
 

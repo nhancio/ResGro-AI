@@ -2,7 +2,6 @@ from .models import Subscription, WorkspaceUser
 
 
 def user_to_api(user: WorkspaceUser) -> dict:
-    sub = user.subscriptions.filter(is_primary=True).first() or user.subscriptions.first()
     return {
         "id": user.id,
         "email": user.email,
@@ -26,6 +25,7 @@ def subscription_to_api(sub: Subscription) -> dict:
         "trialEnd": sub.trial_end.isoformat() if sub.trial_end else None,
         "currentPeriodEnd": sub.current_period_end.isoformat() if sub.current_period_end else None,
         "canceledAt": sub.canceled_at.isoformat() if sub.canceled_at else None,
+        "cancelAtPeriodEnd": bool(sub.cancel_at_period_end),
         "planName": sub.plan_name,
         "plan": {
             "amount": float(sub.amount or 0),

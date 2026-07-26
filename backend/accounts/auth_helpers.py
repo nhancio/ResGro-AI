@@ -9,6 +9,14 @@ ACTIVE_STATUSES = frozenset({"trialing", "active", "past_due"})
 
 
 def primary_subscription(user: WorkspaceUser) -> Subscription | None:
+    """Prefer a paid/active subscription over a stale canceled primary."""
+    active = (
+        user.subscriptions.filter(status__in=ACTIVE_STATUSES)
+        .order_by("-synced_at")
+        .first()
+    )
+    if active:
+        return active
     return user.subscriptions.filter(is_primary=True).first() or user.subscriptions.first()
 
 

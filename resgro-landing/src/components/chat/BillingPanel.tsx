@@ -24,12 +24,6 @@ interface BillingPanelProps {
   sessionUser: WorkspaceUser;
 }
 
-function addDays(date: Date, days: number): Date {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next;
-}
-
 const STATUS_ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
   Paid: CheckCircle2,
   Upcoming: Clock,
@@ -44,13 +38,16 @@ export function BillingPanel({ subscription, sessionUser }: BillingPanelProps) {
 
   const planLabel = getPlanLabel(subscription.subscription.planName);
   const status = subscription.subscription.status || "unknown";
-  const activatedAt = new Date(
-    sessionUser.createdAt || subscription.subscription.trialStart || Date.now(),
-  );
-  const nextBilling = addDays(activatedAt, 31);
+  const cancelAtPeriodEnd = Boolean(subscription.subscription.cancelAtPeriodEnd);
+  const periodEndIso = subscription.subscription.currentPeriodEnd;
   const amount = subscription.subscription.plan.amount;
   const currency = subscription.subscription.plan.currency.toUpperCase();
   const interval = subscription.subscription.plan.interval;
+
+  const billingLabel = cancelAtPeriodEnd ? "Access until" : "Next billing";
+  const billingDateIso = periodEndIso
+    ? periodEndIso
+    : subscription.subscription.trialEnd || null;
 
   useEffect(() => {
     const customerId = subscription.customer.id;
@@ -118,12 +115,17 @@ export function BillingPanel({ subscription, sessionUser }: BillingPanelProps) {
                 <div className="flex items-center gap-1.5 mb-1">
                   <Calendar size={11} className="text-gray-500" />
                   <span className="text-[10px] uppercase tracking-wider text-gray-500">
-                    Next billing
+                    {billingLabel}
                   </span>
                 </div>
                 <p className="text-sm font-medium text-white">
-                  {formatDate(nextBilling.toISOString())}
+                  {billingDateIso ? formatDate(billingDateIso) : "—"}
                 </p>
+                {cancelAtPeriodEnd ? (
+                  <p className="text-[10px] text-amber-400 mt-1">
+                    Cancellation scheduled — no further charges after this date
+                  </p>
+                ) : null}
               </div>
             </div>
           </div>
